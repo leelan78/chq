@@ -1,0 +1,3065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>S.A.A Legacy Pharmaceutical - Cheque Tracking System</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --primary-bg: #eef2ff;
+            --success: #22c55e;
+            --success-bg: #dcfce7;
+            --danger: #ef4444;
+            --danger-bg: #fecaca;
+            --warning: #f59e0b;
+            --warning-bg: #fef3c7;
+            --info: #3b82f6;
+            --info-bg: #dbeafe;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --sidebar-width: 250px;
+            --topbar-height: 64px;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.5;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--gray-100); }
+        ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--gray-900);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .brand-text h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; }
+        .brand-text span { font-size: 11px; color: var(--gray-400); }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            color: var(--gray-300);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: var(--transition);
+            margin-bottom: 2px;
+            cursor: pointer;
+        }
+
+        .nav-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .nav-link.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
+        .nav-link i { width: 20px; text-align: center; font-size: 16px; flex-shrink: 0; }
+
+        .nav-link .badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 10px;
+            border-radius: 20px;
+            min-width: 22px;
+            text-align: center;
+        }
+
+        .nav-link.active .badge { background: rgba(255,255,255,0.25); }
+
+        .sidebar-footer {
+            padding: 16px 20px 24px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .btn-connect {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .btn-connect:hover { background: rgba(255,255,255,0.12); }
+        .btn-connect.connected { background: var(--success); border-color: var(--success); }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--gray-400);
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .dot.connected { background: var(--success); }
+        .dot.disconnected { background: var(--gray-500); }
+        .dot.warning { background: var(--warning); }
+        .dot.danger { background: var(--danger); }
+
+        /* ===== Main Content ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== Topbar ===== */
+        .topbar {
+            height: var(--topbar-height);
+            background: #fff;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            flex-shrink: 0;
+            gap: 16px;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--gray-600);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            padding: 0 14px;
+            flex: 1;
+            max-width: 420px;
+            border: 1px solid transparent;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(79,70,229,0.08);
+        }
+
+        .search-box i { color: var(--gray-400); font-size: 14px; }
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 8px 12px;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            font-family: inherit;
+        }
+        .search-box input::placeholder { color: var(--gray-400); }
+        .search-box kbd {
+            font-size: 11px;
+            color: var(--gray-400);
+            background: var(--gray-100);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .date-display {
+            font-size: 13px;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-200);
+            padding: 8px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .btn-secondary:hover { background: var(--gray-200); }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--gray-600);
+            border: 1px solid var(--gray-200);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .btn-outline:hover { background: var(--gray-50); border-color: var(--gray-300); }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--gray-200);
+            background: #fff;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-600);
+        }
+
+        .btn-icon:hover { background: var(--gray-50); border-color: var(--gray-300); }
+
+        /* ===== Content ===== */
+        .content {
+            padding: 24px 32px 40px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== Page Header ===== */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .page-header h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; }
+        .page-subtitle { font-size: 14px; color: var(--gray-500); margin-top: 2px; }
+        .page-actions { display: flex; gap: 10px; align-items: center; }
+
+        /* ===== Stats Grid ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: var(--transition);
+            border: 1px solid var(--gray-100);
+        }
+
+        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.blue { background: var(--primary-bg); color: var(--primary); }
+        .stat-icon.yellow { background: var(--warning-bg); color: var(--warning); }
+        .stat-icon.red { background: var(--danger-bg); color: var(--danger); }
+        .stat-icon.orange { background: #ffedd5; color: #ea580c; }
+        .stat-icon.green { background: var(--success-bg); color: var(--success); }
+        .stat-icon.purple { background: #f3e8ff; color: #7c3aed; }
+
+        .stat-info { flex: 1; }
+        .stat-label { font-size: 12px; font-weight: 500; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-info h3 { font-size: 24px; font-weight: 700; line-height: 1.2; }
+        .stat-amount { font-size: 14px; font-weight: 600; color: var(--gray-600); }
+
+        /* ===== Dashboard Layout ===== */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .dashboard-main, .dashboard-sidebar { display: flex; flex-direction: column; gap: 24px; }
+
+        /* ===== Card ===== */
+        .card {
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-100);
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .card-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .card-header h3 i { color: var(--primary); }
+        .card-body { padding: 20px 24px; }
+
+        /* ===== Activity ===== */
+        .activity-timeline { max-height: 320px; overflow-y: auto; }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .activity-item:last-child { border-bottom: none; }
+
+        .activity-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .activity-dot.incoming { background: var(--primary-bg); color: var(--primary); }
+        .activity-dot.outgoing { background: var(--warning-bg); color: var(--warning); }
+        .activity-dot.cleared { background: var(--success-bg); color: var(--success); }
+        .activity-dot.overdue { background: var(--danger-bg); color: var(--danger); }
+
+        .activity-content { flex: 1; }
+        .activity-content .title { font-size: 14px; font-weight: 500; }
+        .activity-content .title strong { font-weight: 600; }
+        .activity-content .meta { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+        /* ===== Quick Actions ===== */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .quick-action {
+            padding: 14px 12px;
+            border: 1px solid var(--gray-200);
+            background: #fff;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: inherit;
+        }
+
+        .quick-action:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-300);
+            transform: translateY(-1px);
+        }
+
+        .quick-action i { font-size: 16px; color: var(--primary); }
+
+        /* ===== Table ===== */
+        .table-wrap { overflow-x: auto; padding: 0; }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .table thead { background: var(--gray-50); }
+        .table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray-500);
+            border-bottom: 1px solid var(--gray-200);
+            white-space: nowrap;
+        }
+
+        .table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+        .table tbody tr:hover { background: var(--gray-50); }
+        .table tbody tr:last-child td { border-bottom: none; }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px !important;
+            color: var(--gray-400);
+        }
+
+        .empty-state i { font-size: 32px; display: block; margin-bottom: 8px; }
+
+        /* ===== Status Badges ===== */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge .dot { width: 6px; height: 6px; }
+        .status-badge.pending { background: var(--gray-100); color: var(--gray-600); }
+        .status-badge.pending .dot { background: var(--gray-400); }
+        .status-badge.due_soon { background: var(--warning-bg); color: #b45309; }
+        .status-badge.due_soon .dot { background: var(--warning); }
+        .status-badge.due_today { background: #fef2f2; color: #dc2626; }
+        .status-badge.due_today .dot { background: var(--danger); }
+        .status-badge.overdue { background: var(--danger-bg); color: #dc2626; }
+        .status-badge.overdue .dot { background: var(--danger); }
+        .status-badge.cleared { background: var(--success-bg); color: #15803d; }
+        .status-badge.cleared .dot { background: var(--success); }
+        .status-badge.cancelled { background: var(--gray-100); color: var(--gray-500); }
+        .status-badge.cancelled .dot { background: var(--gray-400); }
+
+        /* ===== Action Buttons ===== */
+        .action-buttons { display: flex; gap: 4px; }
+
+        .action-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-400);
+        }
+
+        .action-btn:hover { background: var(--gray-100); color: var(--gray-600); }
+        .action-btn.edit:hover { background: var(--primary-bg); color: var(--primary); }
+        .action-btn.delete:hover { background: var(--danger-bg); color: var(--danger); }
+        .action-btn.view:hover { background: var(--info-bg); color: var(--info); }
+
+        /* ===== Calendar ===== */
+        .calendar-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .month-year {
+            font-size: 18px;
+            font-weight: 600;
+            min-width: 160px;
+            text-align: center;
+        }
+
+        .calendar-filters {
+            display: flex;
+            gap: 12px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--gray-100);
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gray-50);
+            padding: 0 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-200);
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .filter-group i { color: var(--gray-400); font-size: 13px; }
+        .filter-group select, .filter-group input {
+            border: none;
+            background: transparent;
+            padding: 6px 0;
+            font-size: 13px;
+            width: 100%;
+            outline: none;
+            font-family: inherit;
+            color: var(--gray-700);
+        }
+
+        .calendar-grid { padding: 20px 24px; }
+
+        .calendar-legend {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 12px;
+            color: var(--gray-500);
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .legend-dot.received { background: var(--primary-bg); border: 1px solid var(--primary); }
+        .legend-dot.sent { background: var(--warning-bg); border: 1px solid var(--warning); }
+        .legend-dot.cleared { background: var(--success-bg); border: 1px solid var(--success); }
+        .legend-dot.overdue { background: var(--danger-bg); border: 1px solid var(--danger); }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            padding: 8px 0;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day {
+            min-height: 90px;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-100);
+            background: #fff;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .calendar-day:hover { border-color: var(--primary); background: var(--primary-bg); }
+        .calendar-day.other-month { background: var(--gray-50); color: var(--gray-400); }
+        .calendar-day.today { border-color: var(--primary); background: var(--primary-bg); }
+        .calendar-day .day-number { font-size: 14px; font-weight: 600; }
+        .calendar-day .day-events { margin-top: 4px; font-size: 10px; line-height: 1.4; }
+        .calendar-day .day-event {
+            padding: 2px 4px;
+            border-radius: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 10px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-bottom: 2px;
+        }
+
+        .day-event.received { background: var(--primary-bg); color: var(--primary); border-left: 2px solid var(--primary); }
+        .day-event.sent { background: var(--warning-bg); color: #b45309; border-left: 2px solid var(--warning); }
+        .day-event.cleared { background: var(--success-bg); color: #15803d; border-left: 2px solid var(--success); }
+        .day-event.overdue { background: var(--danger-bg); color: #dc2626; border-left: 2px solid var(--danger); }
+        .day-event.cancelled { background: var(--gray-100); color: var(--gray-500); border-left: 2px solid var(--gray-400); text-decoration: line-through; }
+
+        /* ===== Reports ===== */
+        .reports-layout { display: flex; flex-direction: column; gap: 24px; }
+        .report-filters { padding: 4px 0; }
+
+        .filter-row {
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-item label { font-size: 13px; font-weight: 500; color: var(--gray-600); }
+        .filter-item input {
+            padding: 8px 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+        }
+
+        .filter-item input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79,70,229,0.08);
+        }
+
+        .report-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .report-card {
+            padding: 16px;
+            background: #fff;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .report-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .report-card.active { border-color: var(--primary); background: var(--primary-bg); }
+
+        .report-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .report-card span { font-size: 13px; font-weight: 500; }
+
+        /* ===== Settings ===== */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .setting-item:last-child { border-bottom: none; }
+        .setting-label { font-size: 14px; font-weight: 500; }
+        .setting-value { font-size: 14px; color: var(--gray-500); display: flex; align-items: center; gap: 8px; }
+
+        .reminder-checkboxes {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .reminder-checkboxes label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--gray-600);
+            cursor: pointer;
+        }
+
+        .reminder-checkboxes input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
+
+        /* ===== Modal ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: #fff;
+            border-radius: var(--radius);
+            max-width: 640px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            animation: modalIn 0.3s ease;
+        }
+
+        .modal-content.modal-lg { max-width: 800px; }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .modal-header h3 { font-size: 18px; font-weight: 700; }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-500);
+        }
+
+        .modal-close:hover { background: var(--gray-200); }
+
+        .modal-body { padding: 24px; overflow-y: auto; max-height: calc(90vh - 140px); }
+
+        /* ===== Form ===== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label { font-size: 13px; font-weight: 500; color: var(--gray-700); }
+        .form-group .required { color: var(--danger); }
+
+        .form-group input, .form-group select {
+            padding: 8px 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79,70,229,0.08);
+        }
+
+        .input-with-icon {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            background: #fff;
+            transition: var(--transition);
+        }
+
+        .input-with-icon:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79,70,229,0.08);
+        }
+
+        .input-with-icon span { padding: 0 0 0 12px; font-weight: 500; color: var(--gray-500); }
+        .input-with-icon input {
+            border: none;
+            padding: 8px 12px 8px 4px;
+            font-size: 14px;
+            font-family: inherit;
+            width: 100%;
+            background: transparent;
+            outline: none;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-200);
+            margin-top: 8px;
+            grid-column: 1 / -1;
+        }
+
+        /* ===== Notifications ===== */
+        .notifications {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 380px;
+            width: 100%;
+        }
+
+        .notification {
+            padding: 14px 18px;
+            background: #fff;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .notification.success { border-left-color: var(--success); }
+        .notification.error { border-left-color: var(--danger); }
+        .notification.warning { border-left-color: var(--warning); }
+
+        .notification-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+        .notification.success .notification-icon { color: var(--success); }
+        .notification.error .notification-icon { color: var(--danger); }
+        .notification.warning .notification-icon { color: var(--warning); }
+        .notification-content { flex: 1; }
+        .notification-title { font-weight: 600; font-size: 14px; }
+        .notification-message { font-size: 13px; color: var(--gray-500); }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 14px;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .settings-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-layout { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .topbar { padding: 0 16px; }
+            .content { padding: 16px; }
+            .search-box { max-width: none; }
+            .search-box kbd { display: none; }
+            .date-display { display: none; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .stat-card { padding: 14px 16px; }
+            .stat-info h3 { font-size: 20px; }
+            .quick-actions { grid-template-columns: 1fr 1fr; }
+            .calendar-filters { flex-direction: column; }
+            .filter-group { min-width: auto; }
+            .calendar-day { min-height: 60px; padding: 4px 6px; }
+            .calendar-day .day-events { display: none; }
+            .report-cards { grid-template-columns: 1fr 1fr; }
+            .filter-row { flex-direction: column; align-items: stretch; }
+            .filter-item { width: 100%; }
+            .modal-content { margin: 10px; max-height: 95vh; }
+            .notifications { right: 12px; left: 12px; max-width: none; }
+            .calendar-legend { flex-direction: column; align-items: flex-start; gap: 8px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .report-cards { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: 1fr; }
+            .page-header { flex-direction: column; align-items: stretch; }
+            .page-actions { flex-wrap: wrap; }
+            .topbar-right .btn-primary span { display: none; }
+        }
+
+        /* Text utilities */
+        .text-mono { font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fas fa-pills"></i></div>
+            <div class="brand-text">
+                <h1>S.A.A LEGACY PHARMA</h1>
+                <span>Cheque Tracking System</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a class="nav-link active" data-page="dashboard">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+                <span class="badge" id="navBadge">0</span>
+            </a>
+            <a class="nav-link" data-page="incoming">
+                <i class="fas fa-arrow-down"></i>
+                <span>Customer Payments</span>
+                <span class="badge" id="incomingBadge">0</span>
+            </a>
+            <a class="nav-link" data-page="outgoing">
+                <i class="fas fa-arrow-up"></i>
+                <span>Supplier Payments</span>
+                <span class="badge" id="outgoingBadge">0</span>
+            </a>
+            <a class="nav-link" data-page="calendar">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a class="nav-link" data-page="reports">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+            <a class="nav-link" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="btn-connect" id="connectCalendarBtn">
+                <i class="fab fa-google"></i> Connect Calendar
+            </button>
+            <div class="connection-status">
+                <span class="dot disconnected"></span>
+                <span>Disconnected</span>
+            </div>
+            <button class="btn-connect" id="googleSignInBtn" style="margin-top:8px;">
+                <i class="fab fa-google"></i> Sign in with Google
+            </button>
+            <div class="connection-status" id="googleSignInStatus">
+                <span class="dot disconnected"></span>
+                <span>Not signed in</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="globalSearch" placeholder="Search cheques..." />
+                    <kbd>⌘K</kbd>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <span class="date-display" id="currentDate"></span>
+                <button class="btn-primary" id="btnAddCheck">
+                    <i class="fas fa-plus"></i>
+                    <span>New Cheque</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="content">
+
+            <!-- ===== DASHBOARD ===== -->
+            <section class="page active" id="page-dashboard">
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-arrow-down"></i></div>
+                        <div class="stat-info"><span class="stat-label">Customer Payments</span><h3 id="totalReceived">0</h3></div>
+                        <div class="stat-amount" id="totalReceivedAmount">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon yellow"><i class="fas fa-arrow-up"></i></div>
+                        <div class="stat-info"><span class="stat-label">Supplier Payments</span><h3 id="totalSent">0</h3></div>
+                        <div class="stat-amount" id="totalSentAmount">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red"><i class="fas fa-clock"></i></div>
+                        <div class="stat-info"><span class="stat-label">Due Today</span><h3 id="dueToday">0</h3></div>
+                        <div class="stat-amount" id="dueTodayAmount">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-calendar-week"></i></div>
+                        <div class="stat-info"><span class="stat-label">Due This Week</span><h3 id="dueThisWeek">0</h3></div>
+                        <div class="stat-amount" id="dueThisWeekAmount">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="stat-info"><span class="stat-label">Overdue</span><h3 id="overdueCount">0</h3></div>
+                        <div class="stat-amount" id="overdueAmount">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-info"><span class="stat-label">Cleared</span><h3 id="clearedCount">0</h3></div>
+                        <div class="stat-amount" id="clearedAmount">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-layout">
+                    <div class="dashboard-main">
+                        <div class="card">
+                            <div class="card-header"><h3><i class="fas fa-bell"></i> Recent Activity</h3></div>
+                            <div class="card-body">
+                                <div class="activity-timeline" id="recentActivity">
+                                    <div class="empty-state"><i class="fas fa-inbox"></i><p>No recent activity</p></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dashboard-sidebar">
+                        <div class="card">
+                            <div class="card-header"><h3><i class="fas fa-bolt"></i> Quick Actions</h3></div>
+                            <div class="card-body">
+                                <div class="quick-actions">
+                                    <button class="quick-action" data-type="incoming"><i class="fas fa-arrow-down"></i><span>Record Customer Payment</span></button>
+                                    <button class="quick-action" data-type="outgoing"><i class="fas fa-arrow-up"></i><span>Record Supplier Payment</span></button>
+                                    <button class="quick-action" data-type="calendar"><i class="fas fa-calendar-alt"></i><span>View Calendar</span></button>
+                                    <button class="quick-action" data-type="reports"><i class="fas fa-chart-bar"></i><span>Generate Report</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== INCOMING (CUSTOMER PAYMENTS) ===== -->
+            <section class="page" id="page-incoming">
+                <div class="page-header">
+                    <div><h2>Customer Payments</h2><p class="page-subtitle">Cheques received from customers</p></div>
+                    <div class="page-actions">
+                        <button class="btn-outline" id="filterIncomingBtn"><i class="fas fa-filter"></i> Filter</button>
+                        <button class="btn-outline" id="exportIncomingBtn"><i class="fas fa-download"></i> Export</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead><tr>
+                                <th>ID</th><th>Customer</th><th>Received</th><th>Effective</th>
+                                <th>Cheque No.</th><th>Bank</th><th>Amount</th><th>Status</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody id="incomingTableBody">
+                                <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><span>No customer payments recorded yet</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== OUTGOING (SUPPLIER PAYMENTS) ===== -->
+            <section class="page" id="page-outgoing">
+                <div class="page-header">
+                    <div><h2>Supplier Payments</h2><p class="page-subtitle">Cheques sent to suppliers</p></div>
+                    <div class="page-actions">
+                        <button class="btn-outline" id="filterOutgoingBtn"><i class="fas fa-filter"></i> Filter</button>
+                        <button class="btn-outline" id="exportOutgoingBtn"><i class="fas fa-download"></i> Export</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead><tr>
+                                <th>ID</th><th>Supplier</th><th>Recipient</th><th>Phone</th>
+                                <th>Amount</th><th>Effective</th><th>Cheque No.</th><th>Status</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody id="outgoingTableBody">
+                                <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><span>No supplier payments recorded yet</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== CALENDAR ===== -->
+            <section class="page" id="page-calendar">
+                <div class="page-header">
+                    <div><h2>Calendar View</h2><p class="page-subtitle">Monthly cheque schedule</p></div>
+                    <div class="calendar-controls">
+                        <button class="btn-icon" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <span class="month-year" id="currentMonthYear">September 2026</span>
+                        <button class="btn-icon" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="calendar-legend">
+                        <div class="legend-item"><span class="legend-dot received"></span> Received (Customer)</div>
+                        <div class="legend-item"><span class="legend-dot sent"></span> Sent (Supplier)</div>
+                        <div class="legend-item"><span class="legend-dot cleared"></span> Cleared</div>
+                        <div class="legend-item"><span class="legend-dot overdue"></span> Overdue</div>
+                    </div>
+                    <div class="calendar-filters">
+                        <div class="filter-group"><i class="fas fa-filter"></i>
+                            <select id="calendarFilterType">
+                                <option value="all">All Cheques</option>
+                                <option value="incoming">Customer Payments</option>
+                                <option value="outgoing">Supplier Payments</option>
+                            </select>
+                        </div>
+                        <div class="filter-group"><i class="fas fa-search"></i>
+                            <input type="text" id="calendarSearch" placeholder="Search..." />
+                        </div>
+                        <div class="filter-group"><i class="fas fa-tag"></i>
+                            <select id="calendarFilterStatus">
+                                <option value="all">All Statuses</option>
+                                <option value="pending">Pending</option><option value="due_soon">Due Soon</option>
+                                <option value="due_today">Due Today</option><option value="overdue">Overdue</option>
+                                <option value="cleared">Cleared</option><option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+            </section>
+
+            <!-- ===== REPORTS ===== -->
+            <section class="page" id="page-reports">
+                <div class="page-header"><div><h2>Reports</h2><p class="page-subtitle">Analyze your cheque data</p></div></div>
+                <div class="reports-layout">
+                    <div class="card">
+                        <div class="card-header"><h3>Report Filters</h3></div>
+                        <div class="card-body">
+                            <div class="report-filters">
+                                <div class="filter-row">
+                                    <div class="filter-item"><label>From Date</label><input type="date" id="reportStartDate" /></div>
+                                    <div class="filter-item"><label>To Date</label><input type="date" id="reportEndDate" /></div>
+                                    <div class="filter-item" style="justify-content:flex-end;">
+                                        <button class="btn-primary" id="generateReportBtn"><i class="fas fa-chart-bar"></i> Generate</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="report-cards">
+                        <div class="report-card active" data-report="outstanding"><div class="report-icon purple"><i class="fas fa-hourglass-half"></i></div><span>Outstanding</span></div>
+                        <div class="report-card" data-report="received-monthly"><div class="report-icon blue"><i class="fas fa-arrow-down"></i></div><span>Customer Payments by Month</span></div>
+                        <div class="report-card" data-report="sent-monthly"><div class="report-icon yellow"><i class="fas fa-arrow-up"></i></div><span>Supplier Payments by Month</span></div>
+                        <div class="report-card" data-report="total-received"><div class="report-icon green"><i class="fas fa-dollar-sign"></i></div><span>Total Received</span></div>
+                        <div class="report-card" data-report="total-sent"><div class="report-icon orange"><i class="fas fa-dollar-sign"></i></div><span>Total Sent</span></div>
+                        <div class="report-card" data-report="overdue"><div class="report-icon red"><i class="fas fa-exclamation-triangle"></i></div><span>Overdue</span></div>
+                        <div class="report-card" data-report="cleared"><div class="report-icon green"><i class="fas fa-check-circle"></i></div><span>Cleared</span></div>
+                        <div class="report-card" data-report="by-company"><div class="report-icon blue"><i class="fas fa-building"></i></div><span>By Customer/Supplier</span></div>
+                    </div>
+                    <div class="card" id="reportResults">
+                        <div class="card-header"><h3>Report Results</h3><button class="btn-outline" id="exportReportBtn"><i class="fas fa-download"></i> Export</button></div>
+                        <div class="card-body" id="reportContent"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== SETTINGS ===== -->
+            <section class="page" id="page-settings">
+                <div class="page-header"><div><h2>Settings</h2><p class="page-subtitle">Configure your system</p></div></div>
+                <div class="settings-grid">
+                    <div class="card">
+                        <div class="card-header"><h3><i class="fab fa-google"></i> Google Calendar</h3></div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <div class="setting-info"><span class="setting-label">Connection Status</span>
+                                    <span class="setting-value" id="settingsCalendarStatus">
+                                        <span class="dot disconnected"></span> Not Connected
+                                    </span>
+                                </div>
+                                <button class="btn-primary" id="settingsConnectCalendar"><i class="fab fa-google"></i> Connect</button>
+                            </div>
+                            <div class="setting-item">
+                                <span class="setting-label">Reminder Schedule</span>
+                                <div class="reminder-checkboxes">
+                                    <label><input type="checkbox" checked /> 7 days before</label>
+                                    <label><input type="checkbox" checked /> 3 days before</label>
+                                    <label><input type="checkbox" checked /> 1 day before</label>
+                                    <label><input type="checkbox" checked /> On due date</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3><i class="fas fa-database"></i> Data Management</h3></div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <button class="btn-outline" id="exportAllData"><i class="fas fa-download"></i> Export All Data</button>
+                                <button class="btn-outline" id="importDataBtn"><i class="fas fa-upload"></i> Import Data</button>
+                                <input type="file" id="importDataInput" accept=".json" style="display:none;" />
+                            </div>
+                            <div class="setting-item">
+                                <button class="btn-danger" id="clearAllData"><i class="fas fa-trash"></i> Clear All Data</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3><i class="fas fa-cloud"></i> Google Account &amp; Firestore Sync</h3></div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <div class="setting-info"><span class="setting-label">Account</span>
+                                    <span class="setting-value" id="settingsGoogleStatus"><span class="dot disconnected"></span> Not signed in</span>
+                                </div>
+                                <button class="btn-primary" id="settingsGoogleSignIn"><i class="fab fa-google"></i> Sign in</button>
+                            </div>
+                            <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-top:8px;">
+                                Signing in with Google links this device to your shared Firestore database, so every
+                                signed-in user sees the same cheque data in real time. This requires a Firebase
+                                project — see the <code>firebaseConfig</code> object near the top of the
+                                <code>&lt;script&gt;</code> section for setup instructions.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3><i class="fas fa-bell"></i> Browser Notifications</h3></div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <div class="setting-info"><span class="setting-label">Desktop Alerts</span>
+                                    <span class="setting-value" id="browserNotifStatus"><span class="dot disconnected"></span> Not enabled</span>
+                                </div>
+                                <button class="btn-primary" id="enableNotificationsBtn"><i class="fas fa-bell"></i> Enable</button>
+                            </div>
+                            <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-top:8px;">
+                                When enabled, this browser will show a native notification for cheques due per the
+                                Reminder Schedule above, even in a background tab (the tab must stay open).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div><!-- /content -->
+    </main>
+
+    <!-- ===== CHECK MODAL ===== -->
+    <div class="modal" id="checkModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">New Cheque</h3>
+                <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="checkForm" class="modal-body">
+                <input type="hidden" id="checkId" />
+                <input type="hidden" id="checkType" />
+                <div class="form-grid">
+                    <div class="form-group"><label id="companyLabel">Company Name <span class="required">*</span></label>
+                        <input type="text" id="formCompany" list="companyList" placeholder="Enter company name" required />
+                        <datalist id="companyList"></datalist>
+                    </div>
+                    <div class="form-group" id="recipientGroup"><label>Recipient Name</label>
+                        <input type="text" id="formRecipient" placeholder="Enter recipient name" /></div>
+                    <div class="form-group" id="phoneGroup"><label>Phone Number</label>
+                        <input type="tel" id="formPhone" placeholder="Enter phone number" /></div>
+                    <div class="form-group"><label>Amount <span class="required">*</span></label>
+                        <div class="input-with-icon">
+                            <span id="currencySymbol">$</span>
+                            <input type="number" id="formAmount" step="0.01" placeholder="0.00" required />
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Currency</label>
+                        <select id="formCurrency">
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="GHS">GHS - Ghanaian Cedi</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="NGN">NGN - Nigerian Naira</option>
+                            <option value="XOF">XOF - CFA Franc</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Cheque Number <span class="required">*</span></label>
+                        <input type="text" id="formCheckNumber" placeholder="Enter cheque number" required /></div>
+                    <div class="form-group"><label>Bank Name</label>
+                        <input type="text" id="formBank" list="bankList" placeholder="Enter bank name" />
+                        <datalist id="bankList"></datalist>
+                    </div>
+                    <div class="form-group"><label>Effective Date <span class="required">*</span></label>
+                        <input type="date" id="formEffectiveDate" required /></div>
+                    <div class="form-group" id="receivedDateGroup"><label>Received Date</label>
+                        <input type="date" id="formReceivedDate" /></div>
+                    <div class="form-group" id="sentDateGroup"><label>Date Sent</label>
+                        <input type="date" id="formSentDate" /></div>
+                    <div class="form-group"><label>Status</label>
+                        <select id="formStatus">
+                            <option value="pending">Pending</option><option value="due_soon">Due Soon</option>
+                            <option value="due_today">Due Today</option><option value="overdue">Overdue</option>
+                            <option value="cleared">Cleared</option><option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="modalCancel">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Cheque</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== DETAIL MODAL ===== -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Cheque Details</h3>
+                <button class="modal-close" id="detailModalClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="detailContent"></div>
+        </div>
+    </div>
+
+    <!-- ===== NOTIFICATIONS ===== -->
+    <div class="notifications" id="notificationContainer"></div>
+
+    <!-- Firebase (compat build — works with the plain <script> style below).
+         Loaded unconditionally; it stays completely dormant until you fill in
+         firebaseConfig further down, so the app works exactly as before if
+         you never touch it. -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ============================================================
+        //  STATE
+        // ============================================================
+        const state = {
+            incoming: [],
+            outgoing: [],
+            companies: JSON.parse(localStorage.getItem('checkCompanies') || '[]'),
+            banks: JSON.parse(localStorage.getItem('checkBanks') || '[]'),
+            currentPage: 'dashboard',
+            currentMonth: new Date().getMonth(),
+            currentYear: new Date().getFullYear(),
+            calendarFilter: 'all',
+            calendarStatusFilter: 'all',
+            calendarSearch: '',
+            calendarConnected: false,
+            incomingFilterOutstanding: false,
+            outgoingFilterOutstanding: false,
+            lastReport: null,
+        };
+
+        // ============================================================
+        //  FIREBASE — GOOGLE SIGN-IN + SHARED FIRESTORE SYNC
+        // ============================================================
+        // Setup steps:
+        //   1. https://console.firebase.google.com → Add project (free tier is fine)
+        //   2. Project settings (gear icon) → General → "Your apps" → Add app → Web (</>) → copy the config object it gives you into firebaseConfig below
+        //   3. Build → Authentication → Sign-in method → enable "Google"
+        //   4. Build → Firestore Database → Create database (any region close to you)
+        //   5. Firestore → Rules tab, use something like this so only signed-in users can read/write:
+        //        rules_version = '2';
+        //        service cloud.firestore {
+        //          match /databases/{database}/documents {
+        //            match /cheque-data/{doc} {
+        //              allow read, write: if request.auth != null;
+        //            }
+        //          }
+        //        }
+        //   6. Authentication → Settings → Authorized domains → add whatever domain you host this file on
+        //   7. Paste your config below, replacing the "YOUR_..." placeholders, and reload the page.
+        // Until you do this, firebaseReady stays false and the app behaves exactly
+        // as it did before — all data stays local to this browser (localStorage).
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2_LgbG-_TCUY2zqnsIq9e5AA8f4N41cM",
+            authDomain: "cheque-7d865.firebaseapp.com",
+            projectId: "cheque-7d865",
+            storageBucket: "cheque-7d865.firebasestorage.app",
+            messagingSenderId: "471625567421",
+            appId: "1:471625567421:web:672178213ad8ee7be0fbd4"
+        };
+
+        const firebaseReady = typeof firebase !== 'undefined' &&
+            firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('YOUR_');
+
+        let fbAuth = null, fbDb = null, currentUser = null, unsubscribeSnapshot = null;
+        let applyingRemoteUpdate = false; // guards against a save->write->snapshot->save loop
+        const SHARED_DOC = ['cheque-data', 'shared']; // all signed-in users read/write this one doc
+
+        if (firebaseReady) {
+            firebase.initializeApp(firebaseConfig);
+            fbAuth = firebase.auth();
+            fbDb = firebase.firestore();
+            fbAuth.onAuthStateChanged(user => {
+                currentUser = user;
+                updateGoogleSignInUI();
+                if (user) attachFirestoreSync(); else detachFirestoreSync();
+            });
+        }
+
+        function signInWithGoogle() {
+            if (!firebaseReady) {
+                showNotification('Firebase Not Configured', 'Fill in firebaseConfig in the script to enable Google sign-in', 'warning');
+                return;
+            }
+            fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+                .catch(err => { console.error('Sign-in error:', err); showNotification('Sign-in Failed', err.message, 'error'); });
+        }
+
+        function signOutOfGoogle() {
+            if (firebaseReady && currentUser) fbAuth.signOut();
+        }
+
+        // Lesson learned from earlier debugging of this app's data-loss bug:
+        // never blindly seed/overwrite the shared document on every login or
+        // refresh. Only write a starting document if none exists yet;
+        // otherwise always defer to whatever's already in Firestore.
+        function attachFirestoreSync() {
+            if (!firebaseReady || !currentUser) return;
+            const docRef = fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]);
+            unsubscribeSnapshot = docRef.onSnapshot(snap => {
+                if (snap.exists) {
+                    const remote = snap.data();
+                    applyingRemoteUpdate = true;
+                    state.incoming = remote.incoming || [];
+                    state.outgoing = remote.outgoing || [];
+                    state.companies = remote.companies || [];
+                    state.banks = remote.banks || [];
+                    refreshStatuses();
+                    updateUI();
+                    applyingRemoteUpdate = false;
+                } else {
+                    docRef.set({
+                        incoming: state.incoming,
+                        outgoing: state.outgoing,
+                        companies: state.companies,
+                        banks: state.banks,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            }, err => {
+                console.error('Firestore sync error:', err);
+                showNotification('Sync Error', 'Could not reach Firestore — working from local data', 'error');
+            });
+        }
+
+        function detachFirestoreSync() {
+            if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+        }
+
+        function pushToFirestore() {
+            if (!firebaseReady || !currentUser) return;
+            fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]).set({
+                incoming: state.incoming,
+                outgoing: state.outgoing,
+                companies: state.companies,
+                banks: state.banks,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+
+        function updateGoogleSignInUI() {
+            const sidebarBtn = document.getElementById('googleSignInBtn');
+            const sidebarStatus = document.getElementById('googleSignInStatus');
+            const settingsBtn = document.getElementById('settingsGoogleSignIn');
+            const settingsStatus = document.getElementById('settingsGoogleStatus');
+            const signedIn = !!currentUser;
+            const label = signedIn ? `<i class="fab fa-google"></i> Sign Out` : `<i class="fab fa-google"></i> Sign in with Google`;
+            const statusHtml = signedIn
+                ? `<span class="dot connected"></span><span>${currentUser.email}</span>`
+                : `<span class="dot disconnected"></span><span>Not signed in</span>`;
+            if (sidebarBtn) { sidebarBtn.innerHTML = label; sidebarBtn.classList.toggle('connected', signedIn); }
+            if (sidebarStatus) sidebarStatus.innerHTML = statusHtml;
+            if (settingsBtn) settingsBtn.innerHTML = signedIn ? '<i class="fab fa-google"></i> Sign out' : '<i class="fab fa-google"></i> Sign in';
+            if (settingsStatus) settingsStatus.innerHTML = statusHtml;
+        }
+
+        // ============================================================
+        //  BROWSER NOTIFICATIONS
+        // ============================================================
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                showNotification('Not Supported', 'This browser does not support desktop notifications', 'warning');
+                return;
+            }
+            Notification.requestPermission().then(perm => {
+                updateNotificationPermissionUI();
+                if (perm === 'granted') showNotification('Enabled', 'Browser notifications are on', 'success');
+                else if (perm === 'denied') showNotification('Blocked', 'Notifications were blocked — enable them in your browser\'s site settings', 'warning');
+            });
+        }
+
+        function updateNotificationPermissionUI() {
+            const el = document.getElementById('browserNotifStatus');
+            if (!el || !('Notification' in window)) return;
+            const perm = Notification.permission;
+            el.innerHTML = perm === 'granted' ? '<span class="dot connected"></span> Enabled'
+                : perm === 'denied' ? '<span class="dot danger"></span> Blocked (check browser settings)'
+                : '<span class="dot disconnected"></span> Not enabled';
+        }
+
+        function sendBrowserNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try { new Notification(title, { body }); } catch (e) { /* ignore */ }
+            }
+        }
+
+        // ============================================================
+        //  STORAGE
+        // ============================================================
+        function loadData() {
+            try {
+                const data = localStorage.getItem('checkData');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    state.incoming = parsed.incoming || [];
+                    state.outgoing = parsed.outgoing || [];
+                }
+                state.companies = JSON.parse(localStorage.getItem('checkCompanies') || '[]');
+                state.banks = JSON.parse(localStorage.getItem('checkBanks') || '[]');
+            } catch(e) { console.error('Error loading data:', e); }
+            refreshStatuses();
+        }
+
+        // BUG FIX: statuses (pending / due_soon / due_today / overdue) were only
+        // ever calculated once, at save time. A cheque saved as "pending" never
+        // became "overdue" or "due today" on its own — the dashboard, calendar
+        // and reports all read the stale stored status. This recalculates every
+        // cheque's status (unless manually set to cleared/cancelled) every time
+        // data loads or the UI refreshes, so counts stay accurate as days pass.
+        function refreshStatuses() {
+            [...state.incoming, ...state.outgoing].forEach(c => {
+                c.status = calculateStatus(c.effectiveDate, c.status);
+            });
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('checkData', JSON.stringify({
+                    incoming: state.incoming,
+                    outgoing: state.outgoing,
+                }));
+                localStorage.setItem('checkCompanies', JSON.stringify(state.companies));
+                localStorage.setItem('checkBanks', JSON.stringify(state.banks));
+            } catch(e) { console.error('Error saving data:', e); }
+            if (!applyingRemoteUpdate) pushToFirestore();
+        }
+
+        // ============================================================
+        //  HELPERS
+        // ============================================================
+        function generateId() {
+            return 'CHK-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function isToday(dateStr) {
+            const today = new Date();
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.getFullYear() === today.getFullYear() &&
+                   d.getMonth() === today.getMonth() &&
+                   d.getDate() === today.getDate();
+        }
+
+        function isThisWeek(dateStr) {
+            const today = new Date();
+            const d = new Date(dateStr + 'T00:00:00');
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            startOfWeek.setHours(0,0,0,0);
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23,59,59,999);
+            return d >= startOfWeek && d <= endOfWeek;
+        }
+
+        function daysUntil(dateStr) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const d = new Date(dateStr + 'T00:00:00');
+            return Math.ceil((d - today) / (1000*60*60*24));
+        }
+
+        function getMonthName(month) {
+            return ['January','February','March','April','May','June','July','August','September','October','November','December'][month];
+        }
+
+        function calculateStatus(effectiveDate, currentStatus) {
+            if (currentStatus === 'cleared' || currentStatus === 'cancelled') return currentStatus;
+            const days = daysUntil(effectiveDate);
+            if (days < 0) return 'overdue';
+            if (days === 0) return 'due_today';
+            if (days <= 7) return 'due_soon';
+            return 'pending';
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                pending: 'Pending', due_soon: 'Due Soon', due_today: 'Due Today',
+                overdue: 'Overdue', cleared: 'Cleared', cancelled: 'Cancelled'
+            };
+            return labels[status] || status;
+        }
+
+        function getStatusClass(status) {
+            return status.replace('_', '-');
+        }
+
+        function getCurrencySymbol(currencyCode) {
+            const symbols = {
+                USD: '$', GHS: '₵', GBP: '£', EUR: '€', NGN: '₦', XOF: 'CFA'
+            };
+            return symbols[currencyCode] || '$';
+        }
+
+        function formatCurrency(amount, currencyCode = 'USD') {
+            return getCurrencySymbol(currencyCode) + parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // ============================================================
+        //  SOUND NOTIFICATION
+        // ============================================================
+        function playNotificationSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                oscillator.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.4);
+            } catch(e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // ============================================================
+        //  NOTIFICATIONS
+        // ============================================================
+        function showNotification(title, message, type = 'info', playSound = false) {
+            if (playSound) playNotificationSound();
+            const container = document.getElementById('notificationContainer');
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.innerHTML = `
+                <div class="notification-icon"><i class="fas ${icons[type] || icons.info}"></i></div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+                <button class="notification-close"><i class="fas fa-times"></i></button>
+            `;
+            notif.querySelector('.notification-close').addEventListener('click', () => notif.remove());
+            container.appendChild(notif);
+            setTimeout(() => { if (notif.parentNode) notif.remove(); }, 6000);
+        }
+
+        // ============================================================
+        //  COMPANY & BANK LISTS
+        // ============================================================
+        function addCompany(name) {
+            if (!name) return;
+            const trimmed = name.trim();
+            if (trimmed && !state.companies.includes(trimmed)) {
+                state.companies.push(trimmed);
+                state.companies.sort();
+                saveData();
+                updateCompanyDatalist();
+            }
+        }
+
+        function addBank(name) {
+            if (!name) return;
+            const trimmed = name.trim();
+            if (trimmed && !state.banks.includes(trimmed)) {
+                state.banks.push(trimmed);
+                state.banks.sort();
+                saveData();
+                updateBankDatalist();
+            }
+        }
+
+        function updateCompanyDatalist() {
+            const datalist = document.getElementById('companyList');
+            datalist.innerHTML = state.companies.map(c => `<option value="${c}">`).join('');
+        }
+
+        function updateBankDatalist() {
+            const datalist = document.getElementById('bankList');
+            datalist.innerHTML = state.banks.map(b => `<option value="${b}">`).join('');
+        }
+
+        // ============================================================
+        //  NAVIGATION
+        // ============================================================
+        function navigateTo(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(`page-${page}`);
+            if (target) target.classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.toggle('active', link.dataset.page === page);
+            });
+            state.currentPage = page;
+            if (page === 'dashboard') updateDashboard();
+            if (page === 'incoming') renderIncomingTable();
+            if (page === 'outgoing') renderOutgoingTable();
+            if (page === 'calendar') renderCalendar();
+            if (page === 'reports') generateReport('outstanding');
+            document.getElementById('sidebar').classList.remove('open');
+        }
+
+        // ============================================================
+        //  DASHBOARD (AUTO TOTALS)
+        // ============================================================
+        function updateDashboard() {
+            const incoming = state.incoming;
+            const outgoing = state.outgoing;
+            const allChecks = [...incoming, ...outgoing];
+            const today = new Date().toISOString().split('T')[0];
+
+            const received = incoming.filter(c => c.status !== 'cancelled');
+            const sent = outgoing.filter(c => c.status !== 'cancelled');
+            const dueToday = allChecks.filter(c =>
+                c.status !== 'cleared' && c.status !== 'cancelled' && c.effectiveDate === today
+            );
+            const dueThisWeek = allChecks.filter(c =>
+                c.status !== 'cleared' && c.status !== 'cancelled' &&
+                isThisWeek(c.effectiveDate) && c.effectiveDate !== today
+            );
+            const overdue = allChecks.filter(c =>
+                c.status === 'overdue' && c.status !== 'cleared' && c.status !== 'cancelled'
+            );
+            const cleared = allChecks.filter(c => c.status === 'cleared');
+
+            // Auto-calculate totals by currency
+            const totalsByCurrency = (checks) => {
+                const totals = {};
+                checks.forEach(c => {
+                    const cur = c.currency || 'USD';
+                    if (!totals[cur]) totals[cur] = 0;
+                    totals[cur] += parseFloat(c.amount);
+                });
+                return totals;
+            };
+
+            const receivedTotals = totalsByCurrency(received);
+            const sentTotals = totalsByCurrency(sent);
+            const dueTodayTotals = totalsByCurrency(dueToday);
+            const dueThisWeekTotals = totalsByCurrency(dueThisWeek);
+            const overdueTotals = totalsByCurrency(overdue);
+            const clearedTotals = totalsByCurrency(cleared);
+
+            const formatTotals = (totals) => {
+                const entries = Object.entries(totals);
+                if (entries.length === 0) return '$0.00';
+                return entries.map(([cur, amt]) => formatCurrency(amt, cur)).join(' + ');
+            };
+
+            document.getElementById('totalReceived').textContent = received.length;
+            document.getElementById('totalReceivedAmount').textContent = formatTotals(receivedTotals);
+            document.getElementById('totalSent').textContent = sent.length;
+            document.getElementById('totalSentAmount').textContent = formatTotals(sentTotals);
+            document.getElementById('dueToday').textContent = dueToday.length;
+            document.getElementById('dueTodayAmount').textContent = formatTotals(dueTodayTotals);
+            document.getElementById('dueThisWeek').textContent = dueThisWeek.length;
+            document.getElementById('dueThisWeekAmount').textContent = formatTotals(dueThisWeekTotals);
+            document.getElementById('overdueCount').textContent = overdue.length;
+            document.getElementById('overdueAmount').textContent = formatTotals(overdueTotals);
+            document.getElementById('clearedCount').textContent = cleared.length;
+            document.getElementById('clearedAmount').textContent = formatTotals(clearedTotals);
+
+            const totalDue = dueToday.length + dueThisWeek.length + overdue.length;
+            document.getElementById('navBadge').textContent = totalDue;
+            document.getElementById('incomingBadge').textContent = received.length;
+            document.getElementById('outgoingBadge').textContent = sent.length;
+
+            const sorted = [...allChecks].sort((a,b) => {
+                const da = a.receivedDate || a.sentDate || a.effectiveDate;
+                const db = b.receivedDate || b.sentDate || b.effectiveDate;
+                return new Date(db) - new Date(da);
+            }).slice(0, 10);
+
+            const container = document.getElementById('recentActivity');
+            if (sorted.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>No recent activity</p></div>`;
+            } else {
+                container.innerHTML = sorted.map(check => {
+                    const isIncoming = state.incoming.some(c => c.id === check.id);
+                    const type = isIncoming ? 'incoming' : 'outgoing';
+                    const icon = isIncoming ? 'fa-arrow-down' : 'fa-arrow-up';
+                    const label = isIncoming ? 'Payment from' : 'Payment to';
+                    const date = check.receivedDate || check.sentDate || check.effectiveDate;
+                    return `
+                        <div class="activity-item">
+                            <div class="activity-dot ${type}"><i class="fas ${icon}"></i></div>
+                            <div class="activity-content">
+                                <div class="title">
+                                    <strong>${check.company}</strong> ${label} cheque ${check.checkNumber}
+                                    <span class="status-badge ${getStatusClass(check.status)}">
+                                        <span class="dot"></span> ${getStatusLabel(check.status)}
+                                    </span>
+                                </div>
+                                <div class="meta">${formatCurrency(check.amount, check.currency)} • ${formatDate(date)}${check.recipient ? ' • ' + check.recipient : ''}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            checkDueNotifications();
+        }
+
+        // ============================================================
+        //  DUE NOTIFICATIONS
+        // ============================================================
+        // BUG FIX: this used to only fire while state.calendarConnected was
+        // true — a flag that lives only in memory and resets to false on
+        // every page load/refresh — so alerts effectively never appeared
+        // unless you happened to click "Connect Calendar" in that session.
+        // It also ignored the Reminder Schedule checkboxes entirely and
+        // could re-notify for the same cheque on every re-render. This
+        // version runs on every load, honors the checked reminder days, and
+        // remembers what it has already shown (per cheque + day) so it
+        // doesn't repeat itself.
+        let notifiedKeys = new Set(JSON.parse(localStorage.getItem('checkNotifiedKeys') || '[]'));
+
+        function getReminderDays() {
+            const boxes = document.querySelectorAll('.reminder-checkboxes input[type="checkbox"]');
+            const dayForBox = [7, 3, 1, 0]; // matches the four checkboxes in Settings, in order
+            const days = [];
+            boxes.forEach((box, i) => { if (box.checked) days.push(dayForBox[i]); });
+            return days;
+        }
+
+        function checkDueNotifications() {
+            const all = [...state.incoming, ...state.outgoing];
+            const reminderDays = getReminderDays();
+            if (reminderDays.length === 0) return;
+            let firstOfBatch = true;
+            all.forEach(c => {
+                if (c.status === 'cleared' || c.status === 'cancelled') return;
+                const remaining = daysUntil(c.effectiveDate);
+                if (!reminderDays.includes(remaining)) return;
+                const key = `${c.id}:${c.effectiveDate}:${remaining}`;
+                if (notifiedKeys.has(key)) return;
+                notifiedKeys.add(key);
+                const isIncoming = state.incoming.some(i => i.id === c.id);
+                const who = isIncoming ? 'Customer payment' : 'Supplier payment';
+                const when = remaining === 0 ? 'is due today' : `is due in ${remaining} day${remaining === 1 ? '' : 's'}`;
+                const msg = `${who} — ${c.company} cheque #${c.checkNumber} for ${formatCurrency(c.amount, c.currency)} ${when}`;
+                showNotification(remaining === 0 ? '⏰ Cheque Due Today' : '📅 Cheque Reminder', msg, remaining === 0 ? 'warning' : 'info', firstOfBatch);
+                sendBrowserNotification(remaining === 0 ? 'Cheque Due Today' : 'Cheque Reminder', msg);
+                firstOfBatch = false;
+            });
+            localStorage.setItem('checkNotifiedKeys', JSON.stringify([...notifiedKeys]));
+        }
+
+        // ============================================================
+        //  TABLES
+        // ============================================================
+        function renderIncomingTable() {
+            const tbody = document.getElementById('incomingTableBody');
+            let checks = state.incoming;
+            if (state.incomingFilterOutstanding) {
+                checks = checks.filter(c => c.status !== 'cleared' && c.status !== 'cancelled');
+            }
+            if (checks.length === 0) {
+                const msg = state.incomingFilterOutstanding ? 'No outstanding customer payments' : 'No customer payments recorded yet';
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><span>${msg}</span></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = checks.map(c => `
+                <tr>
+                    <td class="text-mono">${c.id}</td>
+                    <td><strong>${c.company}</strong></td>
+                    <td>${formatDate(c.receivedDate)}</td>
+                    <td>${formatDate(c.effectiveDate)}</td>
+                    <td class="text-mono">${c.checkNumber}</td>
+                    <td>${c.bank || '-'}</td>
+                    <td><strong>${formatCurrency(c.amount, c.currency)}</strong></td>
+                    <td><span class="status-badge ${getStatusClass(c.status)}"><span class="dot"></span>${getStatusLabel(c.status)}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn view" onclick="viewCheck('${c.id}','incoming')"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn edit" onclick="editCheck('${c.id}','incoming')"><i class="fas fa-pen"></i></button>
+                            <button class="action-btn delete" onclick="deleteCheck('${c.id}','incoming')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderOutgoingTable() {
+            const tbody = document.getElementById('outgoingTableBody');
+            let checks = state.outgoing;
+            if (state.outgoingFilterOutstanding) {
+                checks = checks.filter(c => c.status !== 'cleared' && c.status !== 'cancelled');
+            }
+            if (checks.length === 0) {
+                const msg = state.outgoingFilterOutstanding ? 'No outstanding supplier payments' : 'No supplier payments recorded yet';
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><span>${msg}</span></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = checks.map(c => `
+                <tr>
+                    <td class="text-mono">${c.id}</td>
+                    <td><strong>${c.company}</strong></td>
+                    <td>${c.recipient || '-'}</td>
+                    <td>${c.phone || '-'}</td>
+                    <td><strong>${formatCurrency(c.amount, c.currency)}</strong></td>
+                    <td>${formatDate(c.effectiveDate)}</td>
+                    <td class="text-mono">${c.checkNumber}</td>
+                    <td><span class="status-badge ${getStatusClass(c.status)}"><span class="dot"></span>${getStatusLabel(c.status)}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn view" onclick="viewCheck('${c.id}','outgoing')"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn edit" onclick="editCheck('${c.id}','outgoing')"><i class="fas fa-pen"></i></button>
+                            <button class="action-btn delete" onclick="deleteCheck('${c.id}','outgoing')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ============================================================
+        //  CALENDAR
+        // ============================================================
+        function renderCalendar() {
+            const { currentMonth, currentYear } = state;
+            const grid = document.getElementById('calendarGrid');
+            document.getElementById('currentMonthYear').textContent = `${getMonthName(currentMonth)} ${currentYear}`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+            let allChecks = [...state.incoming, ...state.outgoing];
+            if (state.calendarFilter === 'incoming') allChecks = state.incoming;
+            else if (state.calendarFilter === 'outgoing') allChecks = state.outgoing;
+
+            if (state.calendarStatusFilter !== 'all') {
+                allChecks = allChecks.filter(c => c.status === state.calendarStatusFilter);
+            }
+            if (state.calendarSearch) {
+                const s = state.calendarSearch.toLowerCase();
+                allChecks = allChecks.filter(c =>
+                    c.company.toLowerCase().includes(s) ||
+                    (c.recipient && c.recipient.toLowerCase().includes(s))
+                );
+            }
+
+            const byDate = {};
+            allChecks.forEach(c => {
+                const d = c.effectiveDate;
+                if (!byDate[d]) byDate[d] = [];
+                byDate[d].push(c);
+            });
+
+            let html = `
+                <div class="calendar-weekdays">
+                    ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<div class="calendar-weekday">${d}</div>`).join('')}
+                </div>
+                <div class="calendar-days">
+            `;
+
+            for (let i = firstDay - 1; i >= 0; i--) {
+                html += `<div class="calendar-day other-month"><div class="day-number">${daysInPrevMonth - i}</div></div>`;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const isToday = dateStr === today;
+                const dayChecks = byDate[dateStr] || [];
+                html += `
+                    <div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateStr}">
+                        <div class="day-number">${day}</div>
+                        <div class="day-events">
+                            ${dayChecks.slice(0,4).map(ch => {
+                                const isIncoming = state.incoming.some(i => i.id === ch.id);
+                                let eventClass = '';
+                                let icon = '';
+                                if (ch.status === 'cleared') {
+                                    eventClass = 'cleared';
+                                    icon = '<i class="fas fa-check" style="font-size:8px;"></i>';
+                                } else if (ch.status === 'overdue') {
+                                    eventClass = 'overdue';
+                                    icon = '<i class="fas fa-exclamation" style="font-size:8px;"></i>';
+                                } else if (ch.status === 'cancelled') {
+                                    eventClass = 'cancelled';
+                                    icon = '<i class="fas fa-ban" style="font-size:8px;"></i>';
+                                } else if (isIncoming) {
+                                    eventClass = 'received';
+                                    icon = '<i class="fas fa-arrow-down" style="font-size:8px;"></i>';
+                                } else {
+                                    eventClass = 'sent';
+                                    icon = '<i class="fas fa-arrow-up" style="font-size:8px;"></i>';
+                                }
+                                return `<div class="day-event ${eventClass}">${icon}<span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${ch.company} ${formatCurrency(ch.amount, ch.currency)}</span></div>`;
+                            }).join('')}
+                            ${dayChecks.length > 4 ? `<div class="day-event" style="font-size:9px;color:var(--gray-400);justify-content:center;">+${dayChecks.length - 4} more</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const totalDays = firstDay + daysInMonth;
+            for (let day = 1; day <= 42 - totalDays; day++) {
+                html += `<div class="calendar-day other-month"><div class="day-number">${day}</div></div>`;
+            }
+
+            html += '</div>';
+            grid.innerHTML = html;
+
+            grid.querySelectorAll('.calendar-day:not(.other-month)').forEach(el => {
+                el.addEventListener('click', () => showChecksForDate(el.dataset.date));
+            });
+        }
+
+        function showChecksForDate(date) {
+            const all = [...state.incoming, ...state.outgoing];
+            const checks = all.filter(c => c.effectiveDate === date);
+            if (checks.length === 0) {
+                showNotification('No Cheques', `No cheques due on ${formatDate(date)}`, 'info');
+                return;
+            }
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('detailContent');
+            content.innerHTML = `
+                <h4 style="margin-bottom:16px;">Cheques Due on ${formatDate(date)}</h4>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    ${checks.map(c => {
+                        const isIncoming = state.incoming.some(i => i.id === c.id);
+                        const typeLabel = isIncoming ? 'Received from Customer' : 'Sent to Supplier';
+                        const typeColor = isIncoming ? 'var(--primary)' : 'var(--warning)';
+                        return `
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--gray-50);border-radius:var(--radius-sm);border-left:4px solid ${typeColor};">
+                                <div>
+                                    <span style="font-size:11px;font-weight:600;color:${typeColor};text-transform:uppercase;">${typeLabel}</span>
+                                    <br><strong>${c.company}</strong>${c.recipient ? ' → ' + c.recipient : ''}
+                                    <br><span style="font-size:13px;color:var(--gray-500);">Cheque #${c.checkNumber} • ${c.bank || 'No bank'}</span>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-weight:700;font-size:18px;">${formatCurrency(c.amount, c.currency)}</div>
+                                    <span class="status-badge ${getStatusClass(c.status)}"><span class="dot"></span>${getStatusLabel(c.status)}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div style="margin-top:16px;text-align:right;">
+                    <button class="btn-secondary" onclick="document.getElementById('detailModal').classList.remove('active')">Close</button>
+                </div>
+            `;
+            modal.classList.add('active');
+        }
+
+        // ============================================================
+        //  CRUD
+        // ============================================================
+        function openCheckModal(type, data = null) {
+            const modal = document.getElementById('checkModal');
+            const form = document.getElementById('checkForm');
+            const isIncoming = type === 'incoming';
+            document.getElementById('modalTitle').textContent = data 
+                ? `Edit ${isIncoming ? 'Customer Payment' : 'Supplier Payment'}` 
+                : `New ${isIncoming ? 'Customer Payment' : 'Supplier Payment'}`;
+            document.getElementById('checkType').value = type;
+            document.getElementById('checkId').value = data ? data.id : '';
+            form.reset();
+
+            // Set labels based on type
+            document.getElementById('companyLabel').innerHTML = isIncoming 
+                ? 'Customer Name <span class="required">*</span>' 
+                : 'Supplier Name <span class="required">*</span>';
+            document.getElementById('formCompany').placeholder = isIncoming 
+                ? 'Enter customer name' 
+                : 'Enter supplier name';
+
+            document.getElementById('recipientGroup').style.display = isIncoming ? 'none' : 'block';
+            document.getElementById('phoneGroup').style.display = isIncoming ? 'none' : 'block';
+            document.getElementById('receivedDateGroup').style.display = isIncoming ? 'block' : 'none';
+            document.getElementById('sentDateGroup').style.display = isIncoming ? 'none' : 'block';
+
+            if (data) {
+                document.getElementById('formCompany').value = data.company || '';
+                document.getElementById('formRecipient').value = data.recipient || '';
+                document.getElementById('formPhone').value = data.phone || '';
+                document.getElementById('formAmount').value = data.amount || '';
+                document.getElementById('formCheckNumber').value = data.checkNumber || '';
+                document.getElementById('formBank').value = data.bank || '';
+                document.getElementById('formEffectiveDate').value = data.effectiveDate || '';
+                document.getElementById('formReceivedDate').value = data.receivedDate || '';
+                document.getElementById('formSentDate').value = data.sentDate || '';
+                document.getElementById('formCurrency').value = data.currency || 'USD';
+                document.getElementById('formStatus').value = data.status || 'pending';
+            } else {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('formEffectiveDate').value = today;
+                if (isIncoming) document.getElementById('formReceivedDate').value = today;
+                else document.getElementById('formSentDate').value = today;
+                document.getElementById('formStatus').value = 'pending';
+                document.getElementById('formCurrency').value = 'USD';
+            }
+            updateCurrencySymbol();
+            modal.classList.add('active');
+        }
+
+        function closeCheckModal() {
+            document.getElementById('checkModal').classList.remove('active');
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function updateCurrencySymbol() {
+            const currency = document.getElementById('formCurrency').value;
+            document.getElementById('currencySymbol').textContent = getCurrencySymbol(currency);
+        }
+
+        function saveCheck(e) {
+            e.preventDefault();
+            const type = document.getElementById('checkType').value;
+            const id = document.getElementById('checkId').value;
+            const isIncoming = type === 'incoming';
+
+            const data = {
+                company: document.getElementById('formCompany').value.trim(),
+                recipient: document.getElementById('formRecipient').value.trim(),
+                phone: document.getElementById('formPhone').value.trim(),
+                amount: parseFloat(document.getElementById('formAmount').value),
+                checkNumber: document.getElementById('formCheckNumber').value.trim(),
+                bank: document.getElementById('formBank').value.trim(),
+                effectiveDate: document.getElementById('formEffectiveDate').value,
+                status: document.getElementById('formStatus').value,
+                currency: document.getElementById('formCurrency').value,
+            };
+
+            if (!data.company || !data.amount || !data.checkNumber || !data.effectiveDate) {
+                showNotification('Validation Error', 'Please fill in all required fields', 'error');
+                return;
+            }
+
+            // Add company and bank to lists
+            addCompany(data.company);
+            if (data.bank) addBank(data.bank);
+
+            if (isIncoming) {
+                data.receivedDate = document.getElementById('formReceivedDate').value || data.effectiveDate;
+            } else {
+                data.sentDate = document.getElementById('formSentDate').value || data.effectiveDate;
+            }
+
+            // Auto-calculate status based on effective date
+            if (data.status !== 'cleared' && data.status !== 'cancelled') {
+                data.status = calculateStatus(data.effectiveDate, data.status);
+            }
+
+            const collection = isIncoming ? state.incoming : state.outgoing;
+
+            if (id) {
+                const idx = collection.findIndex(c => c.id === id);
+                if (idx !== -1) {
+                    collection[idx] = { ...collection[idx], ...data };
+                    showNotification('Success', `${isIncoming ? 'Customer payment' : 'Supplier payment'} updated`, 'success');
+                }
+            } else {
+                data.id = generateId();
+                data.createdAt = new Date().toISOString();
+                collection.push(data);
+                showNotification('Success', `${isIncoming ? 'Customer payment' : 'Supplier payment'} added`, 'success');
+            }
+
+            saveData();
+            closeCheckModal();
+            updateUI();
+        }
+
+        function viewCheck(id, type) {
+            const collection = type === 'incoming' ? state.incoming : state.outgoing;
+            const c = collection.find(item => item.id === id);
+            if (!c) return;
+
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('detailContent');
+            const isIncoming = type === 'incoming';
+
+            content.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div><div style="font-size:12px;color:var(--gray-400);">ID</div><div style="font-weight:600;font-family:monospace;">${c.id}</div></div>
+                    <div><div style="font-size:12px;color:var(--gray-400);">Status</div><span class="status-badge ${getStatusClass(c.status)}"><span class="dot"></span>${getStatusLabel(c.status)}</span></div>
+                    <div><div style="font-size:12px;color:var(--gray-400);">${isIncoming ? 'Customer' : 'Supplier'}</div><div style="font-weight:600;">${c.company}</div></div>
+                    ${!isIncoming ? `
+                        <div><div style="font-size:12px;color:var(--gray-400);">Recipient</div><div style="font-weight:600;">${c.recipient || '-'}</div></div>
+                        <div><div style="font-size:12px;color:var(--gray-400);">Phone</div><div>${c.phone || '-'}</div></div>
+                    ` : ''}
+                    <div><div style="font-size:12px;color:var(--gray-400);">Amount</div><div style="font-weight:700;font-size:20px;color:var(--primary);">${formatCurrency(c.amount, c.currency)}</div></div>
+                    <div><div style="font-size:12px;color:var(--gray-400);">Currency</div><div>${c.currency || 'USD'}</div></div>
+                    <div><div style="font-size:12px;color:var(--gray-400);">Check Number</div><div style="font-weight:600;font-family:monospace;">${c.checkNumber}</div></div>
+                    <div><div style="font-size:12px;color:var(--gray-400);">Bank</div><div>${c.bank || '-'}</div></div>
+                    <div><div style="font-size:12px;color:var(--gray-400);">Effective Date</div><div style="font-weight:600;">${formatDate(c.effectiveDate)}</div></div>
+                    ${isIncoming ? `
+                        <div><div style="font-size:12px;color:var(--gray-400);">Received Date</div><div>${formatDate(c.receivedDate)}</div></div>
+                    ` : `
+                        <div><div style="font-size:12px;color:var(--gray-400);">Date Sent</div><div>${formatDate(c.sentDate)}</div></div>
+                    `}
+                    <div style="grid-column:1/-1;padding-top:16px;border-top:1px solid var(--gray-200);display:flex;gap:12px;flex-wrap:wrap;">
+                        <button class="btn-secondary" onclick="document.getElementById('detailModal').classList.remove('active')">Close</button>
+                        <button class="btn-outline" onclick="document.getElementById('detailModal').classList.remove('active');editCheck('${c.id}','${type}')"><i class="fas fa-pen"></i> Edit</button>
+                        ${c.status !== 'cleared' ? `<button class="btn-primary" onclick="markCleared('${c.id}','${type}')"><i class="fas fa-check"></i> Mark Cleared</button>` : ''}
+                        ${c.status !== 'cancelled' ? `<button class="btn-danger" onclick="markCancelled('${c.id}','${type}')"><i class="fas fa-times"></i> Mark Cancelled</button>` : ''}
+                    </div>
+                </div>
+            `;
+            modal.classList.add('active');
+        }
+
+        function editCheck(id, type) {
+            const collection = type === 'incoming' ? state.incoming : state.outgoing;
+            const c = collection.find(item => item.id === id);
+            if (c) openCheckModal(type, c);
+        }
+
+        function deleteCheck(id, type) {
+            if (!confirm('Are you sure you want to delete this cheque?')) return;
+            const collection = type === 'incoming' ? state.incoming : state.outgoing;
+            const idx = collection.findIndex(c => c.id === id);
+            if (idx !== -1) {
+                collection.splice(idx, 1);
+                saveData();
+                updateUI();
+                showNotification('Deleted', 'Cheque has been deleted', 'success');
+            }
+        }
+
+        function markCleared(id, type) {
+            const collection = type === 'incoming' ? state.incoming : state.outgoing;
+            const c = collection.find(item => item.id === id);
+            if (c) {
+                c.status = 'cleared';
+                saveData();
+                updateUI();
+                showNotification('Cleared', `Cheque #${c.checkNumber} marked as cleared`, 'success', true);
+                document.getElementById('detailModal').classList.remove('active');
+            }
+        }
+
+        function markCancelled(id, type) {
+            const collection = type === 'incoming' ? state.incoming : state.outgoing;
+            const c = collection.find(item => item.id === id);
+            if (c) {
+                c.status = 'cancelled';
+                saveData();
+                updateUI();
+                showNotification('Cancelled', `Cheque #${c.checkNumber} cancelled`, 'warning');
+                document.getElementById('detailModal').classList.remove('active');
+            }
+        }
+
+        // ============================================================
+        //  REPORTS
+        // ============================================================
+        function generateReport(type) {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const results = document.getElementById('reportResults');
+            const content = document.getElementById('reportContent');
+
+            let data = [];
+            let title = '';
+
+            switch(type) {
+                case 'received-monthly': data = getMonthlyData(state.incoming, startDate, endDate); title = 'Customer Payments by Month'; break;
+                case 'sent-monthly': data = getMonthlyData(state.outgoing, startDate, endDate); title = 'Supplier Payments by Month'; break;
+                case 'total-received': data = getTotalData(state.incoming, startDate, endDate); title = 'Total Received'; break;
+                case 'total-sent': data = getTotalData(state.outgoing, startDate, endDate); title = 'Total Sent'; break;
+                case 'outstanding': data = getOutstandingData(startDate, endDate); title = 'Outstanding Cheques'; break;
+                case 'overdue': data = getOverdueData(startDate, endDate); title = 'Overdue Cheques'; break;
+                case 'cleared': data = getClearedData(startDate, endDate); title = 'Cleared Cheques'; break;
+                case 'by-company': data = getByCompanyData(startDate, endDate); title = 'Cheques by Customer/Supplier'; break;
+                default: return;
+            }
+
+            results.style.display = 'block';
+            state.lastReport = { title, data };
+            if (data.length === 0) {
+                content.innerHTML = `<div class="empty-state"><i class="fas fa-chart-bar"></i><p>No data found</p></div>`;
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+            content.innerHTML = `
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead><tr>${headers.map(h => `<th>${h.replace(/_/g,' ').toUpperCase()}</th>`).join('')}</tr></thead>
+                        <tbody>${data.map(row => `<tr>${headers.map(h => `<td>${row[h] || '-'}</td>`).join('')}</tr>`).join('')}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getMonthlyData(collection, startDate, endDate) {
+            const filtered = filterByDate(collection, startDate, endDate);
+            const monthly = {};
+            filtered.forEach(c => {
+                const d = new Date(c.effectiveDate);
+                const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                if (!monthly[key]) monthly[key] = { month: key, count: 0, totals: {} };
+                monthly[key].count++;
+                const cur = c.currency || 'USD';
+                if (!monthly[key].totals[cur]) monthly[key].totals[cur] = 0;
+                monthly[key].totals[cur] += parseFloat(c.amount);
+            });
+            return Object.values(monthly).map(m => {
+                const totalStr = Object.entries(m.totals).map(([cur, amt]) => formatCurrency(amt, cur)).join(' + ');
+                return {
+                    Month: m.month,
+                    'Number of Cheques': m.count,
+                    'Total Amount': totalStr
+                };
+            });
+        }
+
+        function getTotalData(collection, startDate, endDate) {
+            const filtered = filterByDate(collection, startDate, endDate);
+            const totals = {};
+            filtered.forEach(c => {
+                const cur = c.currency || 'USD';
+                if (!totals[cur]) totals[cur] = 0;
+                totals[cur] += parseFloat(c.amount);
+            });
+            const totalStr = Object.entries(totals).map(([cur, amt]) => formatCurrency(amt, cur)).join(' + ') || '$0.00';
+            return [{
+                'Total Cheques': filtered.length,
+                'Total Amount': totalStr
+            }];
+        }
+
+        function getOutstandingData(startDate, endDate) {
+            const all = [...state.incoming, ...state.outgoing];
+            const filtered = filterByDate(all, startDate, endDate);
+            // BUG FIX: previously compared effectiveDate to "now" (with a time
+            // component), which silently dropped overdue cheques from the
+            // Outstanding report and could mis-classify today's cheques near
+            // midnight depending on timezone. "Outstanding" should mean
+            // anything not yet cleared/cancelled, overdue included.
+            const outstanding = filtered.filter(c =>
+                c.status !== 'cleared' && c.status !== 'cancelled'
+            );
+            return outstanding.map(c => {
+                const isIncoming = state.incoming.some(i => i.id === c.id);
+                return {
+                    Type: isIncoming ? 'Customer Payment' : 'Supplier Payment',
+                    'Customer/Supplier': c.company,
+                    'Cheque No.': c.checkNumber,
+                    Amount: formatCurrency(c.amount, c.currency),
+                    'Due Date': formatDate(c.effectiveDate),
+                    Status: getStatusLabel(c.status)
+                };
+            });
+        }
+
+        function getOverdueData(startDate, endDate) {
+            const all = [...state.incoming, ...state.outgoing];
+            const filtered = filterByDate(all, startDate, endDate);
+            const overdue = filtered.filter(c => c.status === 'overdue');
+            return overdue.map(c => {
+                const isIncoming = state.incoming.some(i => i.id === c.id);
+                return {
+                    Type: isIncoming ? 'Customer Payment' : 'Supplier Payment',
+                    'Customer/Supplier': c.company,
+                    'Cheque No.': c.checkNumber,
+                    Amount: formatCurrency(c.amount, c.currency),
+                    'Due Date': formatDate(c.effectiveDate),
+                    'Days Overdue': Math.abs(daysUntil(c.effectiveDate))
+                };
+            });
+        }
+
+        function getClearedData(startDate, endDate) {
+            const all = [...state.incoming, ...state.outgoing];
+            const filtered = filterByDate(all, startDate, endDate);
+            const cleared = filtered.filter(c => c.status === 'cleared');
+            const totals = {};
+            cleared.forEach(c => {
+                const cur = c.currency || 'USD';
+                if (!totals[cur]) totals[cur] = 0;
+                totals[cur] += parseFloat(c.amount);
+            });
+            const totalStr = Object.entries(totals).map(([cur, amt]) => formatCurrency(amt, cur)).join(' + ') || '$0.00';
+            return [{ 'Cleared Cheques': cleared.length, 'Total Amount': totalStr }];
+        }
+
+        function getByCompanyData(startDate, endDate) {
+            const all = [...state.incoming, ...state.outgoing];
+            const filtered = filterByDate(all, startDate, endDate);
+            const companies = {};
+            filtered.forEach(c => {
+                if (!companies[c.company]) companies[c.company] = { count: 0, totals: {} };
+                companies[c.company].count++;
+                const cur = c.currency || 'USD';
+                if (!companies[c.company].totals[cur]) companies[c.company].totals[cur] = 0;
+                companies[c.company].totals[cur] += parseFloat(c.amount);
+            });
+            return Object.entries(companies).map(([name, d]) => ({
+                'Customer/Supplier': name,
+                'Number of Cheques': d.count,
+                'Total Amount': Object.entries(d.totals).map(([cur, amt]) => formatCurrency(amt, cur)).join(' + ')
+            }));
+        }
+
+        function filterByDate(collection, startDate, endDate) {
+            if (!startDate && !endDate) return collection;
+            return collection.filter(c => {
+                const d = c.effectiveDate;
+                if (startDate && d < startDate) return false;
+                if (endDate && d > endDate) return false;
+                return true;
+            });
+        }
+
+        // ============================================================
+        //  EXPORT
+        // ============================================================
+        // BUG FIX: values were joined into CSV rows with a plain comma, so any
+        // company/recipient/bank name containing a comma (or a quote, or a
+        // line break) silently corrupted the file — fields shifted into the
+        // wrong column when opened in Excel/Sheets. csvEscape() quotes any
+        // field that needs it, per the CSV spec.
+        function csvEscape(value) {
+            const str = String(value ?? '');
+            if (/[",\n]/.test(str)) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+
+        function exportData(type) {
+            const collection = type === 'incoming' ? state.incoming : state.outgoing;
+            if (collection.length === 0) {
+                showNotification('Nothing to Export', 'There is no data in this list yet', 'warning');
+                return;
+            }
+            const data = collection.map(c => ({
+                ID: c.id,
+                Company: c.company,
+                Recipient: c.recipient || '',
+                Phone: c.phone || '',
+                Amount: c.amount,
+                Currency: c.currency || 'USD',
+                'Cheque Number': c.checkNumber,
+                Bank: c.bank || '',
+                'Effective Date': c.effectiveDate,
+                'Received/Sent Date': c.receivedDate || c.sentDate || '',
+                Status: getStatusLabel(c.status)
+            }));
+            const csv = [
+                Object.keys(data[0]).map(csvEscape).join(','),
+                ...data.map(row => Object.values(row).map(csvEscape).join(','))
+            ].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${type}-cheques-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Exported', `${type} cheques exported`, 'success');
+        }
+
+        // BUG FIX: this "Export" button next to Report Results rendered onto
+        // the page but had no click handler at all, so nothing happened.
+        // It now exports whatever report is currently on screen as a CSV.
+        function exportReportToCSV() {
+            if (!state.lastReport || state.lastReport.data.length === 0) {
+                showNotification('Nothing to Export', 'Generate a report first', 'warning');
+                return;
+            }
+            const { title, data } = state.lastReport;
+            const headers = Object.keys(data[0]);
+            const csv = [
+                headers.map(csvEscape).join(','),
+                ...data.map(row => headers.map(h => csvEscape(row[h])).join(','))
+            ].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Exported', `${title} report exported`, 'success');
+        }
+
+        // BUG FIX: "Import Data" button had no click handler — it did nothing.
+        // This restores a JSON file previously produced by "Export All Data".
+        function importDataFromFile(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!Array.isArray(parsed.incoming) || !Array.isArray(parsed.outgoing)) {
+                        throw new Error('Missing incoming/outgoing arrays');
+                    }
+                    state.incoming = parsed.incoming;
+                    state.outgoing = parsed.outgoing;
+                    state.companies = Array.isArray(parsed.companies) ? parsed.companies : state.companies;
+                    state.banks = Array.isArray(parsed.banks) ? parsed.banks : state.banks;
+                    saveData();
+                    updateUI();
+                    showNotification('Imported', 'Data imported successfully', 'success');
+                } catch (err) {
+                    console.error('Import error:', err);
+                    showNotification('Import Failed', 'That file is not a valid export from this app', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportAllData() {
+            const data = {
+                incoming: state.incoming,
+                outgoing: state.outgoing,
+                companies: state.companies,
+                banks: state.banks,
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cheque-data-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Exported', 'All data exported', 'success');
+        }
+
+        // ============================================================
+        //  UPDATE UI
+        // ============================================================
+        function updateUI() {
+            refreshStatuses();
+            updateDashboard();
+            renderIncomingTable();
+            renderOutgoingTable();
+            renderCalendar();
+            updateCompanyDatalist();
+            updateBankDatalist();
+            saveData();
+        }
+
+        // ============================================================
+        //  GOOGLE CALENDAR (Firebase-like stub)
+        // ============================================================
+        function toggleCalendar() {
+            const btn = document.getElementById('connectCalendarBtn');
+            const status = document.querySelector('.connection-status');
+            const dot = status.querySelector('.dot');
+            if (btn.classList.contains('connected')) {
+                btn.classList.remove('connected');
+                btn.innerHTML = '<i class="fab fa-google"></i> Connect Calendar';
+                dot.className = 'dot disconnected';
+                status.querySelector('span:last-child').textContent = 'Disconnected';
+                document.getElementById('settingsCalendarStatus').innerHTML = '<span class="dot disconnected"></span> Not Connected';
+                state.calendarConnected = false;
+                showNotification('Disconnected', 'Google Calendar disconnected', 'info');
+            } else {
+                btn.classList.add('connected');
+                btn.innerHTML = '<i class="fas fa-check"></i> Connected';
+                dot.className = 'dot connected';
+                status.querySelector('span:last-child').textContent = 'Connected';
+                document.getElementById('settingsCalendarStatus').innerHTML = '<span class="dot connected"></span> Connected';
+                state.calendarConnected = true;
+                showNotification('Connected', 'Google Calendar connected. You will receive notifications with sound.', 'success', true);
+                checkDueNotifications();
+            }
+        }
+
+        // ============================================================
+        //  INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            updateUI();
+            updateGoogleSignInUI();
+            updateNotificationPermissionUI();
+
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', {
+                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+            });
+
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            document.getElementById('reportStartDate').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('reportEndDate').value = lastDay.toISOString().split('T')[0];
+
+            generateReport('outstanding');
+        });
+
+        // ============================================================
+        //  EVENT LISTENERS
+        // ============================================================
+
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                navigateTo(link.dataset.page);
+            });
+        });
+
+        // Mobile menu
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // Add check
+        document.getElementById('btnAddCheck').addEventListener('click', () => {
+            const page = state.currentPage;
+            if (page === 'incoming') openCheckModal('incoming');
+            else if (page === 'outgoing') openCheckModal('outgoing');
+            else {
+                const choice = confirm('Click OK for Customer Payment (Received), Cancel for Supplier Payment (Sent)');
+                openCheckModal(choice ? 'incoming' : 'outgoing');
+            }
+        });
+
+        // Quick actions
+        document.querySelectorAll('.quick-action').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.type;
+                if (type === 'incoming' || type === 'outgoing') openCheckModal(type);
+                else navigateTo(type);
+            });
+        });
+
+        // Modal controls
+        document.getElementById('modalClose').addEventListener('click', closeCheckModal);
+        document.getElementById('modalCancel').addEventListener('click', closeCheckModal);
+        document.getElementById('detailModalClose').addEventListener('click', closeCheckModal);
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
+        });
+
+        // Form submit
+        document.getElementById('checkForm').addEventListener('submit', saveCheck);
+
+        // Currency change
+        document.getElementById('formCurrency').addEventListener('change', updateCurrencySymbol);
+
+        // Received date change -> effective date min
+        document.getElementById('formReceivedDate').addEventListener('change', e => {
+            const received = e.target.value;
+            const effectiveInput = document.getElementById('formEffectiveDate');
+            if (received) {
+                effectiveInput.min = received;
+                if (effectiveInput.value && effectiveInput.value < received) {
+                    effectiveInput.value = received;
+                }
+            } else {
+                effectiveInput.removeAttribute('min');
+            }
+        });
+
+        // Sent date change -> effective date min
+        document.getElementById('formSentDate').addEventListener('change', e => {
+            const sent = e.target.value;
+            const effectiveInput = document.getElementById('formEffectiveDate');
+            if (sent) {
+                effectiveInput.min = sent;
+                if (effectiveInput.value && effectiveInput.value < sent) {
+                    effectiveInput.value = sent;
+                }
+            } else {
+                effectiveInput.removeAttribute('min');
+            }
+        });
+
+        // Company input - save on blur
+        document.getElementById('formCompany').addEventListener('blur', e => {
+            addCompany(e.target.value);
+        });
+
+        // Bank input - save on blur
+        document.getElementById('formBank').addEventListener('blur', e => {
+            addBank(e.target.value);
+        });
+
+        // Calendar controls
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            if (state.currentMonth === 0) { state.currentMonth = 11; state.currentYear--; }
+            else state.currentMonth--;
+            renderCalendar();
+        });
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            if (state.currentMonth === 11) { state.currentMonth = 0; state.currentYear++; }
+            else state.currentMonth++;
+            renderCalendar();
+        });
+
+        document.getElementById('calendarFilterType').addEventListener('change', e => {
+            state.calendarFilter = e.target.value;
+            renderCalendar();
+        });
+        document.getElementById('calendarFilterStatus').addEventListener('change', e => {
+            state.calendarStatusFilter = e.target.value;
+            renderCalendar();
+        });
+        document.getElementById('calendarSearch').addEventListener('input', e => {
+            state.calendarSearch = e.target.value;
+            renderCalendar();
+        });
+
+        // Global search
+        let searchTimeout;
+        document.getElementById('globalSearch').addEventListener('input', e => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const q = e.target.value.trim();
+                if (q.length < 2) { updateUI(); return; }
+                const all = [...state.incoming, ...state.outgoing];
+                const results = all.filter(c =>
+                    c.company.toLowerCase().includes(q.toLowerCase()) ||
+                    (c.recipient && c.recipient.toLowerCase().includes(q.toLowerCase())) ||
+                    c.checkNumber.toLowerCase().includes(q.toLowerCase()) ||
+                    (c.bank && c.bank.toLowerCase().includes(q.toLowerCase())) ||
+                    (c.phone && c.phone.includes(q))
+                );
+                if (results.length === 0) {
+                    showNotification('No Results', 'No cheques found matching your search', 'info');
+                    return;
+                }
+                if (results.some(c => state.incoming.some(i => i.id === c.id))) navigateTo('incoming');
+                else navigateTo('outgoing');
+            }, 300);
+        });
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', e => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('globalSearch').focus();
+            }
+        });
+
+        // Reports
+        document.getElementById('generateReportBtn').addEventListener('click', () => {
+            const active = document.querySelector('.report-card.active');
+            if (active) generateReport(active.dataset.report);
+            else showNotification('Select Report', 'Please select a report type first', 'warning');
+        });
+
+        document.querySelectorAll('.report-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.report-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                generateReport(card.dataset.report);
+            });
+        });
+
+        // Export
+        document.getElementById('exportIncomingBtn').addEventListener('click', () => exportData('incoming'));
+        document.getElementById('exportOutgoingBtn').addEventListener('click', () => exportData('outgoing'));
+        document.getElementById('exportAllData').addEventListener('click', exportAllData);
+
+        // BUG FIX: these four controls rendered on the page but had no
+        // click handlers wired up, so clicking them did nothing.
+        document.getElementById('filterIncomingBtn').addEventListener('click', function() {
+            state.incomingFilterOutstanding = !state.incomingFilterOutstanding;
+            this.classList.toggle('connected', state.incomingFilterOutstanding);
+            this.innerHTML = state.incomingFilterOutstanding
+                ? '<i class="fas fa-filter"></i> Outstanding Only'
+                : '<i class="fas fa-filter"></i> Filter';
+            renderIncomingTable();
+        });
+        document.getElementById('filterOutgoingBtn').addEventListener('click', function() {
+            state.outgoingFilterOutstanding = !state.outgoingFilterOutstanding;
+            this.classList.toggle('connected', state.outgoingFilterOutstanding);
+            this.innerHTML = state.outgoingFilterOutstanding
+                ? '<i class="fas fa-filter"></i> Outstanding Only'
+                : '<i class="fas fa-filter"></i> Filter';
+            renderOutgoingTable();
+        });
+        document.getElementById('exportReportBtn').addEventListener('click', exportReportToCSV);
+        document.getElementById('importDataBtn').addEventListener('click', () => {
+            document.getElementById('importDataInput').click();
+        });
+        document.getElementById('importDataInput').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) importDataFromFile(file);
+            e.target.value = '';
+        });
+
+        // Calendar connect
+        document.getElementById('connectCalendarBtn').addEventListener('click', toggleCalendar);
+        document.getElementById('settingsConnectCalendar').addEventListener('click', toggleCalendar);
+
+        // Google sign-in (Firebase)
+        document.getElementById('googleSignInBtn').addEventListener('click', () => {
+            currentUser ? signOutOfGoogle() : signInWithGoogle();
+        });
+        document.getElementById('settingsGoogleSignIn').addEventListener('click', () => {
+            currentUser ? signOutOfGoogle() : signInWithGoogle();
+        });
+
+        // Browser notifications
+        document.getElementById('enableNotificationsBtn').addEventListener('click', requestNotificationPermission);
+
+        // Reminder schedule checkboxes — re-check due notifications when changed
+        document.querySelectorAll('.reminder-checkboxes input[type="checkbox"]').forEach(box => {
+            box.addEventListener('change', checkDueNotifications);
+        });
+
+        // Clear all data
+        document.getElementById('clearAllData').addEventListener('click', () => {
+            if (confirm('Delete ALL cheque data? This cannot be undone!')) {
+                if (confirm('Really? All cheques will be permanently deleted.')) {
+                    state.incoming = [];
+                    state.outgoing = [];
+                    state.companies = [];
+                    state.banks = [];
+                    saveData();
+                    updateUI();
+                    showNotification('Cleared', 'All data has been cleared', 'warning');
+                }
+            }
+        });
+
+        // ============================================================
+        //  EXPOSE GLOBALLY
+        // ============================================================
+        window.navigateTo = navigateTo;
+        window.openCheckModal = openCheckModal;
+        window.closeCheckModal = closeCheckModal;
+        window.viewCheck = viewCheck;
+        window.editCheck = editCheck;
+        window.deleteCheck = deleteCheck;
+        window.markCleared = markCleared;
+        window.markCancelled = markCancelled;
+        window.exportData = exportData;
+        window.generateReport = generateReport;
+        window.saveCheck = saveCheck;
+        window.renderIncomingTable = renderIncomingTable;
+        window.renderOutgoingTable = renderOutgoingTable;
+        window.updateDashboard = updateDashboard;
+        window.renderCalendar = renderCalendar;
+        window.showChecksForDate = showChecksForDate;
+        window.formatDate = formatDate;
+        window.formatCurrency = formatCurrency;
+        window.getStatusLabel = getStatusLabel;
+        window.getStatusClass = getStatusClass;
+
+        console.log('✅ S.A.A Legacy Pharmaceutical Cheque Tracking System loaded');
+        console.log(`📊 ${state.incoming.length} customer payments, ${state.outgoing.length} supplier payments`);
+    </script>
+
+</body>
+</html>
