@@ -1123,6 +1123,11 @@
                 <i class="fas fa-chart-bar"></i>
                 <span>Reports</span>
             </a>
+            <a class="nav-link" data-page="trash">
+                <i class="fas fa-trash"></i>
+                <span>Trash</span>
+                <span class="badge" id="trashBadge">0</span>
+            </a>
             <a class="nav-link" data-page="settings">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
@@ -1358,6 +1363,29 @@
                 </div>
             </section>
 
+            <!-- ===== TRASH ===== -->
+            <section class="page" id="page-trash">
+                <div class="page-header">
+                    <div><h2>Trash</h2><p class="page-subtitle">Deleted cheques — restore or remove permanently</p></div>
+                    <div class="page-actions">
+                        <button class="btn-danger" id="emptyTrashBtn"><i class="fas fa-trash"></i> Empty Trash</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead><tr>
+                                <th>Type</th><th>Company</th><th>Effective</th>
+                                <th>Cheque No.</th><th>Amount</th><th>Deleted</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody id="trashTableBody">
+                                <tr><td colspan="7" class="empty-state"><i class="fas fa-trash"></i><span>Trash is empty</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- ===== SETTINGS ===== -->
             <section class="page" id="page-settings">
                 <div class="page-header"><div><h2>Settings</h2><p class="page-subtitle">Configure your system</p></div></div>
@@ -1373,6 +1401,17 @@
                                 </div>
                                 <button class="btn-primary" id="settingsConnectCalendar"><i class="fab fa-google"></i> Connect</button>
                             </div>
+                            <div class="setting-item" id="calendarPickerRow" style="display:none;">
+                                <div class="setting-info"><span class="setting-label">Sync To Calendar</span></div>
+                                <select id="calendarPicker" style="padding:8px 12px;border-radius:8px;border:1px solid var(--gray-300);"></select>
+                            </div>
+                            <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-top:8px;">
+                                Connect picks whichever Google account you sign into in the popup — it does not have
+                                to be the same account used for data sync above. Every non-cleared cheque gets a
+                                same-day event on the calendar you choose, kept in sync as you add, edit, clear or
+                                delete cheques. Setup requires enabling the Calendar API and a redirect origin — see
+                                the comment above <code>GOOGLE_CALENDAR_CLIENT_ID</code> near the top of the script.
+                            </p>
                             <div class="setting-item">
                                 <span class="setting-label">Reminder Schedule</span>
                                 <div class="reminder-checkboxes">
@@ -1456,14 +1495,14 @@
                         <input type="tel" id="formPhone" placeholder="Enter phone number" /></div>
                     <div class="form-group"><label>Amount <span class="required">*</span></label>
                         <div class="input-with-icon">
-                            <span id="currencySymbol">$</span>
+                            <span id="currencySymbol">₵</span>
                             <input type="number" id="formAmount" step="0.01" placeholder="0.00" required />
                         </div>
                     </div>
                     <div class="form-group"><label>Currency</label>
                         <select id="formCurrency">
-                            <option value="USD">USD - US Dollar</option>
                             <option value="GHS">GHS - Ghanaian Cedi</option>
+                            <option value="USD">USD - US Dollar</option>
                             <option value="GBP">GBP - British Pound</option>
                             <option value="EUR">EUR - Euro</option>
                             <option value="NGN">NGN - Nigerian Naira</option>
@@ -1471,7 +1510,7 @@
                         </select>
                     </div>
                     <div class="form-group"><label>Cheque Number <span class="required">*</span></label>
-                        <input type="text" id="formCheckNumber" placeholder="Enter cheque number" required /></div>
+                        <input type="text" id="formCheckNumber" placeholder="6-digit cheque number" inputmode="numeric" pattern="\d{6}" maxlength="6" title="Cheque number must be exactly 6 digits" required /></div>
                     <div class="form-group"><label>Bank Name</label>
                         <input type="text" id="formBank" list="bankList" placeholder="Enter bank name" />
                         <datalist id="bankList"></datalist>
@@ -1519,6 +1558,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <script>
         // ============================================================
@@ -1527,6 +1567,7 @@
         const state = {
             incoming: [],
             outgoing: [],
+            trash: [],
             companies: JSON.parse(localStorage.getItem('checkCompanies') || '[]'),
             banks: JSON.parse(localStorage.getItem('checkBanks') || '[]'),
             currentPage: 'dashboard',
@@ -1615,6 +1656,7 @@
                     applyingRemoteUpdate = true;
                     state.incoming = remote.incoming || [];
                     state.outgoing = remote.outgoing || [];
+                    state.trash = remote.trash || [];
                     state.companies = remote.companies || [];
                     state.banks = remote.banks || [];
                     refreshStatuses();
@@ -1624,6 +1666,7 @@
                     docRef.set({
                         incoming: state.incoming,
                         outgoing: state.outgoing,
+                        trash: state.trash,
                         companies: state.companies,
                         banks: state.banks,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1644,6 +1687,7 @@
             fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]).set({
                 incoming: state.incoming,
                 outgoing: state.outgoing,
+                trash: state.trash,
                 companies: state.companies,
                 banks: state.banks,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1707,10 +1751,24 @@
                     state.incoming = parsed.incoming || [];
                     state.outgoing = parsed.outgoing || [];
                 }
+                state.trash = JSON.parse(localStorage.getItem('checkTrash') || '[]');
                 state.companies = JSON.parse(localStorage.getItem('checkCompanies') || '[]');
                 state.banks = JSON.parse(localStorage.getItem('checkBanks') || '[]');
             } catch(e) { console.error('Error loading data:', e); }
             refreshStatuses();
+            purgeOldTrash();
+        }
+
+        // Trash items older than 30 days are removed automatically so the
+        // list doesn't grow forever; anything you actually want to keep,
+        // restore it before then.
+        function purgeOldTrash() {
+            const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+            const before = state.trash.length;
+            state.trash = state.trash.filter(t => new Date(t.deletedAt).getTime() > cutoff);
+            if (state.trash.length !== before) {
+                localStorage.setItem('checkTrash', JSON.stringify(state.trash));
+            }
         }
 
         // BUG FIX: statuses (pending / due_soon / due_today / overdue) were only
@@ -1731,10 +1789,13 @@
                     incoming: state.incoming,
                     outgoing: state.outgoing,
                 }));
+                localStorage.setItem('checkTrash', JSON.stringify(state.trash));
                 localStorage.setItem('checkCompanies', JSON.stringify(state.companies));
                 localStorage.setItem('checkBanks', JSON.stringify(state.banks));
             } catch(e) { console.error('Error saving data:', e); }
             if (!applyingRemoteUpdate) pushToFirestore();
+            if (state.calendarConnected) syncChequesToCalendar();
+            updateTrashBadge();
         }
 
         // ============================================================
@@ -1914,6 +1975,7 @@
             if (page === 'outgoing') renderOutgoingTable();
             if (page === 'calendar') renderCalendar();
             if (page === 'reports') generateReport('outstanding');
+            if (page === 'trash') renderTrashTable();
             document.getElementById('sidebar').classList.remove('open');
         }
 
@@ -2304,11 +2366,14 @@
                 document.getElementById('formStatus').value = data.status || 'pending';
             } else {
                 const today = new Date().toISOString().split('T')[0];
-                document.getElementById('formEffectiveDate').value = today;
+                // The user wants Effective Date left blank so a cheque can't
+                // be saved (it's a required field) until a date is actually
+                // chosen, rather than silently defaulting to today.
+                document.getElementById('formEffectiveDate').value = '';
                 if (isIncoming) document.getElementById('formReceivedDate').value = today;
                 else document.getElementById('formSentDate').value = today;
                 document.getElementById('formStatus').value = 'pending';
-                document.getElementById('formCurrency').value = 'USD';
+                document.getElementById('formCurrency').value = 'GHS';
             }
             updateCurrencySymbol();
             modal.classList.add('active');
@@ -2344,6 +2409,11 @@
 
             if (!data.company || !data.amount || !data.checkNumber || !data.effectiveDate) {
                 showNotification('Validation Error', 'Please fill in all required fields', 'error');
+                return;
+            }
+
+            if (!/^\d{6}$/.test(data.checkNumber)) {
+                showNotification('Validation Error', 'Cheque number must be exactly 6 digits, no letters', 'error');
                 return;
             }
 
@@ -2427,16 +2497,82 @@
             if (c) openCheckModal(type, c);
         }
 
+        // BUG FIX / FEATURE: deleting used to permanently erase the cheque
+        // immediately with no way back. Now it moves to Trash first — only
+        // "Empty Trash" or deleting an item from the Trash page is permanent.
         function deleteCheck(id, type) {
-            if (!confirm('Are you sure you want to delete this cheque?')) return;
+            if (!confirm('Move this cheque to Trash?')) return;
             const collection = type === 'incoming' ? state.incoming : state.outgoing;
             const idx = collection.findIndex(c => c.id === id);
             if (idx !== -1) {
-                collection.splice(idx, 1);
+                const [item] = collection.splice(idx, 1);
+                state.trash.push({ ...item, _type: type, deletedAt: new Date().toISOString() });
                 saveData();
                 updateUI();
-                showNotification('Deleted', 'Cheque has been deleted', 'success');
+                showNotification('Moved to Trash', 'Cheque moved to Trash', 'success');
             }
+        }
+
+        function restoreFromTrash(id) {
+            const idx = state.trash.findIndex(t => t.id === id);
+            if (idx === -1) return;
+            const [item] = state.trash.splice(idx, 1);
+            const { _type, deletedAt, ...cheque } = item;
+            cheque.status = calculateStatus(cheque.effectiveDate, cheque.status);
+            (_type === 'incoming' ? state.incoming : state.outgoing).push(cheque);
+            saveData();
+            updateUI();
+            renderTrashTable();
+            showNotification('Restored', 'Cheque restored', 'success');
+        }
+
+        function permanentDeleteFromTrash(id) {
+            if (!confirm('Permanently delete this cheque? This cannot be undone.')) return;
+            state.trash = state.trash.filter(t => t.id !== id);
+            saveData();
+            renderTrashTable();
+            updateTrashBadge();
+            showNotification('Deleted', 'Cheque permanently deleted', 'success');
+        }
+
+        function emptyTrash() {
+            if (state.trash.length === 0) return;
+            if (!confirm(`Permanently delete all ${state.trash.length} item(s) in Trash? This cannot be undone.`)) return;
+            state.trash = [];
+            saveData();
+            renderTrashTable();
+            updateTrashBadge();
+            showNotification('Trash Emptied', 'All trashed cheques permanently deleted', 'success');
+        }
+
+        function updateTrashBadge() {
+            const badge = document.getElementById('trashBadge');
+            if (badge) badge.textContent = state.trash.length;
+        }
+
+        function renderTrashTable() {
+            const tbody = document.getElementById('trashTableBody');
+            if (state.trash.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-trash"></i><span>Trash is empty</span></td></tr>`;
+                return;
+            }
+            const sorted = [...state.trash].sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
+            tbody.innerHTML = sorted.map(c => `
+                <tr>
+                    <td>${c._type === 'incoming' ? 'Customer' : 'Supplier'}</td>
+                    <td>${c.company}</td>
+                    <td>${formatDate(c.effectiveDate)}</td>
+                    <td class="text-mono">${c.checkNumber}</td>
+                    <td><strong>${formatCurrency(c.amount, c.currency)}</strong></td>
+                    <td>${formatDate(c.deletedAt.split('T')[0])}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn view" title="Restore" onclick="restoreFromTrash('${c.id}')"><i class="fas fa-undo"></i></button>
+                            <button class="action-btn delete" title="Delete Permanently" onclick="permanentDeleteFromTrash('${c.id}')"><i class="fas fa-times"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         function markCleared(id, type) {
@@ -2756,29 +2892,216 @@
         }
 
         // ============================================================
-        //  GOOGLE CALENDAR (Firebase-like stub)
+        //  GOOGLE CALENDAR — real OAuth via Google Identity Services (GIS)
         // ============================================================
+        // This is independent of the Firebase sign-in above — it connects
+        // whichever specific Google account you choose in the popup, and
+        // pushes each open cheque to that account's calendar as an event.
+        //
+        // Setup:
+        //   1. Google Cloud Console (console.cloud.google.com) → make sure
+        //      you're in the SAME project as your Firebase project
+        //      ("cheque-7d865") using the project switcher at the top.
+        //   2. APIs & Services → Library → search "Google Calendar API" → Enable.
+        //   3. APIs & Services → Credentials → you should see an OAuth 2.0
+        //      Client ID already created (Firebase creates one automatically
+        //      when you enable Google sign-in) — usually named "Web client
+        //      (auto created by Google Service)". Open it and add, under
+        //      "Authorized JavaScript origins": your GitHub Pages URL
+        //      (e.g. https://yourname.github.io) and http://localhost for
+        //      local testing. Save, then copy that Client ID below.
+        //   4. APIs & Services → OAuth consent screen → Audience/Test users →
+        //      add the specific Google account(s) you'll connect with the
+        //      calendar button, unless you plan to publish the app publicly
+        //      (Calendar access is a "sensitive scope" Google requires
+        //      verification for on unverified/production apps — adding
+        //      yourself as a test user skips that for personal use).
+        //   5. Paste the Client ID here:
+        const GOOGLE_CALENDAR_CLIENT_ID = "471625567421-0ku415l32jbff6lrvm5460r93cucr75n.apps.googleusercontent.com";
+        const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
+
+        const calendarReady = () => typeof google !== 'undefined' && google.accounts &&
+            GOOGLE_CALENDAR_CLIENT_ID && !GOOGLE_CALENDAR_CLIENT_ID.startsWith('YOUR_');
+
+        let calendarTokenClient = null;
+        let calendarAccessToken = null;
+        let calendarTokenExpiresAt = 0;
+        let calendarAccountEmail = null;
+        let selectedCalendarId = localStorage.getItem('checkSelectedCalendarId') || 'primary';
+
+        function getCalendarTokenClient() {
+            if (!calendarTokenClient) {
+                calendarTokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CALENDAR_CLIENT_ID,
+                    scope: CALENDAR_SCOPE,
+                    callback: handleCalendarTokenResponse
+                });
+            }
+            return calendarTokenClient;
+        }
+
         function toggleCalendar() {
+            if (state.calendarConnected) {
+                disconnectCalendar();
+                return;
+            }
+            if (!calendarReady()) {
+                showNotification('Not Configured', 'Set GOOGLE_CALENDAR_CLIENT_ID near the top of the script to enable Calendar sync', 'warning');
+                return;
+            }
+            getCalendarTokenClient().requestAccessToken({ prompt: 'consent select_account' });
+        }
+
+        async function handleCalendarTokenResponse(response) {
+            if (response.error) {
+                console.error('Calendar auth error:', response);
+                showNotification('Connection Failed', response.error_description || response.error, 'error');
+                return;
+            }
+            calendarAccessToken = response.access_token;
+            calendarTokenExpiresAt = Date.now() + (Number(response.expires_in) || 3300) * 1000;
+            state.calendarConnected = true;
+
+            try {
+                const info = await calendarApiFetch('https://www.googleapis.com/oauth2/v3/userinfo');
+                calendarAccountEmail = info.email || null;
+            } catch (e) { calendarAccountEmail = null; }
+
+            updateCalendarUI();
+            showNotification('Connected', calendarAccountEmail ? `Calendar connected (${calendarAccountEmail})` : 'Calendar connected', 'success', true);
+            await fetchCalendarList();
+            await syncChequesToCalendar();
+            checkDueNotifications();
+        }
+
+        function disconnectCalendar() {
+            if (calendarAccessToken && typeof google !== 'undefined' && google.accounts) {
+                google.accounts.oauth2.revoke(calendarAccessToken, () => {});
+            }
+            calendarAccessToken = null;
+            calendarTokenExpiresAt = 0;
+            calendarAccountEmail = null;
+            state.calendarConnected = false;
+            updateCalendarUI();
+            showNotification('Disconnected', 'Google Calendar disconnected', 'info');
+        }
+
+        function updateCalendarUI() {
             const btn = document.getElementById('connectCalendarBtn');
             const status = document.querySelector('.connection-status');
             const dot = status.querySelector('.dot');
-            if (btn.classList.contains('connected')) {
+            const settingsStatus = document.getElementById('settingsCalendarStatus');
+            const settingsBtn = document.getElementById('settingsConnectCalendar');
+            const pickerRow = document.getElementById('calendarPickerRow');
+            if (state.calendarConnected) {
+                btn.classList.add('connected');
+                btn.innerHTML = '<i class="fas fa-check"></i> Connected';
+                dot.className = 'dot connected';
+                status.querySelector('span:last-child').textContent = calendarAccountEmail || 'Connected';
+                settingsStatus.innerHTML = `<span class="dot connected"></span> ${calendarAccountEmail || 'Connected'}`;
+                settingsBtn.innerHTML = '<i class="fas fa-times"></i> Disconnect';
+                pickerRow.style.display = '';
+            } else {
                 btn.classList.remove('connected');
                 btn.innerHTML = '<i class="fab fa-google"></i> Connect Calendar';
                 dot.className = 'dot disconnected';
                 status.querySelector('span:last-child').textContent = 'Disconnected';
-                document.getElementById('settingsCalendarStatus').innerHTML = '<span class="dot disconnected"></span> Not Connected';
-                state.calendarConnected = false;
-                showNotification('Disconnected', 'Google Calendar disconnected', 'info');
-            } else {
-                btn.classList.add('connected');
-                btn.innerHTML = '<i class="fas fa-check"></i> Connected';
-                dot.className = 'dot connected';
-                status.querySelector('span:last-child').textContent = 'Connected';
-                document.getElementById('settingsCalendarStatus').innerHTML = '<span class="dot connected"></span> Connected';
-                state.calendarConnected = true;
-                showNotification('Connected', 'Google Calendar connected. You will receive notifications with sound.', 'success', true);
-                checkDueNotifications();
+                settingsStatus.innerHTML = '<span class="dot disconnected"></span> Not Connected';
+                settingsBtn.innerHTML = '<i class="fab fa-google"></i> Connect';
+                pickerRow.style.display = 'none';
+            }
+        }
+
+        // Access tokens from GIS expire (~1hr) and aren't silently refreshed
+        // without a visible popup, so re-request one transparently whenever
+        // it's about to expire, right before an API call needs it.
+        function ensureCalendarToken() {
+            return new Promise((resolve, reject) => {
+                if (calendarAccessToken && Date.now() < calendarTokenExpiresAt - 30000) {
+                    resolve(calendarAccessToken);
+                    return;
+                }
+                if (!calendarReady()) { reject(new Error('Calendar not configured')); return; }
+                const client = getCalendarTokenClient();
+                const originalCallback = client.callback;
+                client.callback = (resp) => { originalCallback(resp); resp.error ? reject(new Error(resp.error)) : resolve(resp.access_token); };
+                client.requestAccessToken({ prompt: '' });
+            });
+        }
+
+        async function calendarApiFetch(url, options = {}) {
+            const token = await ensureCalendarToken();
+            const res = await fetch(url, {
+                ...options,
+                headers: { ...(options.headers || {}), Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+            });
+            if (!res.ok) throw new Error(`Calendar API ${res.status}: ${await res.text()}`);
+            return res.status === 204 ? null : res.json();
+        }
+
+        async function fetchCalendarList() {
+            const picker = document.getElementById('calendarPicker');
+            try {
+                const data = await calendarApiFetch('https://www.googleapis.com/calendar/v3/users/me/calendarList');
+                picker.innerHTML = (data.items || [])
+                    .map(cal => `<option value="${cal.id}">${cal.summary}${cal.primary ? ' (primary)' : ''}</option>`)
+                    .join('');
+                if ([...picker.options].some(o => o.value === selectedCalendarId)) {
+                    picker.value = selectedCalendarId;
+                } else if (picker.options.length) {
+                    selectedCalendarId = picker.options[0].value;
+                }
+            } catch (e) {
+                console.error('Could not load calendar list:', e);
+            }
+        }
+
+        // Keeps one Google Calendar event per open cheque, matched by a
+        // hidden extendedProperty (so re-running sync never creates
+        // duplicates). Cheques that are cleared, cancelled, or deleted have
+        // their event removed.
+        async function syncChequesToCalendar() {
+            if (!state.calendarConnected) return;
+            const all = [...state.incoming.map(c => ({ ...c, _dir: 'incoming' })), ...state.outgoing.map(c => ({ ...c, _dir: 'outgoing' }))];
+            try {
+                const existing = await calendarApiFetch(
+                    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(selectedCalendarId)}/events?privateExtendedProperty=chequeApp%3Dtrue&maxResults=2500&showDeleted=false`
+                );
+                const existingByChequeId = new Map((existing.items || []).map(ev => [ev.extendedProperties?.private?.chequeId, ev]));
+
+                // BUG FIX: a cheque that's deleted (or moved to Trash) simply
+                // disappears from state.incoming/outgoing, but its calendar
+                // event was never being cleaned up — it lingered forever.
+                // Anything with a matching event but no longer present here
+                // (cleared/cancelled/deleted/trashed) gets its event removed.
+                const currentIds = new Set(all.map(c => c.id));
+                for (const [chequeId, ev] of existingByChequeId) {
+                    if (chequeId && !currentIds.has(chequeId)) {
+                        await calendarApiFetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(selectedCalendarId)}/events/${ev.id}`, { method: 'DELETE' });
+                    }
+                }
+
+                for (const c of all) {
+                    const isOpen = c.status !== 'cleared' && c.status !== 'cancelled';
+                    const match = existingByChequeId.get(c.id);
+                    if (!isOpen) {
+                        if (match) await calendarApiFetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(selectedCalendarId)}/events/${match.id}`, { method: 'DELETE' });
+                        continue;
+                    }
+                    const who = c._dir === 'incoming' ? 'Customer payment due' : 'Supplier payment due';
+                    const body = {
+                        summary: `${who}: ${c.company} — Cheque #${c.checkNumber}`,
+                        description: `${formatCurrency(c.amount, c.currency)} — ${c._dir === 'incoming' ? 'from' : 'to'} ${c.company}${c.bank ? ' via ' + c.bank : ''}`,
+                        start: { date: c.effectiveDate },
+                        end: { date: c.effectiveDate },
+                        extendedProperties: { private: { chequeApp: 'true', chequeId: c.id } }
+                    };
+                    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(selectedCalendarId)}/events${match ? '/' + match.id : ''}`;
+                    await calendarApiFetch(url, { method: match ? 'PATCH' : 'POST', body: JSON.stringify(body) });
+                }
+            } catch (e) {
+                console.error('Calendar sync error:', e);
+                showNotification('Calendar Sync Failed', 'Could not sync cheques to Google Calendar', 'error');
             }
         }
 
@@ -3017,6 +3340,20 @@
         document.querySelectorAll('.reminder-checkboxes input[type="checkbox"]').forEach(box => {
             box.addEventListener('change', checkDueNotifications);
         });
+
+        // Calendar picker
+        document.getElementById('calendarPicker').addEventListener('change', function() {
+            selectedCalendarId = this.value;
+            localStorage.setItem('checkSelectedCalendarId', selectedCalendarId);
+            syncChequesToCalendar();
+        });
+
+        // Cheque number: digits only, max 6, strip anything else as you type
+        document.getElementById('formCheckNumber').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+        });
+
+        document.getElementById('emptyTrashBtn').addEventListener('click', emptyTrash);
 
         // Clear all data
         document.getElementById('clearAllData').addEventListener('click', () => {
