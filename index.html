@@ -1632,6 +1632,13 @@
             }
             const provider = new firebase.auth.GoogleAuthProvider();
             provider.addScope(CALENDAR_SCOPE);
+            // BUG FIX: without forcing the consent screen, Google can silently
+            // reuse a prior sign-in that only granted the base profile/email
+            // scope and hand back an access token with no Calendar permission
+            // at all — the app would then think it's "connected" but every
+            // Calendar API call fails. Forcing 'consent' guarantees the popup
+            // always asks for (and actually grants) the Calendar scope.
+            provider.setCustomParameters({ prompt: 'consent' });
             fbAuth.signInWithPopup(provider)
                 .then(handleGoogleSignInResult)
                 .catch(err => { console.error('Sign-in error:', err); showNotification('Sign-in Failed', err.message, 'error'); });
@@ -1649,11 +1656,28 @@
                 updateCalendarUI();
                 showNotification('Connected', 'Signed in — calendar access granted', 'success', true);
                 await fetchCalendarList();
-                await syncChequesToCalendar();
-                checkDueNotifications();
+                // BUG FIX: verify the granted token can actually reach the
+                // Calendar API before declaring success. If the Google
+                // account never approved the Calendar scope (e.g. it's
+                // missing from the OAuth consent screen, or the account
+                // isn't added as a test user), calendarApiFetch will fail
+                // here and we should say so plainly instead of quietly
+                // leaving a "connected" badge that never really works.
+                try {
+                    await queueCalendarSync();
+                    checkDueNotifications();
+                } catch (e) {
+                    console.error('Post-connect calendar sync failed:', e);
+                    showNotification(
+                        'Calendar Permission Needed',
+                        'Signed in, but Calendar access was not granted. Make sure the Google Calendar API is enabled and your account is added as a test user, then click Connect Calendar again.',
+                        'error'
+                    );
+                }
             } else {
                 state.calendarConnected = false;
                 updateCalendarUI();
+                showNotification('Calendar Not Connected', 'Google did not grant calendar access — please try again and approve the Calendar permission.', 'warning');
             }
         }
 
@@ -1816,7 +1840,7 @@
                 localStorage.setItem('checkBanks', JSON.stringify(state.banks));
             } catch(e) { console.error('Error saving data:', e); }
             if (!applyingRemoteUpdate) pushToFirestore();
-            if (state.calendarConnected) syncChequesToCalendar();
+            if (state.calendarConnected) queueCalendarSync().catch(e => console.error('Calendar sync failed:', e));
             updateTrashBadge();
         }
 
@@ -1949,24 +1973,24 @@
         // ============================================================
         //  COMPANY & BANK LISTS
         // ============================================================
-        function addCompany(name) {
+        function addCompany(name, persist = true) {
             if (!name) return;
             const trimmed = name.trim();
             if (trimmed && !state.companies.includes(trimmed)) {
                 state.companies.push(trimmed);
                 state.companies.sort();
-                saveData();
+                if (persist) saveData();
                 updateCompanyDatalist();
             }
         }
 
-        function addBank(name) {
+        function addBank(name, persist = true) {
             if (!name) return;
             const trimmed = name.trim();
             if (trimmed && !state.banks.includes(trimmed)) {
                 state.banks.push(trimmed);
                 state.banks.sort();
-                saveData();
+                if (persist) saveData();
                 updateBankDatalist();
             }
         }
@@ -2474,9 +2498,15 @@
                 return;
             }
 
-            // Add company and bank to lists
-            addCompany(data.company);
-            if (data.bank) addBank(data.bank);
+            // Add company and bank to lists. BUG FIX: addCompany/addBank each
+            // used to trigger their own immediate saveData() (Firestore push
+            // + calendar sync) with the OLD data, moments before this
+            // function's own updateUI() did the same thing with the NEW
+            // data — two or three redundant, overlapping syncs per save.
+            // Pass persist:false here since updateUI() below saves everything
+            // (including the new/updated company & bank names) in one shot.
+            addCompany(data.company, false);
+            if (data.bank) addBank(data.bank, false);
 
             if (isIncoming) {
                 data.receivedDate = document.getElementById('formReceivedDate').value || data.effectiveDate;
@@ -2504,7 +2534,6 @@
                 showNotification('Success', `${isIncoming ? 'Customer payment' : 'Supplier payment'} added`, 'success');
             }
 
-            saveData();
             closeCheckModal();
             updateUI();
         }
@@ -2564,8 +2593,12 @@
             if (idx !== -1) {
                 const [item] = collection.splice(idx, 1);
                 state.trash.push({ ...item, _type: type, deletedAt: new Date().toISOString() });
-                saveData();
+                // BUG FIX: updateUI() already calls saveData() at the end of
+                // its own cycle — calling saveData() again here fired a
+                // second, overlapping Firestore write and calendar sync for
+                // every single action (see queueCalendarSync note above).
                 updateUI();
+                renderTrashTable();
                 showNotification('Moved to Trash', 'Cheque moved to Trash', 'success');
             }
         }
@@ -2577,7 +2610,6 @@
             const { _type, deletedAt, ...cheque } = item;
             cheque.status = calculateStatus(cheque.effectiveDate, cheque.status);
             (_type === 'incoming' ? state.incoming : state.outgoing).push(cheque);
-            saveData();
             updateUI();
             renderTrashTable();
             showNotification('Restored', 'Cheque restored', 'success');
@@ -2637,7 +2669,6 @@
             const c = collection.find(item => item.id === id);
             if (c) {
                 c.status = 'cleared';
-                saveData();
                 updateUI();
                 showNotification('Cleared', `Cheque #${c.checkNumber} marked as cleared`, 'success', true);
                 document.getElementById('detailModal').classList.remove('active');
@@ -2649,7 +2680,6 @@
             const c = collection.find(item => item.id === id);
             if (c) {
                 c.status = 'cancelled';
-                saveData();
                 updateUI();
                 showNotification('Cancelled', `Cheque #${c.checkNumber} cancelled`, 'warning');
                 document.getElementById('detailModal').classList.remove('active');
@@ -2905,7 +2935,6 @@
                     state.outgoing = parsed.outgoing;
                     state.companies = Array.isArray(parsed.companies) ? parsed.companies : state.companies;
                     state.banks = Array.isArray(parsed.banks) ? parsed.banks : state.banks;
-                    saveData();
                     updateUI();
                     showNotification('Imported', 'Data imported successfully', 'success');
                 } catch (err) {
@@ -2988,7 +3017,9 @@
         // handy for troubleshooting or forcing an update.
         function connectOrSyncCalendar() {
             if (state.calendarConnected) {
-                syncChequesToCalendar().then(() => showNotification('Synced', 'Cheques synced to calendar', 'success'));
+                queueCalendarSync()
+                    .then(() => showNotification('Synced', 'Cheques synced to calendar', 'success'))
+                    .catch(e => console.error('Manual calendar sync failed:', e));
             } else {
                 signInWithGoogle();
             }
@@ -3008,13 +3039,39 @@
                 ...options,
                 headers: { ...(options.headers || {}), Authorization: `Bearer ${calendarAccessToken}`, 'Content-Type': 'application/json' }
             });
-            if (res.status === 401) {
+            // BUG FIX: a 401 means the token itself is dead, but a 403 means
+            // the token is valid yet was never granted Calendar permission
+            // (missing scope, Calendar API not enabled, or account not on
+            // the OAuth test-user list). Previously only 401 reset the
+            // "connected" state, so a 403 just left the UI stuck showing
+            // "Calendar connected" forever while every sync silently failed.
+            if (res.status === 401 || res.status === 403) {
                 state.calendarConnected = false;
                 updateCalendarUI();
-                throw new Error('Calendar access expired — sign in again to reconnect');
+                throw new Error(
+                    res.status === 401
+                        ? 'Calendar access expired — sign in again to reconnect'
+                        : 'Calendar permission denied — enable the Google Calendar API for this project and sign in again'
+                );
             }
             if (!res.ok) throw new Error(`Calendar API ${res.status}: ${await res.text()}`);
             return res.status === 204 ? null : res.json();
+        }
+
+        // BUG FIX: saveData() (called on nearly every edit) used to call
+        // syncChequesToCalendar() directly, and several actions (saveCheck,
+        // markCleared, markCancelled, deleteCheck, restoreFromTrash, imports)
+        // ended up calling saveData() more than once for a single user
+        // action. That fired multiple overlapping syncs at once — each one
+        // fetches the "existing" events before any of the others have
+        // finished writing, so they'd all decide the same event needed to be
+        // created and post duplicates (or delete/recreate out of order).
+        // Routing every sync request through one shared queue guarantees
+        // they run strictly one at a time, eliminating the race entirely.
+        let calendarSyncQueue = Promise.resolve();
+        function queueCalendarSync() {
+            calendarSyncQueue = calendarSyncQueue.then(() => syncChequesToCalendar());
+            return calendarSyncQueue;
         }
 
         async function fetchCalendarList() {
@@ -3341,7 +3398,6 @@
                     state.outgoing = [];
                     state.companies = [];
                     state.banks = [];
-                    saveData();
                     updateUI();
                     showNotification('Cleared', 'All data has been cleared', 'warning');
                 }
