@@ -1135,19 +1135,16 @@
         </nav>
 
         <div class="sidebar-footer">
-            <button class="btn-connect" id="connectCalendarBtn">
-                <i class="fab fa-google"></i> Connect Calendar
-            </button>
-            <div class="connection-status">
-                <span class="dot disconnected"></span>
-                <span>Disconnected</span>
-            </div>
-            <button class="btn-connect" id="googleSignInBtn" style="margin-top:8px;">
+            <button class="btn-connect" id="googleSignInBtn">
                 <i class="fab fa-google"></i> Sign in with Google
             </button>
             <div class="connection-status" id="googleSignInStatus">
                 <span class="dot disconnected"></span>
                 <span>Not signed in</span>
+            </div>
+            <div class="connection-status" id="calendarStatusLine" style="margin-top:4px;">
+                <span class="dot disconnected"></span>
+                <span>Calendar not connected</span>
             </div>
         </div>
     </aside>
@@ -1190,22 +1187,22 @@
                         <div class="stat-info"><span class="stat-label">Supplier Payments</span><h3 id="totalSent">0</h3></div>
                         <div class="stat-amount" id="totalSentAmount">$0.00</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="cursor:pointer;" onclick="showDashboardStatModal('dueToday')">
                         <div class="stat-icon red"><i class="fas fa-clock"></i></div>
                         <div class="stat-info"><span class="stat-label">Due Today</span><h3 id="dueToday">0</h3></div>
                         <div class="stat-amount" id="dueTodayAmount">$0.00</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="cursor:pointer;" onclick="showDashboardStatModal('dueThisWeek')">
                         <div class="stat-icon orange"><i class="fas fa-calendar-week"></i></div>
                         <div class="stat-info"><span class="stat-label">Due This Week</span><h3 id="dueThisWeek">0</h3></div>
                         <div class="stat-amount" id="dueThisWeekAmount">$0.00</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="cursor:pointer;" onclick="showDashboardStatModal('overdue')">
                         <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
                         <div class="stat-info"><span class="stat-label">Overdue</span><h3 id="overdueCount">0</h3></div>
                         <div class="stat-amount" id="overdueAmount">$0.00</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="cursor:pointer;" onclick="showDashboardStatModal('cleared')">
                         <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
                         <div class="stat-info"><span class="stat-label">Cleared</span><h3 id="clearedCount">0</h3></div>
                         <div class="stat-amount" id="clearedAmount">$0.00</div>
@@ -1391,26 +1388,31 @@
                 <div class="page-header"><div><h2>Settings</h2><p class="page-subtitle">Configure your system</p></div></div>
                 <div class="settings-grid">
                     <div class="card">
-                        <div class="card-header"><h3><i class="fab fa-google"></i> Google Calendar</h3></div>
+                        <div class="card-header"><h3><i class="fas fa-cloud"></i> Google Account (Sync &amp; Calendar)</h3></div>
                         <div class="card-body">
                             <div class="setting-item">
-                                <div class="setting-info"><span class="setting-label">Connection Status</span>
-                                    <span class="setting-value" id="settingsCalendarStatus">
-                                        <span class="dot disconnected"></span> Not Connected
-                                    </span>
+                                <div class="setting-info"><span class="setting-label">Account</span>
+                                    <span class="setting-value" id="settingsGoogleStatus"><span class="dot disconnected"></span> Not signed in</span>
                                 </div>
-                                <button class="btn-primary" id="settingsConnectCalendar"><i class="fab fa-google"></i> Connect</button>
+                                <button class="btn-primary" id="settingsGoogleSignIn"><i class="fab fa-google"></i> Sign in</button>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info"><span class="setting-label">Calendar</span>
+                                    <span class="setting-value" id="settingsCalendarStatus"><span class="dot disconnected"></span> Not connected</span>
+                                </div>
                             </div>
                             <div class="setting-item" id="calendarPickerRow" style="display:none;">
                                 <div class="setting-info"><span class="setting-label">Sync To Calendar</span></div>
                                 <select id="calendarPicker" style="padding:8px 12px;border-radius:8px;border:1px solid var(--gray-300);"></select>
                             </div>
                             <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-top:8px;">
-                                Connect picks whichever Google account you sign into in the popup — it does not have
-                                to be the same account used for data sync above. Every non-cleared cheque gets a
-                                same-day event on the calendar you choose, kept in sync as you add, edit, clear or
-                                delete cheques. Setup requires enabling the Calendar API and a redirect origin — see
-                                the comment above <code>GOOGLE_CALENDAR_CLIENT_ID</code> near the top of the script.
+                                One "Sign in" grants both: your shared Firestore data syncs across every signed-in
+                                device, and every non-cleared cheque is pushed as a same-day event to whichever
+                                calendar you pick above, kept in sync as you add, edit, clear or delete cheques. This
+                                needs a Firebase project (see <code>firebaseConfig</code> near the top of the
+                                <code>&lt;script&gt;</code> section) and Calendar API access enabled for that same
+                                project. Browser security means calendar access doesn't survive a page reload —
+                                you'll be asked to sign in again if you come back later and it shows "Not connected."
                             </p>
                             <div class="setting-item">
                                 <span class="setting-label">Reminder Schedule</span>
@@ -1434,23 +1436,6 @@
                             <div class="setting-item">
                                 <button class="btn-danger" id="clearAllData"><i class="fas fa-trash"></i> Clear All Data</button>
                             </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header"><h3><i class="fas fa-cloud"></i> Google Account &amp; Firestore Sync</h3></div>
-                        <div class="card-body">
-                            <div class="setting-item">
-                                <div class="setting-info"><span class="setting-label">Account</span>
-                                    <span class="setting-value" id="settingsGoogleStatus"><span class="dot disconnected"></span> Not signed in</span>
-                                </div>
-                                <button class="btn-primary" id="settingsGoogleSignIn"><i class="fab fa-google"></i> Sign in</button>
-                            </div>
-                            <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-top:8px;">
-                                Signing in with Google links this device to your shared Firestore database, so every
-                                signed-in user sees the same cheque data in real time. This requires a Firebase
-                                project — see the <code>firebaseConfig</code> object near the top of the
-                                <code>&lt;script&gt;</code> section for setup instructions.
-                            </p>
                         </div>
                     </div>
                     <div class="card">
@@ -1511,8 +1496,8 @@
                     </div>
                     <div class="form-group"><label>Cheque Number <span class="required">*</span></label>
                         <input type="text" id="formCheckNumber" placeholder="6-digit cheque number" inputmode="numeric" pattern="\d{6}" maxlength="6" title="Cheque number must be exactly 6 digits" required /></div>
-                    <div class="form-group"><label>Bank Name</label>
-                        <input type="text" id="formBank" list="bankList" placeholder="Enter bank name" />
+                    <div class="form-group"><label>Bank Name <span class="required">*</span></label>
+                        <input type="text" id="formBank" list="bankList" placeholder="Enter bank name" required />
                         <datalist id="bankList"></datalist>
                     </div>
                     <div class="form-group"><label>Effective Date <span class="required">*</span></label>
@@ -1558,7 +1543,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <script>
         // ============================================================
@@ -1630,17 +1614,54 @@
             });
         }
 
+        // Requesting the Calendar scope here means ONE Google sign-in grants
+        // both Firestore sync and Calendar access in the same popup — no
+        // separate OAuth client, no second button, no separate "test users"
+        // list to manage for Calendar specifically (it shares the Firebase
+        // sign-in's own OAuth client and consent screen).
+        const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
+        let calendarAccessToken = null;
+        let calendarTokenExpiresAt = 0;
+        let selectedCalendarId = localStorage.getItem('checkSelectedCalendarId') || 'primary';
+
         function signInWithGoogle() {
             if (!firebaseReady) {
                 showNotification('Firebase Not Configured', 'Fill in firebaseConfig in the script to enable Google sign-in', 'warning');
                 return;
             }
-            fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.addScope(CALENDAR_SCOPE);
+            fbAuth.signInWithPopup(provider)
+                .then(handleGoogleSignInResult)
                 .catch(err => { console.error('Sign-in error:', err); showNotification('Sign-in Failed', err.message, 'error'); });
+        }
+
+        async function handleGoogleSignInResult(result) {
+            const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
+            if (credential && credential.accessToken) {
+                calendarAccessToken = credential.accessToken;
+                // Google access tokens last ~1hr; Firebase doesn't expose a
+                // silent-refresh for this specific token, so once it expires
+                // the person just needs to click "Sign in" again.
+                calendarTokenExpiresAt = Date.now() + 55 * 60 * 1000;
+                state.calendarConnected = true;
+                updateCalendarUI();
+                showNotification('Connected', 'Signed in — calendar access granted', 'success', true);
+                await fetchCalendarList();
+                await syncChequesToCalendar();
+                checkDueNotifications();
+            } else {
+                state.calendarConnected = false;
+                updateCalendarUI();
+            }
         }
 
         function signOutOfGoogle() {
             if (firebaseReady && currentUser) fbAuth.signOut();
+            calendarAccessToken = null;
+            calendarTokenExpiresAt = 0;
+            state.calendarConnected = false;
+            updateCalendarUI();
         }
 
         // Lesson learned from earlier debugging of this app's data-loss bug:
@@ -2287,17 +2308,16 @@
             });
         }
 
-        function showChecksForDate(date) {
-            const all = [...state.incoming, ...state.outgoing];
-            const checks = all.filter(c => c.effectiveDate === date);
+        // Reusable: renders a list of cheques into the shared detail modal.
+        function renderChequeListModal(title, checks) {
             if (checks.length === 0) {
-                showNotification('No Cheques', `No cheques due on ${formatDate(date)}`, 'info');
+                showNotification('No Cheques', `No cheques found for "${title}"`, 'info');
                 return;
             }
             const modal = document.getElementById('detailModal');
             const content = document.getElementById('detailContent');
             content.innerHTML = `
-                <h4 style="margin-bottom:16px;">Cheques Due on ${formatDate(date)}</h4>
+                <h4 style="margin-bottom:16px;">${title}</h4>
                 <div style="display:flex;flex-direction:column;gap:12px;">
                     ${checks.map(c => {
                         const isIncoming = state.incoming.some(i => i.id === c.id);
@@ -2308,7 +2328,7 @@
                                 <div>
                                     <span style="font-size:11px;font-weight:600;color:${typeColor};text-transform:uppercase;">${typeLabel}</span>
                                     <br><strong>${c.company}</strong>${c.recipient ? ' → ' + c.recipient : ''}
-                                    <br><span style="font-size:13px;color:var(--gray-500);">Cheque #${c.checkNumber} • ${c.bank || 'No bank'}</span>
+                                    <br><span style="font-size:13px;color:var(--gray-500);">Cheque #${c.checkNumber} • ${c.bank || 'No bank'} • ${formatDate(c.effectiveDate)}</span>
                                 </div>
                                 <div style="text-align:right;">
                                     <div style="font-weight:700;font-size:18px;">${formatCurrency(c.amount, c.currency)}</div>
@@ -2323,6 +2343,42 @@
                 </div>
             `;
             modal.classList.add('active');
+        }
+
+        function showChecksForDate(date) {
+            const all = [...state.incoming, ...state.outgoing];
+            const checks = all.filter(c => c.effectiveDate === date);
+            renderChequeListModal(`Cheques Due on ${formatDate(date)}`, checks);
+        }
+
+        // Tapping a dashboard stat card (Due Today / Due This Week / Overdue /
+        // Cleared) shows the matching cheques, each clearly labelled as a
+        // customer (incoming) or supplier (outgoing) payment. Cleared cheques
+        // are shown most-recently-cleared first.
+        function showDashboardStatModal(kind) {
+            const allChecks = [...state.incoming, ...state.outgoing];
+            const today = new Date().toISOString().split('T')[0];
+            let title, checks;
+            if (kind === 'dueToday') {
+                title = 'Due Today';
+                checks = allChecks.filter(c => c.status !== 'cleared' && c.status !== 'cancelled' && c.effectiveDate === today);
+            } else if (kind === 'dueThisWeek') {
+                title = 'Due This Week';
+                checks = allChecks.filter(c => c.status !== 'cleared' && c.status !== 'cancelled' && isThisWeek(c.effectiveDate) && c.effectiveDate !== today);
+            } else if (kind === 'overdue') {
+                title = 'Overdue';
+                checks = allChecks.filter(c => c.status === 'overdue');
+            } else if (kind === 'cleared') {
+                title = 'Cleared Cheques';
+                checks = allChecks.filter(c => c.status === 'cleared')
+                    .sort((a, b) => new Date(b.effectiveDate) - new Date(a.effectiveDate));
+                renderChequeListModal(title, checks);
+                return;
+            } else {
+                return;
+            }
+            checks = [...checks].sort((a, b) => new Date(a.effectiveDate) - new Date(b.effectiveDate));
+            renderChequeListModal(title, checks);
         }
 
         // ============================================================
@@ -2407,7 +2463,7 @@
                 currency: document.getElementById('formCurrency').value,
             };
 
-            if (!data.company || !data.amount || !data.checkNumber || !data.effectiveDate) {
+            if (!data.company || !data.amount || !data.checkNumber || !data.effectiveDate || !data.bank) {
                 showNotification('Validation Error', 'Please fill in all required fields', 'error');
                 return;
             }
@@ -2892,149 +2948,53 @@
         }
 
         // ============================================================
-        //  GOOGLE CALENDAR — real OAuth via Google Identity Services (GIS)
+        //  GOOGLE CALENDAR
         // ============================================================
-        // This is independent of the Firebase sign-in above — it connects
-        // whichever specific Google account you choose in the popup, and
-        // pushes each open cheque to that account's calendar as an event.
-        //
-        // Setup:
-        //   1. Google Cloud Console (console.cloud.google.com) → make sure
-        //      you're in the SAME project as your Firebase project
-        //      ("cheque-7d865") using the project switcher at the top.
-        //   2. APIs & Services → Library → search "Google Calendar API" → Enable.
-        //   3. APIs & Services → Credentials → you should see an OAuth 2.0
-        //      Client ID already created (Firebase creates one automatically
-        //      when you enable Google sign-in) — usually named "Web client
-        //      (auto created by Google Service)". Open it and add, under
-        //      "Authorized JavaScript origins": your GitHub Pages URL
-        //      (e.g. https://yourname.github.io) and http://localhost for
-        //      local testing. Save, then copy that Client ID below.
-        //   4. APIs & Services → OAuth consent screen → Audience/Test users →
-        //      add the specific Google account(s) you'll connect with the
-        //      calendar button, unless you plan to publish the app publicly
-        //      (Calendar access is a "sensitive scope" Google requires
-        //      verification for on unverified/production apps — adding
-        //      yourself as a test user skips that for personal use).
-        //   5. Paste the Client ID here:
-        const GOOGLE_CALENDAR_CLIENT_ID = "471625567421-0ku415l32jbff6lrvm5460r93cucr75n.apps.googleusercontent.com";
-        const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
-
-        const calendarReady = () => typeof google !== 'undefined' && google.accounts &&
-            GOOGLE_CALENDAR_CLIENT_ID && !GOOGLE_CALENDAR_CLIENT_ID.startsWith('YOUR_');
-
-        let calendarTokenClient = null;
-        let calendarAccessToken = null;
-        let calendarTokenExpiresAt = 0;
-        let calendarAccountEmail = null;
-        let selectedCalendarId = localStorage.getItem('checkSelectedCalendarId') || 'primary';
-
-        function getCalendarTokenClient() {
-            if (!calendarTokenClient) {
-                calendarTokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: GOOGLE_CALENDAR_CLIENT_ID,
-                    scope: CALENDAR_SCOPE,
-                    callback: handleCalendarTokenResponse
-                });
-            }
-            return calendarTokenClient;
-        }
-
-        function toggleCalendar() {
-            if (state.calendarConnected) {
-                disconnectCalendar();
-                return;
-            }
-            if (!calendarReady()) {
-                showNotification('Not Configured', 'Set GOOGLE_CALENDAR_CLIENT_ID near the top of the script to enable Calendar sync', 'warning');
-                return;
-            }
-            getCalendarTokenClient().requestAccessToken({ prompt: 'consent select_account' });
-        }
-
-        async function handleCalendarTokenResponse(response) {
-            if (response.error) {
-                console.error('Calendar auth error:', response);
-                showNotification('Connection Failed', response.error_description || response.error, 'error');
-                return;
-            }
-            calendarAccessToken = response.access_token;
-            calendarTokenExpiresAt = Date.now() + (Number(response.expires_in) || 3300) * 1000;
-            state.calendarConnected = true;
-
-            try {
-                const info = await calendarApiFetch('https://www.googleapis.com/oauth2/v3/userinfo');
-                calendarAccountEmail = info.email || null;
-            } catch (e) { calendarAccountEmail = null; }
-
-            updateCalendarUI();
-            showNotification('Connected', calendarAccountEmail ? `Calendar connected (${calendarAccountEmail})` : 'Calendar connected', 'success', true);
-            await fetchCalendarList();
-            await syncChequesToCalendar();
-            checkDueNotifications();
-        }
-
-        function disconnectCalendar() {
-            if (calendarAccessToken && typeof google !== 'undefined' && google.accounts) {
-                google.accounts.oauth2.revoke(calendarAccessToken, () => {});
-            }
-            calendarAccessToken = null;
-            calendarTokenExpiresAt = 0;
-            calendarAccountEmail = null;
-            state.calendarConnected = false;
-            updateCalendarUI();
-            showNotification('Disconnected', 'Google Calendar disconnected', 'info');
-        }
+        // No separate setup needed beyond what Firebase sign-in already
+        // requires — just make sure, in the SAME Google Cloud project as
+        // your Firebase project ("cheque-7d865"):
+        //   1. APIs & Services → Library → "Google Calendar API" → Enable.
+        //   2. APIs & Services → OAuth consent screen (Google Auth Platform)
+        //      → Audience → Test users → add whichever Google account(s)
+        //      will click "Sign in with Google" (Calendar is a "sensitive
+        //      scope" Google requires verification for on unverified apps —
+        //      being a test user skips that for personal/internal use).
+        // That's it — no separate OAuth client, no separate Calendar button.
 
         function updateCalendarUI() {
-            const btn = document.getElementById('connectCalendarBtn');
-            const status = document.querySelector('.connection-status');
-            const dot = status.querySelector('.dot');
+            const statusLine = document.getElementById('calendarStatusLine');
             const settingsStatus = document.getElementById('settingsCalendarStatus');
-            const settingsBtn = document.getElementById('settingsConnectCalendar');
             const pickerRow = document.getElementById('calendarPickerRow');
             if (state.calendarConnected) {
-                btn.classList.add('connected');
-                btn.innerHTML = '<i class="fas fa-check"></i> Connected';
-                dot.className = 'dot connected';
-                status.querySelector('span:last-child').textContent = calendarAccountEmail || 'Connected';
-                settingsStatus.innerHTML = `<span class="dot connected"></span> ${calendarAccountEmail || 'Connected'}`;
-                settingsBtn.innerHTML = '<i class="fas fa-times"></i> Disconnect';
-                pickerRow.style.display = '';
+                if (statusLine) statusLine.innerHTML = '<span class="dot connected"></span><span>Calendar connected</span>';
+                if (settingsStatus) settingsStatus.innerHTML = '<span class="dot connected"></span> Connected';
+                if (pickerRow) pickerRow.style.display = '';
             } else {
-                btn.classList.remove('connected');
-                btn.innerHTML = '<i class="fab fa-google"></i> Connect Calendar';
-                dot.className = 'dot disconnected';
-                status.querySelector('span:last-child').textContent = 'Disconnected';
-                settingsStatus.innerHTML = '<span class="dot disconnected"></span> Not Connected';
-                settingsBtn.innerHTML = '<i class="fab fa-google"></i> Connect';
-                pickerRow.style.display = 'none';
+                if (statusLine) statusLine.innerHTML = '<span class="dot disconnected"></span><span>Calendar not connected</span>';
+                if (settingsStatus) settingsStatus.innerHTML = '<span class="dot disconnected"></span> Not connected';
+                if (pickerRow) pickerRow.style.display = 'none';
             }
         }
 
-        // Access tokens from GIS expire (~1hr) and aren't silently refreshed
-        // without a visible popup, so re-request one transparently whenever
-        // it's about to expire, right before an API call needs it.
-        function ensureCalendarToken() {
-            return new Promise((resolve, reject) => {
-                if (calendarAccessToken && Date.now() < calendarTokenExpiresAt - 30000) {
-                    resolve(calendarAccessToken);
-                    return;
-                }
-                if (!calendarReady()) { reject(new Error('Calendar not configured')); return; }
-                const client = getCalendarTokenClient();
-                const originalCallback = client.callback;
-                client.callback = (resp) => { originalCallback(resp); resp.error ? reject(new Error(resp.error)) : resolve(resp.access_token); };
-                client.requestAccessToken({ prompt: '' });
-            });
-        }
-
+        // Google's OAuth access token isn't refreshed silently once it
+        // expires — without a visible popup there's no way to renew it, so
+        // when it's gone we just fall back to "not connected" and ask for a
+        // fresh sign-in rather than erroring on every subsequent action.
         async function calendarApiFetch(url, options = {}) {
-            const token = await ensureCalendarToken();
+            if (!calendarAccessToken || Date.now() > calendarTokenExpiresAt) {
+                state.calendarConnected = false;
+                updateCalendarUI();
+                throw new Error('Calendar access expired — sign in again to reconnect');
+            }
             const res = await fetch(url, {
                 ...options,
-                headers: { ...(options.headers || {}), Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+                headers: { ...(options.headers || {}), Authorization: `Bearer ${calendarAccessToken}`, 'Content-Type': 'application/json' }
             });
+            if (res.status === 401) {
+                state.calendarConnected = false;
+                updateCalendarUI();
+                throw new Error('Calendar access expired — sign in again to reconnect');
+            }
             if (!res.ok) throw new Error(`Calendar API ${res.status}: ${await res.text()}`);
             return res.status === 204 ? null : res.json();
         }
@@ -3110,8 +3070,10 @@
         // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
+            state.calendarConnected = false; // access token never survives a reload — start fresh each load
             updateUI();
             updateGoogleSignInUI();
+            updateCalendarUI();
             updateNotificationPermissionUI();
 
             const now = new Date();
@@ -3321,11 +3283,7 @@
             e.target.value = '';
         });
 
-        // Calendar connect
-        document.getElementById('connectCalendarBtn').addEventListener('click', toggleCalendar);
-        document.getElementById('settingsConnectCalendar').addEventListener('click', toggleCalendar);
-
-        // Google sign-in (Firebase)
+        // Google sign-in (Firebase) — one sign-in grants both Firestore sync and Calendar
         document.getElementById('googleSignInBtn').addEventListener('click', () => {
             currentUser ? signOutOfGoogle() : signInWithGoogle();
         });
@@ -3389,6 +3347,9 @@
         window.updateDashboard = updateDashboard;
         window.renderCalendar = renderCalendar;
         window.showChecksForDate = showChecksForDate;
+        window.showDashboardStatModal = showDashboardStatModal;
+        window.restoreFromTrash = restoreFromTrash;
+        window.permanentDeleteFromTrash = permanentDeleteFromTrash;
         window.formatDate = formatDate;
         window.formatCurrency = formatCurrency;
         window.getStatusLabel = getStatusLabel;
