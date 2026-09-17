@@ -1400,6 +1400,7 @@
                                 <div class="setting-info"><span class="setting-label">Calendar</span>
                                     <span class="setting-value" id="settingsCalendarStatus"><span class="dot disconnected"></span> Not connected</span>
                                 </div>
+                                <button class="btn-primary" id="connectCalendarBtn"><i class="fab fa-google"></i> Connect Calendar</button>
                             </div>
                             <div class="setting-item" id="calendarPickerRow" style="display:none;">
                                 <div class="setting-info"><span class="setting-label">Sync To Calendar</span></div>
@@ -2965,14 +2966,31 @@
             const statusLine = document.getElementById('calendarStatusLine');
             const settingsStatus = document.getElementById('settingsCalendarStatus');
             const pickerRow = document.getElementById('calendarPickerRow');
+            const connectBtn = document.getElementById('connectCalendarBtn');
             if (state.calendarConnected) {
                 if (statusLine) statusLine.innerHTML = '<span class="dot connected"></span><span>Calendar connected</span>';
                 if (settingsStatus) settingsStatus.innerHTML = '<span class="dot connected"></span> Connected';
                 if (pickerRow) pickerRow.style.display = '';
+                if (connectBtn) connectBtn.innerHTML = '<i class="fas fa-sync"></i> Sync Now';
             } else {
                 if (statusLine) statusLine.innerHTML = '<span class="dot disconnected"></span><span>Calendar not connected</span>';
                 if (settingsStatus) settingsStatus.innerHTML = '<span class="dot disconnected"></span> Not connected';
                 if (pickerRow) pickerRow.style.display = 'none';
+                if (connectBtn) connectBtn.innerHTML = '<i class="fab fa-google"></i> Connect Calendar';
+            }
+        }
+
+        // Explicit "Connect Calendar" / "Sync Now" button. If calendar access
+        // isn't currently granted, this re-runs the Google sign-in popup with
+        // the calendar scope (works even if you're already signed in for
+        // Firestore — Google will just ask for the extra permission). If
+        // calendar access is already active, it just re-syncs immediately —
+        // handy for troubleshooting or forcing an update.
+        function connectOrSyncCalendar() {
+            if (state.calendarConnected) {
+                syncChequesToCalendar().then(() => showNotification('Synced', 'Cheques synced to calendar', 'success'));
+            } else {
+                signInWithGoogle();
             }
         }
 
@@ -3290,6 +3308,8 @@
         document.getElementById('settingsGoogleSignIn').addEventListener('click', () => {
             currentUser ? signOutOfGoogle() : signInWithGoogle();
         });
+
+        document.getElementById('connectCalendarBtn').addEventListener('click', connectOrSyncCalendar);
 
         // Browser notifications
         document.getElementById('enableNotificationsBtn').addEventListener('click', requestNotificationPermission);
