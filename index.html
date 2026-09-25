@@ -1041,6 +1041,10 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
+        /* ===== Report drilldown ===== */
+        .report-row-clickable { cursor: pointer; }
+        .report-row-clickable:hover { background: var(--primary-bg) !important; }
+
         /* ===== Responsive ===== */
         @media (max-width: 1200px) {
             .stats-grid { grid-template-columns: repeat(3, 1fr); }
@@ -1602,24 +1606,6 @@
         // ============================================================
         //  FIREBASE — GOOGLE SIGN-IN + SHARED FIRESTORE SYNC
         // ============================================================
-        // Setup steps:
-        //   1. https://console.firebase.google.com → Add project (free tier is fine)
-        //   2. Project settings (gear icon) → General → "Your apps" → Add app → Web (</>) → copy the config object it gives you into firebaseConfig below
-        //   3. Build → Authentication → Sign-in method → enable "Google"
-        //   4. Build → Firestore Database → Create database (any region close to you)
-        //   5. Firestore → Rules tab, use something like this so only signed-in users can read/write:
-        //        rules_version = '2';
-        //        service cloud.firestore {
-        //          match /databases/{database}/documents {
-        //            match /cheque-data/{doc} {
-        //              allow read, write: if request.auth != null;
-        //            }
-        //          }
-        //        }
-        //   6. Authentication → Settings → Authorized domains → add whatever domain you host this file on
-        //   7. Paste your config below, replacing the "YOUR_..." placeholders, and reload the page.
-        // Until you do this, firebaseReady stays false and the app behaves exactly
-        // as it did before — all data stays local to this browser (localStorage).
         const firebaseConfig = {
             apiKey: "AIzaSyB2_LgbG-_TCUY2zqnsIq9e5AA8f4N41cM",
             authDomain: "cheque-7d865.firebaseapp.com",
@@ -1647,11 +1633,6 @@
             });
         }
 
-        // Requesting the Calendar scope here means ONE Google sign-in grants
-        // both Firestore sync and Calendar access in the same popup — no
-        // separate OAuth client, no second button, no separate "test users"
-        // list to manage for Calendar specifically (it shares the Firebase
-        // sign-in's own OAuth client and consent screen).
         const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
         let calendarAccessToken = null;
         let calendarTokenExpiresAt = 0;
@@ -1664,12 +1645,6 @@
             }
             const provider = new firebase.auth.GoogleAuthProvider();
             provider.addScope(CALENDAR_SCOPE);
-            // BUG FIX: without forcing the consent screen, Google can silently
-            // reuse a prior sign-in that only granted the base profile/email
-            // scope and hand back an access token with no Calendar permission
-            // at all — the app would then think it's "connected" but every
-            // Calendar API call fails. Forcing 'consent' guarantees the popup
-            // always asks for (and actually grants) the Calendar scope.
             provider.setCustomParameters({ prompt: 'consent' });
             fbAuth.signInWithPopup(provider)
                 .then(handleGoogleSignInResult)
@@ -1680,21 +1655,11 @@
             const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
             if (credential && credential.accessToken) {
                 calendarAccessToken = credential.accessToken;
-                // Google access tokens last ~1hr; Firebase doesn't expose a
-                // silent-refresh for this specific token, so once it expires
-                // the person just needs to click "Sign in" again.
                 calendarTokenExpiresAt = Date.now() + 55 * 60 * 1000;
                 state.calendarConnected = true;
                 updateCalendarUI();
                 showNotification('Connected', 'Signed in — calendar access granted', 'success', true);
                 await fetchCalendarList();
-                // BUG FIX: verify the granted token can actually reach the
-                // Calendar API before declaring success. If the Google
-                // account never approved the Calendar scope (e.g. it's
-                // missing from the OAuth consent screen, or the account
-                // isn't added as a test user), calendarApiFetch will fail
-                // here and we should say so plainly instead of quietly
-                // leaving a "connected" badge that never really works.
                 try {
                     await queueCalendarSync();
                     checkDueNotifications();
@@ -1721,10 +1686,6 @@
             updateCalendarUI();
         }
 
-        // Lesson learned from earlier debugging of this app's data-loss bug:
-        // never blindly seed/overwrite the shared document on every login or
-        // refresh. Only write a starting document if none exists yet;
-        // otherwise always defer to whatever's already in Firestore.
         function attachFirestoreSync() {
             if (!firebaseReady || !currentUser) return;
             const docRef = fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]);
@@ -1837,9 +1798,6 @@
             purgeOldTrash();
         }
 
-        // Trash items older than 30 days are removed automatically so the
-        // list doesn't grow forever; anything you actually want to keep,
-        // restore it before then.
         function purgeOldTrash() {
             const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
             const before = state.trash.length;
@@ -1849,12 +1807,6 @@
             }
         }
 
-        // BUG FIX: statuses (pending / due_soon / due_today / overdue) were only
-        // ever calculated once, at save time. A cheque saved as "pending" never
-        // became "overdue" or "due today" on its own — the dashboard, calendar
-        // and reports all read the stale stored status. This recalculates every
-        // cheque's status (unless manually set to cleared/cancelled) every time
-        // data loads or the UI refreshes, so counts stay accurate as days pass.
         function refreshStatuses() {
             [...state.incoming, ...state.outgoing].forEach(c => {
                 c.status = calculateStatus(c.effectiveDate, c.status);
@@ -2080,7 +2032,6 @@
             );
             const cleared = allChecks.filter(c => c.status === 'cleared');
 
-            // Auto-calculate totals by currency
             const totalsByCurrency = (checks) => {
                 const totals = {};
                 checks.forEach(c => {
@@ -2161,20 +2112,11 @@
         // ============================================================
         //  DUE NOTIFICATIONS
         // ============================================================
-        // BUG FIX: this used to only fire while state.calendarConnected was
-        // true — a flag that lives only in memory and resets to false on
-        // every page load/refresh — so alerts effectively never appeared
-        // unless you happened to click "Connect Calendar" in that session.
-        // It also ignored the Reminder Schedule checkboxes entirely and
-        // could re-notify for the same cheque on every re-render. This
-        // version runs on every load, honors the checked reminder days, and
-        // remembers what it has already shown (per cheque + day) so it
-        // doesn't repeat itself.
         let notifiedKeys = new Set(JSON.parse(localStorage.getItem('checkNotifiedKeys') || '[]'));
 
         function getReminderDays() {
             const boxes = document.querySelectorAll('.reminder-checkboxes input[type="checkbox"]');
-            const dayForBox = [7, 3, 1, 0]; // matches the four checkboxes in Settings, in order
+            const dayForBox = [7, 3, 1, 0];
             const days = [];
             boxes.forEach((box, i) => { if (box.checked) days.push(dayForBox[i]); });
             return days;
@@ -2206,9 +2148,6 @@
         // ============================================================
         //  TABLES
         // ============================================================
-        // Generic sorter used by the Customer/Supplier Payments tables.
-        // Sorts a copy of the array by effectiveDate (as a real date) or
-        // amount (numerically), in ascending or descending order.
         function applySort(checks, sort) {
             if (!sort || !sort.field) return checks;
             const dir = sort.dir === 'asc' ? 1 : -1;
@@ -2227,8 +2166,6 @@
             });
         }
 
-        // Updates the little sort-arrow icons on sortable table headers so
-        // they reflect which column/direction is currently active.
         function updateSortIcons(tableName, sort) {
             document.querySelectorAll(`.table th.sortable[data-table="${tableName}"]`).forEach(th => {
                 const icon = th.querySelector('i');
@@ -2403,7 +2340,6 @@
             });
         }
 
-        // Reusable: renders a list of cheques into the shared detail modal.
         function renderChequeListModal(title, checks) {
             if (checks.length === 0) {
                 showNotification('No Cheques', `No cheques found for "${title}"`, 'info');
@@ -2446,10 +2382,6 @@
             renderChequeListModal(`Cheques Due on ${formatDate(date)}`, checks);
         }
 
-        // Tapping a dashboard stat card (Due Today / Due This Week / Overdue /
-        // Cleared) shows the matching cheques, each clearly labelled as a
-        // customer (incoming) or supplier (outgoing) payment. Cleared cheques
-        // are shown most-recently-cleared first.
         function showDashboardStatModal(kind) {
             const allChecks = [...state.incoming, ...state.outgoing];
             const today = new Date().toISOString().split('T')[0];
@@ -2477,6 +2409,20 @@
         }
 
         // ============================================================
+        //  REPORT ROW DRILLDOWN
+        // ============================================================
+        // Opens the shared detail modal showing every cheque behind one row
+        // of a report (a month, or a full Total Received / Total Sent figure).
+        // Called from the clickable rows rendered in generateReport().
+        function showReportRowDetails(rowIndex) {
+            if (!state.lastReport || !state.lastReport.data[rowIndex]) return;
+            const row = state.lastReport.data[rowIndex];
+            if (!Array.isArray(row._cheques)) return;
+            const label = row._label || state.lastReport.title;
+            renderChequeListModal(label, row._cheques);
+        }
+
+        // ============================================================
         //  CRUD
         // ============================================================
         function openCheckModal(type, data = null) {
@@ -2490,7 +2436,6 @@
             document.getElementById('checkId').value = data ? data.id : '';
             form.reset();
 
-            // Set labels based on type
             document.getElementById('companyLabel').innerHTML = isIncoming 
                 ? 'Customer Name <span class="required">*</span>' 
                 : 'Supplier Name <span class="required">*</span>';
@@ -2517,9 +2462,6 @@
                 document.getElementById('formStatus').value = data.status || 'pending';
             } else {
                 const today = new Date().toISOString().split('T')[0];
-                // The user wants Effective Date left blank so a cheque can't
-                // be saved (it's a required field) until a date is actually
-                // chosen, rather than silently defaulting to today.
                 document.getElementById('formEffectiveDate').value = '';
                 if (isIncoming) document.getElementById('formReceivedDate').value = today;
                 else document.getElementById('formSentDate').value = today;
@@ -2568,13 +2510,27 @@
                 return;
             }
 
-            // Add company and bank to lists. BUG FIX: addCompany/addBank each
-            // used to trigger their own immediate saveData() (Firestore push
-            // + calendar sync) with the OLD data, moments before this
-            // function's own updateUI() did the same thing with the NEW
-            // data — two or three redundant, overlapping syncs per save.
-            // Pass persist:false here since updateUI() below saves everything
-            // (including the new/updated company & bank names) in one shot.
+            // FEATURE: cheque numbers must be unique across the whole system —
+            // customer payments, supplier payments and trashed cheques all
+            // share one number space, since a real cheque book number can only
+            // ever be used once. When editing (id is set) the cheque itself is
+            // skipped so re-saving an unchanged form doesn't flag its own
+            // number as a duplicate.
+            const duplicate = [...state.incoming, ...state.outgoing, ...state.trash]
+                .find(c => c.checkNumber === data.checkNumber && c.id !== id);
+
+            if (duplicate) {
+                const where = state.incoming.some(c => c.id === duplicate.id) ? 'Customer Payments'
+                    : state.outgoing.some(c => c.id === duplicate.id) ? 'Supplier Payments'
+                    : 'Trash';
+                showNotification(
+                    'Duplicate Cheque Number',
+                    `Cheque #${data.checkNumber} already exists in ${where} (${duplicate.company}). Cheque numbers must be unique.`,
+                    'error'
+                );
+                return;
+            }
+
             addCompany(data.company, false);
             if (data.bank) addBank(data.bank, false);
 
@@ -2584,7 +2540,6 @@
                 data.sentDate = document.getElementById('formSentDate').value || data.effectiveDate;
             }
 
-            // Auto-calculate status based on effective date
             if (data.status !== 'cleared' && data.status !== 'cancelled') {
                 data.status = calculateStatus(data.effectiveDate, data.status);
             }
@@ -2653,9 +2608,6 @@
             if (c) openCheckModal(type, c);
         }
 
-        // BUG FIX / FEATURE: deleting used to permanently erase the cheque
-        // immediately with no way back. Now it moves to Trash first — only
-        // "Empty Trash" or deleting an item from the Trash page is permanent.
         function deleteCheck(id, type) {
             if (!confirm('Move this cheque to Trash?')) return;
             const collection = type === 'incoming' ? state.incoming : state.outgoing;
@@ -2663,10 +2615,6 @@
             if (idx !== -1) {
                 const [item] = collection.splice(idx, 1);
                 state.trash.push({ ...item, _type: type, deletedAt: new Date().toISOString() });
-                // BUG FIX: updateUI() already calls saveData() at the end of
-                // its own cycle — calling saveData() again here fired a
-                // second, overlapping Firestore write and calendar sync for
-                // every single action (see queueCalendarSync note above).
                 updateUI();
                 renderTrashTable();
                 showNotification('Moved to Trash', 'Cheque moved to Trash', 'success');
@@ -2759,11 +2707,6 @@
         // ============================================================
         //  REPORTS
         // ============================================================
-        // If a specific Month + Year are picked in the Report Filters panel,
-        // that takes priority over the From/To date range — it resolves to
-        // the first and last day of that exact month, so reports like
-        // "Customer/Supplier Payments by Month" and "Total Sent/Received"
-        // can be scoped to one specific month's data.
         function getReportDateRange() {
             const month = document.getElementById('reportMonthFilter').value;
             const year = document.getElementById('reportYearFilter').value;
@@ -2807,14 +2750,30 @@
                 return;
             }
 
-            const headers = Object.keys(data[0]);
+            // FEATURE: rows that carry a hidden `_cheques` array (the monthly
+            // and total reports) become clickable so the user can drill into
+            // the exact cheques behind that figure instead of only seeing the
+            // summary line. Private keys (leading underscore) are stripped
+            // from the visible columns.
+            const headers = Object.keys(data[0]).filter(h => !h.startsWith('_'));
+            const hasDrilldown = data.some(row => Array.isArray(row._cheques));
+
             content.innerHTML = `
                 <div class="table-wrap">
                     <table class="table">
-                        <thead><tr>${headers.map(h => `<th>${h.replace(/_/g,' ').toUpperCase()}</th>`).join('')}</tr></thead>
-                        <tbody>${data.map(row => `<tr>${headers.map(h => `<td>${row[h] || '-'}</td>`).join('')}</tr>`).join('')}</tbody>
+                        <thead><tr>${headers.map(h => `<th>${h.replace(/_/g,' ').toUpperCase()}</th>`).join('')}${hasDrilldown ? '<th>Details</th>' : ''}</tr></thead>
+                        <tbody>${data.map((row, i) => `
+                            <tr class="${Array.isArray(row._cheques) ? 'report-row-clickable' : ''}"
+                                ${Array.isArray(row._cheques) ? `onclick="showReportRowDetails(${i})"` : ''}>
+                                ${headers.map(h => `<td>${row[h] || '-'}</td>`).join('')}
+                                ${hasDrilldown ? `<td>${Array.isArray(row._cheques)
+                                    ? `<button class="btn-outline" onclick="event.stopPropagation();showReportRowDetails(${i})"><i class="fas fa-eye"></i> View ${row._cheques.length}</button>`
+                                    : '-'}</td>` : ''}
+                            </tr>
+                        `).join('')}</tbody>
                     </table>
                 </div>
+                ${hasDrilldown ? '<p class="page-subtitle" style="margin-top:12px;">Click any row (or its View button) to see the individual cheques behind that figure.</p>' : ''}
             `;
         }
 
@@ -2824,8 +2783,9 @@
             filtered.forEach(c => {
                 const d = new Date(c.effectiveDate);
                 const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                if (!monthly[key]) monthly[key] = { month: key, count: 0, totals: {} };
+                if (!monthly[key]) monthly[key] = { month: key, count: 0, totals: {}, cheques: [] };
                 monthly[key].count++;
+                monthly[key].cheques.push(c);
                 const cur = c.currency || 'USD';
                 if (!monthly[key].totals[cur]) monthly[key].totals[cur] = 0;
                 monthly[key].totals[cur] += parseFloat(c.amount);
@@ -2835,7 +2795,9 @@
                 return {
                     Month: m.month,
                     'Number of Cheques': m.count,
-                    'Total Amount': totalStr
+                    'Total Amount': totalStr,
+                    _cheques: m.cheques,
+                    _label: `Cheques in ${m.month}`
                 };
             });
         }
@@ -2849,20 +2811,18 @@
                 totals[cur] += parseFloat(c.amount);
             });
             const totalStr = Object.entries(totals).map(([cur, amt]) => formatCurrency(amt, cur)).join(' + ') || '$0.00';
+            const isIncoming = collection === state.incoming;
             return [{
                 'Total Cheques': filtered.length,
-                'Total Amount': totalStr
+                'Total Amount': totalStr,
+                _cheques: filtered,
+                _label: isIncoming ? 'All Customer Payments' : 'All Supplier Payments'
             }];
         }
 
         function getOutstandingData(startDate, endDate) {
             const all = [...state.incoming, ...state.outgoing];
             const filtered = filterByDate(all, startDate, endDate);
-            // BUG FIX: previously compared effectiveDate to "now" (with a time
-            // component), which silently dropped overdue cheques from the
-            // Outstanding report and could mis-classify today's cheques near
-            // midnight depending on timezone. "Outstanding" should mean
-            // anything not yet cleared/cancelled, overdue included.
             const outstanding = filtered.filter(c =>
                 c.status !== 'cleared' && c.status !== 'cancelled'
             );
@@ -2941,11 +2901,6 @@
         // ============================================================
         //  EXPORT
         // ============================================================
-        // BUG FIX: values were joined into CSV rows with a plain comma, so any
-        // company/recipient/bank name containing a comma (or a quote, or a
-        // line break) silently corrupted the file — fields shifted into the
-        // wrong column when opened in Excel/Sheets. csvEscape() quotes any
-        // field that needs it, per the CSV spec.
         function csvEscape(value) {
             const str = String(value ?? '');
             if (/[",\n]/.test(str)) {
@@ -2987,16 +2942,13 @@
             showNotification('Exported', `${type} cheques exported`, 'success');
         }
 
-        // BUG FIX: this "Export" button next to Report Results rendered onto
-        // the page but had no click handler at all, so nothing happened.
-        // It now exports whatever report is currently on screen as a CSV.
         function exportReportToCSV() {
             if (!state.lastReport || state.lastReport.data.length === 0) {
                 showNotification('Nothing to Export', 'Generate a report first', 'warning');
                 return;
             }
             const { title, data } = state.lastReport;
-            const headers = Object.keys(data[0]);
+            const headers = Object.keys(data[0]).filter(h => !h.startsWith('_'));
             const csv = [
                 headers.map(csvEscape).join(','),
                 ...data.map(row => headers.map(h => csvEscape(row[h])).join(','))
@@ -3011,8 +2963,6 @@
             showNotification('Exported', `${title} report exported`, 'success');
         }
 
-        // BUG FIX: "Import Data" button had no click handler — it did nothing.
-        // This restores a JSON file previously produced by "Export All Data".
         function importDataFromFile(file) {
             const reader = new FileReader();
             reader.onload = e => {
@@ -3071,17 +3021,6 @@
         // ============================================================
         //  GOOGLE CALENDAR
         // ============================================================
-        // No separate setup needed beyond what Firebase sign-in already
-        // requires — just make sure, in the SAME Google Cloud project as
-        // your Firebase project ("cheque-7d865"):
-        //   1. APIs & Services → Library → "Google Calendar API" → Enable.
-        //   2. APIs & Services → OAuth consent screen (Google Auth Platform)
-        //      → Audience → Test users → add whichever Google account(s)
-        //      will click "Sign in with Google" (Calendar is a "sensitive
-        //      scope" Google requires verification for on unverified apps —
-        //      being a test user skips that for personal/internal use).
-        // That's it — no separate OAuth client, no separate Calendar button.
-
         function updateCalendarUI() {
             const statusLine = document.getElementById('calendarStatusLine');
             const settingsStatus = document.getElementById('settingsCalendarStatus');
@@ -3100,12 +3039,6 @@
             }
         }
 
-        // Explicit "Connect Calendar" / "Sync Now" button. If calendar access
-        // isn't currently granted, this re-runs the Google sign-in popup with
-        // the calendar scope (works even if you're already signed in for
-        // Firestore — Google will just ask for the extra permission). If
-        // calendar access is already active, it just re-syncs immediately —
-        // handy for troubleshooting or forcing an update.
         function connectOrSyncCalendar() {
             if (state.calendarConnected) {
                 queueCalendarSync()
@@ -3116,10 +3049,6 @@
             }
         }
 
-        // Google's OAuth access token isn't refreshed silently once it
-        // expires — without a visible popup there's no way to renew it, so
-        // when it's gone we just fall back to "not connected" and ask for a
-        // fresh sign-in rather than erroring on every subsequent action.
         async function calendarApiFetch(url, options = {}) {
             if (!calendarAccessToken || Date.now() > calendarTokenExpiresAt) {
                 state.calendarConnected = false;
@@ -3130,12 +3059,6 @@
                 ...options,
                 headers: { ...(options.headers || {}), Authorization: `Bearer ${calendarAccessToken}`, 'Content-Type': 'application/json' }
             });
-            // BUG FIX: a 401 means the token itself is dead, but a 403 means
-            // the token is valid yet was never granted Calendar permission
-            // (missing scope, Calendar API not enabled, or account not on
-            // the OAuth test-user list). Previously only 401 reset the
-            // "connected" state, so a 403 just left the UI stuck showing
-            // "Calendar connected" forever while every sync silently failed.
             if (res.status === 401 || res.status === 403) {
                 state.calendarConnected = false;
                 updateCalendarUI();
@@ -3149,16 +3072,6 @@
             return res.status === 204 ? null : res.json();
         }
 
-        // BUG FIX: saveData() (called on nearly every edit) used to call
-        // syncChequesToCalendar() directly, and several actions (saveCheck,
-        // markCleared, markCancelled, deleteCheck, restoreFromTrash, imports)
-        // ended up calling saveData() more than once for a single user
-        // action. That fired multiple overlapping syncs at once — each one
-        // fetches the "existing" events before any of the others have
-        // finished writing, so they'd all decide the same event needed to be
-        // created and post duplicates (or delete/recreate out of order).
-        // Routing every sync request through one shared queue guarantees
-        // they run strictly one at a time, eliminating the race entirely.
         let calendarSyncQueue = Promise.resolve();
         function queueCalendarSync() {
             calendarSyncQueue = calendarSyncQueue.then(() => syncChequesToCalendar());
@@ -3182,10 +3095,6 @@
             }
         }
 
-        // Keeps one Google Calendar event per open cheque, matched by a
-        // hidden extendedProperty (so re-running sync never creates
-        // duplicates). Cheques that are cleared, cancelled, or deleted have
-        // their event removed.
         async function syncChequesToCalendar() {
             if (!state.calendarConnected) return;
             const all = [...state.incoming.map(c => ({ ...c, _dir: 'incoming' })), ...state.outgoing.map(c => ({ ...c, _dir: 'outgoing' }))];
@@ -3195,11 +3104,6 @@
                 );
                 const existingByChequeId = new Map((existing.items || []).map(ev => [ev.extendedProperties?.private?.chequeId, ev]));
 
-                // BUG FIX: a cheque that's deleted (or moved to Trash) simply
-                // disappears from state.incoming/outgoing, but its calendar
-                // event was never being cleaned up — it lingered forever.
-                // Anything with a matching event but no longer present here
-                // (cleared/cancelled/deleted/trashed) gets its event removed.
                 const currentIds = new Set(all.map(c => c.id));
                 for (const [chequeId, ev] of existingByChequeId) {
                     if (chequeId && !currentIds.has(chequeId)) {
@@ -3234,9 +3138,6 @@
         // ============================================================
         //  INIT
         // ============================================================
-        // Fills the Report Filters "Year" dropdown with a sensible range —
-        // a few years back from the earliest cheque on record (or this year
-        // if there's no data yet) through next year.
         function populateReportYearFilter() {
             const yearSelect = document.getElementById('reportYearFilter');
             const nowYear = new Date().getFullYear();
@@ -3255,7 +3156,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
-            state.calendarConnected = false; // access token never survives a reload — start fresh each load
+            state.calendarConnected = false;
             updateUI();
             populateReportYearFilter();
             updateGoogleSignInUI();
@@ -3279,7 +3180,6 @@
         //  EVENT LISTENERS
         // ============================================================
 
-        // Navigation
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
@@ -3287,12 +3187,10 @@
             });
         });
 
-        // Mobile menu
         document.getElementById('menuToggle').addEventListener('click', () => {
             document.getElementById('sidebar').classList.toggle('open');
         });
 
-        // Add check
         document.getElementById('btnAddCheck').addEventListener('click', () => {
             const page = state.currentPage;
             if (page === 'incoming') openCheckModal('incoming');
@@ -3303,7 +3201,6 @@
             }
         });
 
-        // Quick actions
         document.querySelectorAll('.quick-action').forEach(btn => {
             btn.addEventListener('click', () => {
                 const type = btn.dataset.type;
@@ -3312,7 +3209,6 @@
             });
         });
 
-        // Modal controls
         document.getElementById('modalClose').addEventListener('click', closeCheckModal);
         document.getElementById('modalCancel').addEventListener('click', closeCheckModal);
         document.getElementById('detailModalClose').addEventListener('click', closeCheckModal);
@@ -3320,13 +3216,10 @@
             modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
         });
 
-        // Form submit
         document.getElementById('checkForm').addEventListener('submit', saveCheck);
 
-        // Currency change
         document.getElementById('formCurrency').addEventListener('change', updateCurrencySymbol);
 
-        // Received date change -> effective date min
         document.getElementById('formReceivedDate').addEventListener('change', e => {
             const received = e.target.value;
             const effectiveInput = document.getElementById('formEffectiveDate');
@@ -3340,7 +3233,6 @@
             }
         });
 
-        // Sent date change -> effective date min
         document.getElementById('formSentDate').addEventListener('change', e => {
             const sent = e.target.value;
             const effectiveInput = document.getElementById('formEffectiveDate');
@@ -3354,17 +3246,14 @@
             }
         });
 
-        // Company input - save on blur
         document.getElementById('formCompany').addEventListener('blur', e => {
             addCompany(e.target.value);
         });
 
-        // Bank input - save on blur
         document.getElementById('formBank').addEventListener('blur', e => {
             addBank(e.target.value);
         });
 
-        // Calendar controls
         document.getElementById('prevMonth').addEventListener('click', () => {
             if (state.currentMonth === 0) { state.currentMonth = 11; state.currentYear--; }
             else state.currentMonth--;
@@ -3389,7 +3278,6 @@
             renderCalendar();
         });
 
-        // Global search
         let searchTimeout;
         document.getElementById('globalSearch').addEventListener('input', e => {
             clearTimeout(searchTimeout);
@@ -3413,7 +3301,6 @@
             }, 300);
         });
 
-        // Keyboard shortcut
         document.addEventListener('keydown', e => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
@@ -3421,15 +3308,12 @@
             }
         });
 
-        // Reports
         document.getElementById('generateReportBtn').addEventListener('click', () => {
             const active = document.querySelector('.report-card.active');
             if (active) generateReport(active.dataset.report);
             else showNotification('Select Report', 'Please select a report type first', 'warning');
         });
 
-        // Clears the Month/Year picker so the From/To date range (or no
-        // range at all) is used again for the next generated report.
         document.getElementById('clearReportMonthFilterBtn').addEventListener('click', () => {
             document.getElementById('reportMonthFilter').value = '';
             document.getElementById('reportYearFilter').value = '';
@@ -3443,13 +3327,10 @@
             });
         });
 
-        // Export
         document.getElementById('exportIncomingBtn').addEventListener('click', () => exportData('incoming'));
         document.getElementById('exportOutgoingBtn').addEventListener('click', () => exportData('outgoing'));
         document.getElementById('exportAllData').addEventListener('click', exportAllData);
 
-        // BUG FIX: these four controls rendered on the page but had no
-        // click handlers wired up, so clicking them did nothing.
         document.getElementById('filterIncomingBtn').addEventListener('click', function() {
             state.incomingFilterOutstanding = !state.incomingFilterOutstanding;
             this.classList.toggle('connected', state.incomingFilterOutstanding);
@@ -3468,9 +3349,6 @@
         });
         document.getElementById('exportReportBtn').addEventListener('click', exportReportToCSV);
 
-        // Sortable column headers — Customer Payments & Supplier Payments
-        // tables. Click a header to sort by it; click again to flip the
-        // direction (ascending <-> descending).
         document.querySelectorAll('.table th.sortable').forEach(th => {
             th.addEventListener('click', () => {
                 const tableName = th.dataset.table;
@@ -3496,7 +3374,6 @@
             e.target.value = '';
         });
 
-        // Google sign-in (Firebase) — one sign-in grants both Firestore sync and Calendar
         document.getElementById('googleSignInBtn').addEventListener('click', () => {
             currentUser ? signOutOfGoogle() : signInWithGoogle();
         });
@@ -3506,29 +3383,24 @@
 
         document.getElementById('connectCalendarBtn').addEventListener('click', connectOrSyncCalendar);
 
-        // Browser notifications
         document.getElementById('enableNotificationsBtn').addEventListener('click', requestNotificationPermission);
 
-        // Reminder schedule checkboxes — re-check due notifications when changed
         document.querySelectorAll('.reminder-checkboxes input[type="checkbox"]').forEach(box => {
             box.addEventListener('change', checkDueNotifications);
         });
 
-        // Calendar picker
         document.getElementById('calendarPicker').addEventListener('change', function() {
             selectedCalendarId = this.value;
             localStorage.setItem('checkSelectedCalendarId', selectedCalendarId);
             syncChequesToCalendar();
         });
 
-        // Cheque number: digits only, max 6, strip anything else as you type
         document.getElementById('formCheckNumber').addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '').slice(0, 6);
         });
 
         document.getElementById('emptyTrashBtn').addEventListener('click', emptyTrash);
 
-        // Clear all data
         document.getElementById('clearAllData').addEventListener('click', () => {
             if (confirm('Delete ALL cheque data? This cannot be undone!')) {
                 if (confirm('Really? All cheques will be permanently deleted.')) {
@@ -3562,6 +3434,7 @@
         window.renderCalendar = renderCalendar;
         window.showChecksForDate = showChecksForDate;
         window.showDashboardStatModal = showDashboardStatModal;
+        window.showReportRowDetails = showReportRowDetails;
         window.restoreFromTrash = restoreFromTrash;
         window.permanentDeleteFromTrash = permanentDeleteFromTrash;
         window.formatDate = formatDate;
