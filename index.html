@@ -563,6 +563,11 @@
 
         .table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
         .table tbody tr:hover { background: var(--gray-50); }
+
+        .table th.sortable { cursor: pointer; user-select: none; transition: var(--transition); }
+        .table th.sortable:hover { color: var(--primary); }
+        .table th.sortable i { margin-left: 4px; font-size: 11px; opacity: 0.5; }
+        .table th.sortable.sort-active i { opacity: 1; color: var(--primary); }
         .table tbody tr:last-child td { border-bottom: none; }
 
         .empty-state {
@@ -1249,8 +1254,11 @@
                     <div class="table-wrap">
                         <table class="table">
                             <thead><tr>
-                                <th>ID</th><th>Customer</th><th>Received</th><th>Effective</th>
-                                <th>Cheque No.</th><th>Bank</th><th>Amount</th><th>Status</th><th>Actions</th>
+                                <th>ID</th><th>Customer</th><th>Received</th>
+                                <th class="sortable" data-table="incoming" data-sort="effectiveDate">Effective <i class="fas fa-sort"></i></th>
+                                <th>Cheque No.</th><th>Bank</th>
+                                <th class="sortable" data-table="incoming" data-sort="amount">Amount <i class="fas fa-sort"></i></th>
+                                <th>Status</th><th>Actions</th>
                             </tr></thead>
                             <tbody id="incomingTableBody">
                                 <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><span>No customer payments recorded yet</span></td></tr>
@@ -1274,7 +1282,9 @@
                         <table class="table">
                             <thead><tr>
                                 <th>ID</th><th>Supplier</th><th>Recipient</th><th>Phone</th>
-                                <th>Amount</th><th>Effective</th><th>Cheque No.</th><th>Status</th><th>Actions</th>
+                                <th class="sortable" data-table="outgoing" data-sort="amount">Amount <i class="fas fa-sort"></i></th>
+                                <th class="sortable" data-table="outgoing" data-sort="effectiveDate">Effective <i class="fas fa-sort"></i></th>
+                                <th>Cheque No.</th><th>Status</th><th>Actions</th>
                             </tr></thead>
                             <tbody id="outgoingTableBody">
                                 <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><span>No supplier payments recorded yet</span></td></tr>
@@ -1340,6 +1350,26 @@
                                         <button class="btn-primary" id="generateReportBtn"><i class="fas fa-chart-bar"></i> Generate</button>
                                     </div>
                                 </div>
+                                <div class="filter-row">
+                                    <div class="filter-item"><label>Or Month</label>
+                                        <select id="reportMonthFilter">
+                                            <option value="">Any Month</option>
+                                            <option value="0">January</option><option value="1">February</option>
+                                            <option value="2">March</option><option value="3">April</option>
+                                            <option value="4">May</option><option value="5">June</option>
+                                            <option value="6">July</option><option value="7">August</option>
+                                            <option value="8">September</option><option value="9">October</option>
+                                            <option value="10">November</option><option value="11">December</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-item"><label>Year</label>
+                                        <select id="reportYearFilter"><option value="">Any Year</option></select>
+                                    </div>
+                                    <div class="filter-item" style="justify-content:flex-end;">
+                                        <button class="btn-outline" id="clearReportMonthFilterBtn" type="button"><i class="fas fa-times"></i> Clear</button>
+                                    </div>
+                                </div>
+                                <p class="page-subtitle" style="margin-top:-4px;">Pick a specific Month and Year to report on just that month (used instead of the date range above) — handy for "Customer/Supplier Payments by Month" and "Total Sent/Received".</p>
                             </div>
                         </div>
                     </div>
@@ -1564,6 +1594,8 @@
             calendarConnected: false,
             incomingFilterOutstanding: false,
             outgoingFilterOutstanding: false,
+            incomingSort: { field: 'effectiveDate', dir: 'desc' },
+            outgoingSort: { field: 'effectiveDate', dir: 'desc' },
             lastReport: null,
         };
 
@@ -2174,12 +2206,48 @@
         // ============================================================
         //  TABLES
         // ============================================================
+        // Generic sorter used by the Customer/Supplier Payments tables.
+        // Sorts a copy of the array by effectiveDate (as a real date) or
+        // amount (numerically), in ascending or descending order.
+        function applySort(checks, sort) {
+            if (!sort || !sort.field) return checks;
+            const dir = sort.dir === 'asc' ? 1 : -1;
+            return [...checks].sort((a, b) => {
+                let av, bv;
+                if (sort.field === 'amount') {
+                    av = parseFloat(a.amount) || 0;
+                    bv = parseFloat(b.amount) || 0;
+                } else {
+                    av = new Date(a.effectiveDate).getTime() || 0;
+                    bv = new Date(b.effectiveDate).getTime() || 0;
+                }
+                if (av < bv) return -1 * dir;
+                if (av > bv) return 1 * dir;
+                return 0;
+            });
+        }
+
+        // Updates the little sort-arrow icons on sortable table headers so
+        // they reflect which column/direction is currently active.
+        function updateSortIcons(tableName, sort) {
+            document.querySelectorAll(`.table th.sortable[data-table="${tableName}"]`).forEach(th => {
+                const icon = th.querySelector('i');
+                const isActive = sort && sort.field === th.dataset.sort;
+                th.classList.toggle('sort-active', !!isActive);
+                icon.className = isActive
+                    ? (sort.dir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down')
+                    : 'fas fa-sort';
+            });
+        }
+
         function renderIncomingTable() {
             const tbody = document.getElementById('incomingTableBody');
             let checks = state.incoming;
             if (state.incomingFilterOutstanding) {
                 checks = checks.filter(c => c.status !== 'cleared' && c.status !== 'cancelled');
             }
+            checks = applySort(checks, state.incomingSort);
+            updateSortIcons('incoming', state.incomingSort);
             if (checks.length === 0) {
                 const msg = state.incomingFilterOutstanding ? 'No outstanding customer payments' : 'No customer payments recorded yet';
                 tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><span>${msg}</span></td></tr>`;
@@ -2212,6 +2280,8 @@
             if (state.outgoingFilterOutstanding) {
                 checks = checks.filter(c => c.status !== 'cleared' && c.status !== 'cancelled');
             }
+            checks = applySort(checks, state.outgoingSort);
+            updateSortIcons('outgoing', state.outgoingSort);
             if (checks.length === 0) {
                 const msg = state.outgoingFilterOutstanding ? 'No outstanding supplier payments' : 'No supplier payments recorded yet';
                 tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><span>${msg}</span></td></tr>`;
@@ -2689,9 +2759,29 @@
         // ============================================================
         //  REPORTS
         // ============================================================
+        // If a specific Month + Year are picked in the Report Filters panel,
+        // that takes priority over the From/To date range — it resolves to
+        // the first and last day of that exact month, so reports like
+        // "Customer/Supplier Payments by Month" and "Total Sent/Received"
+        // can be scoped to one specific month's data.
+        function getReportDateRange() {
+            const month = document.getElementById('reportMonthFilter').value;
+            const year = document.getElementById('reportYearFilter').value;
+            if (month !== '' && year !== '') {
+                const m = parseInt(month, 10);
+                const y = parseInt(year, 10);
+                const firstDay = new Date(y, m, 1).toISOString().split('T')[0];
+                const lastDay = new Date(y, m + 1, 0).toISOString().split('T')[0];
+                return { startDate: firstDay, endDate: lastDay };
+            }
+            return {
+                startDate: document.getElementById('reportStartDate').value,
+                endDate: document.getElementById('reportEndDate').value
+            };
+        }
+
         function generateReport(type) {
-            const startDate = document.getElementById('reportStartDate').value;
-            const endDate = document.getElementById('reportEndDate').value;
+            const { startDate, endDate } = getReportDateRange();
             const results = document.getElementById('reportResults');
             const content = document.getElementById('reportContent');
 
@@ -2974,6 +3064,7 @@
             renderCalendar();
             updateCompanyDatalist();
             updateBankDatalist();
+            if (document.getElementById('reportYearFilter')) populateReportYearFilter();
             saveData();
         }
 
@@ -3143,10 +3234,30 @@
         // ============================================================
         //  INIT
         // ============================================================
+        // Fills the Report Filters "Year" dropdown with a sensible range —
+        // a few years back from the earliest cheque on record (or this year
+        // if there's no data yet) through next year.
+        function populateReportYearFilter() {
+            const yearSelect = document.getElementById('reportYearFilter');
+            const nowYear = new Date().getFullYear();
+            const allDates = [...state.incoming, ...state.outgoing]
+                .map(c => new Date(c.effectiveDate).getFullYear())
+                .filter(y => !isNaN(y));
+            const earliest = allDates.length ? Math.min(...allDates, nowYear) : nowYear - 3;
+            const latest = allDates.length ? Math.max(...allDates, nowYear) : nowYear + 1;
+            const selected = yearSelect.value;
+            yearSelect.innerHTML = '<option value="">Any Year</option>' +
+                Array.from({ length: latest - earliest + 2 }, (_, i) => latest + 1 - i)
+                    .filter(y => y >= earliest)
+                    .map(y => `<option value="${y}">${y}</option>`).join('');
+            yearSelect.value = selected;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
             state.calendarConnected = false; // access token never survives a reload — start fresh each load
             updateUI();
+            populateReportYearFilter();
             updateGoogleSignInUI();
             updateCalendarUI();
             updateNotificationPermissionUI();
@@ -3317,6 +3428,13 @@
             else showNotification('Select Report', 'Please select a report type first', 'warning');
         });
 
+        // Clears the Month/Year picker so the From/To date range (or no
+        // range at all) is used again for the next generated report.
+        document.getElementById('clearReportMonthFilterBtn').addEventListener('click', () => {
+            document.getElementById('reportMonthFilter').value = '';
+            document.getElementById('reportYearFilter').value = '';
+        });
+
         document.querySelectorAll('.report-card').forEach(card => {
             card.addEventListener('click', () => {
                 document.querySelectorAll('.report-card').forEach(c => c.classList.remove('active'));
@@ -3349,6 +3467,26 @@
             renderOutgoingTable();
         });
         document.getElementById('exportReportBtn').addEventListener('click', exportReportToCSV);
+
+        // Sortable column headers — Customer Payments & Supplier Payments
+        // tables. Click a header to sort by it; click again to flip the
+        // direction (ascending <-> descending).
+        document.querySelectorAll('.table th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const tableName = th.dataset.table;
+                const field = th.dataset.sort;
+                const sortKey = tableName === 'incoming' ? 'incomingSort' : 'outgoingSort';
+                const current = state[sortKey];
+                if (current.field === field) {
+                    current.dir = current.dir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    current.field = field;
+                    current.dir = 'asc';
+                }
+                if (tableName === 'incoming') renderIncomingTable();
+                else renderOutgoingTable();
+            });
+        });
         document.getElementById('importDataBtn').addEventListener('click', () => {
             document.getElementById('importDataInput').click();
         });
