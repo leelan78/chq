@@ -2347,6 +2347,7 @@
             }
             const modal = document.getElementById('detailModal');
             const content = document.getElementById('detailContent');
+            state.lastChequeList = { title, checks };
             content.innerHTML = `
                 <h4 style="margin-bottom:16px;">${title}</h4>
                 <div style="display:flex;flex-direction:column;gap:12px;">
@@ -2369,11 +2370,84 @@
                         `;
                     }).join('')}
                 </div>
-                <div style="margin-top:16px;text-align:right;">
+                <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:10px;">
+                    <button class="btn-primary" onclick="printChequeList()"><i class="fas fa-print"></i> Print</button>
                     <button class="btn-secondary" onclick="document.getElementById('detailModal').classList.remove('active')">Close</button>
                 </div>
             `;
             modal.classList.add('active');
+        }
+
+        // ============================================================
+        //  PRINT the cheque list currently shown in the details modal
+        // ============================================================
+        function printChequeList() {
+            const list = state.lastChequeList;
+            if (!list || !list.checks || list.checks.length === 0) {
+                showNotification('Nothing to Print', 'Open a list of cheques first', 'warning');
+                return;
+            }
+            const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            const rows = list.checks;
+            const totals = {};
+            rows.forEach(c => {
+                const cur = c.currency || 'USD';
+                totals[cur] = (totals[cur] || 0) + (parseFloat(c.amount) || 0);
+            });
+            const totalStr = Object.entries(totals).map(([cur, amt]) => formatCurrency(amt, cur)).join(' + ');
+            const printedOn = new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+
+            const body = rows.map((c, i) => {
+                const isIncoming = state.incoming.some(x => x.id === c.id);
+                return `<tr>
+                    <td>${i + 1}</td>
+                    <td>${isIncoming ? 'Customer' : 'Supplier'}</td>
+                    <td>${esc(c.company)}${c.recipient ? '<br><small>&rarr; ' + esc(c.recipient) + '</small>' : ''}</td>
+                    <td>${esc(c.checkNumber)}</td>
+                    <td>${esc(c.bank || '-')}</td>
+                    <td>${esc(formatDate(c.effectiveDate))}</td>
+                    <td class="num">${esc(formatCurrency(c.amount, c.currency))}</td>
+                    <td>${esc(getStatusLabel(c.status))}</td>
+                </tr>`;
+            }).join('');
+
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(list.title)}</title>
+                <style>
+                    * { box-sizing: border-box; }
+                    body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 24px; font-size: 12px; }
+                    h1 { font-size: 18px; margin: 0 0 4px; }
+                    .meta { color: #555; margin-bottom: 16px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #bbb; padding: 6px 8px; text-align: left; vertical-align: top; }
+                    th { background: #eee; font-size: 11px; text-transform: uppercase; }
+                    small { color: #555; }
+                    .num { text-align: right; white-space: nowrap; font-weight: bold; }
+                    tfoot td { font-weight: bold; background: #f6f6f6; }
+                    tr { page-break-inside: avoid; }
+                    thead { display: table-header-group; }
+                    @page { margin: 12mm; }
+                </style></head><body>
+                <h1>${esc(list.title)}</h1>
+                <div class="meta">S.A.A Legacy Pharmaceutical &bull; ${rows.length} cheque(s) &bull; Printed ${esc(printedOn)}</div>
+                <table>
+                    <thead><tr><th>#</th><th>Type</th><th>Customer / Supplier</th><th>Cheque No.</th><th>Bank</th><th>Due Date</th><th>Amount</th><th>Status</th></tr></thead>
+                    <tbody>${body}</tbody>
+                    <tfoot><tr><td colspan="6">Total</td><td class="num" colspan="2">${esc(totalStr)}</td></tr></tfoot>
+                </table></body></html>`;
+
+            // Print through a hidden iframe (no pop-up blockers to worry about)
+            const old = document.getElementById('printFrame');
+            if (old) old.remove();
+            const frame = document.createElement('iframe');
+            frame.id = 'printFrame';
+            frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+            document.body.appendChild(frame);
+            const doc = frame.contentWindow.document;
+            doc.open(); doc.write(html); doc.close();
+            setTimeout(() => {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            }, 250);
         }
 
         function showChecksForDate(date) {
