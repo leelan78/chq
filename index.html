@@ -1258,9 +1258,9 @@
                     <div class="table-wrap">
                         <table class="table">
                             <thead><tr>
-                                <th>ID</th><th>Customer</th><th>Received</th>
+                                <th>ID</th><th class="sortable" data-table="incoming" data-sort="name">Customer <i class="fas fa-sort"></i></th><th>Received</th>
                                 <th class="sortable" data-table="incoming" data-sort="effectiveDate">Effective <i class="fas fa-sort"></i></th>
-                                <th>Cheque No.</th><th>Bank</th>
+                                <th class="sortable" data-table="incoming" data-sort="chequeNo">Cheque No. <i class="fas fa-sort"></i></th><th>Bank</th>
                                 <th class="sortable" data-table="incoming" data-sort="amount">Amount <i class="fas fa-sort"></i></th>
                                 <th>Status</th><th>Actions</th>
                             </tr></thead>
@@ -1285,10 +1285,10 @@
                     <div class="table-wrap">
                         <table class="table">
                             <thead><tr>
-                                <th>ID</th><th>Supplier</th><th>Recipient</th><th>Phone</th>
+                                <th>ID</th><th class="sortable" data-table="outgoing" data-sort="name">Supplier <i class="fas fa-sort"></i></th><th>Recipient</th><th>Phone</th>
                                 <th class="sortable" data-table="outgoing" data-sort="amount">Amount <i class="fas fa-sort"></i></th>
                                 <th class="sortable" data-table="outgoing" data-sort="effectiveDate">Effective <i class="fas fa-sort"></i></th>
-                                <th>Cheque No.</th><th>Status</th><th>Actions</th>
+                                <th class="sortable" data-table="outgoing" data-sort="chequeNo">Cheque No. <i class="fas fa-sort"></i></th><th>Status</th><th>Actions</th>
                             </tr></thead>
                             <tbody id="outgoingTableBody">
                                 <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i><span>No supplier payments recorded yet</span></td></tr>
@@ -2156,6 +2156,12 @@
                 if (sort.field === 'amount') {
                     av = parseFloat(a.amount) || 0;
                     bv = parseFloat(b.amount) || 0;
+                } else if (sort.field === 'name') {
+                    const cmp = String(a.company || '').localeCompare(String(b.company || ''), undefined, { sensitivity: 'base', numeric: true });
+                    return cmp * dir;
+                } else if (sort.field === 'chequeNo') {
+                    const cmp = String(a.checkNumber || '').localeCompare(String(b.checkNumber || ''), undefined, { numeric: true });
+                    return cmp * dir;
                 } else {
                     av = new Date(a.effectiveDate).getTime() || 0;
                     bv = new Date(b.effectiveDate).getTime() || 0;
@@ -2340,18 +2346,51 @@
             });
         }
 
-        function renderChequeListModal(title, checks) {
+        // Sorts a copy of a cheque list by the given key without mutating
+        // the original array. 'date' (default) keeps due-date order,
+        // 'name' sorts A–Z by customer/supplier name, 'chequeNo' sorts by
+        // cheque number (numeric-aware).
+        function sortChequeList(checks, key) {
+            const arr = [...checks];
+            if (key === 'name') {
+                arr.sort((a, b) => String(a.company || '').localeCompare(String(b.company || ''), undefined, { sensitivity: 'base' }));
+            } else if (key === 'chequeNo') {
+                arr.sort((a, b) => String(a.checkNumber || '').localeCompare(String(b.checkNumber || ''), undefined, { numeric: true, sensitivity: 'base' }));
+            } else {
+                arr.sort((a, b) => new Date(a.effectiveDate) - new Date(b.effectiveDate));
+            }
+            return arr;
+        }
+
+        function changeChequeListSort(key) {
+            if (!state.lastChequeList) return;
+            renderChequeListModal(state.lastChequeList.title, state.lastChequeList.checks, key);
+        }
+
+        function renderChequeListModal(title, checks, sortKey) {
             if (checks.length === 0) {
                 showNotification('No Cheques', `No cheques found for "${title}"`, 'info');
                 return;
             }
+            sortKey = sortKey || 'date';
             const modal = document.getElementById('detailModal');
             const content = document.getElementById('detailContent');
-            state.lastChequeList = { title, checks };
+            state.lastChequeList = { title, checks, sortKey };
+            const sorted = sortChequeList(checks, sortKey);
             content.innerHTML = `
-                <h4 style="margin-bottom:16px;">${title}</h4>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                    <h4 style="margin:0;">${title}</h4>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <label style="font-size:12px;color:var(--gray-500);">Sort by</label>
+                        <select onchange="changeChequeListSort(this.value)" style="padding:6px 10px;border-radius:8px;border:1px solid var(--gray-300);font-size:13px;">
+                            <option value="date" ${sortKey === 'date' ? 'selected' : ''}>Due Date</option>
+                            <option value="name" ${sortKey === 'name' ? 'selected' : ''}>Name (A–Z)</option>
+                            <option value="chequeNo" ${sortKey === 'chequeNo' ? 'selected' : ''}>Cheque Number</option>
+                        </select>
+                    </div>
+                </div>
                 <div style="display:flex;flex-direction:column;gap:12px;">
-                    ${checks.map(c => {
+                    ${sorted.map(c => {
                         const isIncoming = state.incoming.some(i => i.id === c.id);
                         const typeLabel = isIncoming ? 'Received from Customer' : 'Sent to Supplier';
                         const typeColor = isIncoming ? 'var(--primary)' : 'var(--warning)';
@@ -2388,7 +2427,7 @@
                 return;
             }
             const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-            const rows = list.checks;
+            const rows = sortChequeList(list.checks, list.sortKey || 'date');
             const totals = {};
             rows.forEach(c => {
                 const cur = c.currency || 'USD';
@@ -2396,6 +2435,7 @@
             });
             const totalStr = Object.entries(totals).map(([cur, amt]) => formatCurrency(amt, cur)).join(' + ');
             const printedOn = new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+            const sortLabel = { date: 'Due Date', name: 'Name (A–Z)', chequeNo: 'Cheque Number' }[list.sortKey || 'date'];
 
             const body = rows.map((c, i) => {
                 const isIncoming = state.incoming.some(x => x.id === c.id);
@@ -2428,7 +2468,7 @@
                     @page { margin: 12mm; }
                 </style></head><body>
                 <h1>${esc(list.title)}</h1>
-                <div class="meta">S.A.A Legacy Pharmaceutical &bull; ${rows.length} cheque(s) &bull; Printed ${esc(printedOn)}</div>
+                <div class="meta">S.A.A Legacy Pharmaceutical &bull; ${rows.length} cheque(s) &bull; Sorted by ${esc(sortLabel)} &bull; Printed ${esc(printedOn)}</div>
                 <table>
                     <thead><tr><th>#</th><th>Type</th><th>Customer / Supplier</th><th>Cheque No.</th><th>Bank</th><th>Due Date</th><th>Amount</th><th>Status</th></tr></thead>
                     <tbody>${body}</tbody>
