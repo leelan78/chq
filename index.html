@@ -1094,9 +1094,81 @@
 
         /* Text utilities */
         .text-mono { font-family: monospace; }
+
+        /* ===== AUTH GATE ===== */
+        .auth-gate { position: fixed; inset: 0; z-index: 2500; display: flex; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(135deg, var(--primary-dark), var(--primary)); }
+        .auth-gate.hidden { display: none; }
+        .auth-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 36px 32px; width: 100%; max-width: 420px; text-align: center; }
+        .auth-card .brand-icon-lg { width: 56px; height: 56px; border-radius: 14px; background: var(--primary-bg); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px; }
+        .auth-card h2 { font-size: 20px; margin-bottom: 8px; }
+        .auth-card p { color: var(--gray-500); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+        .auth-google-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); background: #fff; color: var(--gray-800); font-weight: 600; font-size: 14px; font-family: inherit; cursor: pointer; transition: var(--transition); }
+        .auth-google-btn:hover { background: var(--gray-50); box-shadow: var(--shadow-md); }
+        .auth-google-btn .fa-google { color: #ea4335; }
+        .auth-error { color: var(--danger); font-size: 13px; margin-top: 12px; min-height: 18px; }
+        .auth-link { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 13px; margin-top: 14px; font-family: inherit; }
+
+        /* ===== ROLE-BASED VIEW-ONLY MODE ===== */
+        body.ro-cheques #btnAddCheck,
+        body.ro-cheques #incomingTableBody .action-btn.edit,
+        body.ro-cheques #incomingTableBody .action-btn.delete,
+        body.ro-cheques #outgoingTableBody .action-btn.edit,
+        body.ro-cheques #outgoingTableBody .action-btn.delete,
+        body.ro-cheques #trashTableBody .action-buttons,
+        body.ro-cheques #emptyTrashBtn,
+        body.ro-cheques .quick-action[data-type="incoming"],
+        body.ro-cheques .quick-action[data-type="outgoing"],
+        body.ro-cheques #importDataBtn,
+        body.ro-cheques .cheque-edit-only,
+        body.ro-cheques .detail-edit-actions,
+        body.ro-expenses .expense-edit { display: none !important; }
+
+        /* ===== EXPENSES + USERS ===== */
+        .form-group textarea { padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: #fff; resize: vertical; min-height: 64px; transition: var(--transition); }
+        .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79,70,229,0.08); }
+        .exp-filter-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+        .exp-filter-bar .filter-item { display: flex; flex-direction: column; gap: 4px; }
+        .exp-filter-bar .filter-item select, .exp-filter-bar .filter-item input { padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: #fff; }
+        .exp-cat { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--primary-bg); color: var(--primary-dark); font-size: 12px; font-weight: 600; white-space: nowrap; }
+        .exp-note { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+        .exp-by { font-size: 12px; color: var(--gray-500); }
+        .exp-break-head { font-weight: 700; font-size: 13px; margin: 14px 0 4px; color: var(--gray-700); }
+        .exp-break-row { display: grid; grid-template-columns: 170px 1fr 170px; gap: 12px; align-items: center; padding: 5px 0; font-size: 13px; }
+        .exp-bar { height: 8px; background: var(--gray-100); border-radius: 999px; overflow: hidden; }
+        .exp-bar > span { display: block; height: 100%; background: var(--primary); border-radius: 999px; }
+        .role-note { font-size: 12.5px; color: var(--gray-500); line-height: 1.8; margin-top: 14px; }
+        .user-role-select { padding: 6px 10px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; background: #fff; }
+        .pending-flag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--warning-bg); color: #b45309; font-size: 11px; font-weight: 600; }
+        @media (max-width: 640px) { .exp-break-row { grid-template-columns: 110px 1fr 120px; } }
     </style>
 </head>
 <body>
+
+
+    <!-- ===== SIGN-IN GATE ===== -->
+    <div class="auth-gate" id="authGate">
+        <div class="auth-card">
+            <div class="brand-icon-lg"><i class="fas fa-pills"></i></div>
+            <h2>S.A.A Legacy Pharmaceutical</h2>
+            <div id="gate-loading">
+                <p><i class="fas fa-circle-notch fa-spin"></i>&nbsp; Loading…</p>
+            </div>
+            <div id="gate-signin" style="display:none;">
+                <p>Sign in with your Google account to continue.</p>
+                <button class="auth-google-btn" id="gateSignInBtn"><i class="fab fa-google"></i> Sign in with Google</button>
+                <div class="auth-error" id="gateError"></div>
+            </div>
+            <div id="gate-pending" style="display:none;">
+                <p>You're signed in as <strong id="gatePendingEmail"></strong>, but an administrator hasn't given you access yet. This screen unlocks by itself as soon as they do.</p>
+                <button class="auth-link" id="gatePendingSignOut">Sign out</button>
+            </div>
+            <div id="gate-error" style="display:none;">
+                <p id="gateErrorMsg"></p>
+                <button class="auth-google-btn" id="gateRetry"><i class="fas fa-rotate-right"></i> Try again</button>
+                <button class="auth-link" id="gateErrorSignOut">Sign out</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ===== SIDEBAR ===== -->
     <aside class="sidebar" id="sidebar">
@@ -1132,10 +1204,19 @@
                 <i class="fas fa-chart-bar"></i>
                 <span>Reports</span>
             </a>
+            <a class="nav-link" data-page="expenses">
+                <i class="fas fa-receipt"></i>
+                <span>Expenses</span>
+            </a>
             <a class="nav-link" data-page="trash">
                 <i class="fas fa-trash"></i>
                 <span>Trash</span>
                 <span class="badge" id="trashBadge">0</span>
+            </a>
+            <a class="nav-link" data-page="users" style="display:none;">
+                <i class="fas fa-users-gear"></i>
+                <span>Users</span>
+                <span class="badge" id="usersBadge" style="display:none;">0</span>
             </a>
             <a class="nav-link" data-page="settings">
                 <i class="fas fa-cog"></i>
@@ -1394,6 +1475,61 @@
                 </div>
             </section>
 
+            <!-- ===== EXPENSES ===== -->
+            <section class="page" id="page-expenses">
+                <div class="page-header">
+                    <div><h2>Expenses</h2><p class="page-subtitle">Record and track business expenses</p></div>
+                    <div class="page-actions">
+                        <button class="btn-outline" id="exportExpensesBtn"><i class="fas fa-download"></i> Export</button>
+                        <button class="btn-primary expense-edit" id="addExpenseBtn"><i class="fas fa-plus"></i> New Expense</button>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="expenseStats" style="margin-bottom:20px;"></div>
+
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="card-body">
+                        <div class="exp-filter-bar">
+                            <div class="filter-item"><label>Month</label>
+                                <select id="expFilterMonth">
+                                    <option value="">Any Month</option>
+                                    <option value="0">January</option><option value="1">February</option>
+                                    <option value="2">March</option><option value="3">April</option>
+                                    <option value="4">May</option><option value="5">June</option>
+                                    <option value="6">July</option><option value="7">August</option>
+                                    <option value="8">September</option><option value="9">October</option>
+                                    <option value="10">November</option><option value="11">December</option>
+                                </select>
+                            </div>
+                            <div class="filter-item"><label>Year</label><select id="expFilterYear"><option value="">Any Year</option></select></div>
+                            <div class="filter-item"><label>Category</label><select id="expFilterCategory"><option value="">All Categories</option></select></div>
+                            <div class="filter-item" style="flex:1;min-width:180px;"><label>Search</label><input type="text" id="expSearch" placeholder="Description, paid to, reference…" /></div>
+                            <div class="filter-item"><button class="btn-outline" id="expClearFilters" type="button"><i class="fas fa-times"></i> Clear</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead><tr>
+                                <th>Date</th><th>Description</th><th>Category</th><th>Paid To</th>
+                                <th>Method</th><th>Reference</th><th>Amount</th><th>Added By</th>
+                                <th class="expense-edit">Actions</th>
+                            </tr></thead>
+                            <tbody id="expenseTableBody">
+                                <tr><td colspan="9" class="empty-state"><i class="fas fa-receipt"></i><span>No expenses recorded yet</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-chart-pie"></i> Spending by Category</h3></div>
+                    <div class="card-body" id="expenseBreakdown"></div>
+                </div>
+            </section>
+
             <!-- ===== TRASH ===== -->
             <section class="page" id="page-trash">
                 <div class="page-header">
@@ -1412,6 +1548,51 @@
                             <tbody id="trashTableBody">
                                 <tr><td colspan="7" class="empty-state"><i class="fas fa-trash"></i><span>Trash is empty</span></td></tr>
                             </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== USERS & ACCESS (admin only) ===== -->
+            <section class="page" id="page-users">
+                <div class="page-header">
+                    <div><h2>Users &amp; Access</h2><p class="page-subtitle">Add people and choose what each of them can do</p></div>
+                </div>
+
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="card-header"><h3><i class="fas fa-user-plus"></i> Add User</h3></div>
+                    <div class="card-body">
+                        <div class="exp-filter-bar">
+                            <div class="filter-item" style="flex:1;min-width:220px;"><label>Google email</label><input type="email" id="newUserEmail" placeholder="name@gmail.com" /></div>
+                            <div class="filter-item"><label>Role</label><select id="newUserRole"></select></div>
+                            <div class="filter-item"><button class="btn-primary" id="addUserBtn" type="button"><i class="fas fa-plus"></i> Add User</button></div>
+                        </div>
+                        <div class="role-note">
+                            <strong>Administrator</strong> — sees everything and manages users, but cannot edit data.<br>
+                            <strong>Accountant</strong> — sees and edits everything (cheques and expenses).<br>
+                            <strong>Expense Accountant</strong> — sees and edits the Expenses section only.<br>
+                            <strong>Viewer</strong> — sees everything, edits nothing.<br>
+                            Anyone who signs in with Google without being added waits on a "no access" screen until you give them a role here.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="card-header"><h3><i class="fas fa-users"></i> People with an account</h3></div>
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-envelope"></i> Added, not signed in yet</h3></div>
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead><tr><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+                            <tbody id="invitesTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1441,9 +1622,7 @@
                                 <select id="calendarPicker" style="padding:8px 12px;border-radius:8px;border:1px solid var(--gray-300);"></select>
                             </div>
                             <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-top:8px;">
-                                One "Sign in" grants both: your shared Firestore data syncs across every signed-in
-                                device, and every non-cleared cheque is pushed as a same-day event to whichever
-                                calendar you pick above, kept in sync as you add, edit, clear or delete cheques. This
+                                Signing in keeps your shared data in sync across every device. "Connect Calendar" is optional and separate: it pushes every non-cleared cheque as a same-day event to whichever calendar you pick above, kept in sync as you add, edit, clear or delete cheques. This
                                 needs a Firebase project (see <code>firebaseConfig</code> near the top of the
                                 <code>&lt;script&gt;</code> section) and Calendar API access enabled for that same
                                 project. Browser security means calendar access doesn't survive a page reload —
@@ -1468,7 +1647,7 @@
                                 <button class="btn-outline" id="importDataBtn"><i class="fas fa-upload"></i> Import Data</button>
                                 <input type="file" id="importDataInput" accept=".json" style="display:none;" />
                             </div>
-                            <div class="setting-item">
+                            <div class="setting-item cheque-edit-only">
                                 <button class="btn-danger" id="clearAllData"><i class="fas fa-trash"></i> Clear All Data</button>
                             </div>
                         </div>
@@ -1557,6 +1736,64 @@
         </div>
     </div>
 
+    <!-- ===== EXPENSE MODAL ===== -->
+    <div class="modal" id="expenseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="expenseModalTitle">New Expense</h3>
+                <button class="modal-close" id="expenseModalClose" type="button"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="expenseForm" class="modal-body">
+                <input type="hidden" id="expenseId" />
+                <div class="form-grid">
+                    <div class="form-group"><label>Date <span class="required">*</span></label>
+                        <input type="date" id="expDate" required /></div>
+                    <div class="form-group"><label>Category <span class="required">*</span></label>
+                        <input type="text" id="expCategory" list="expCategoryList" placeholder="Pick or type a category" required />
+                        <datalist id="expCategoryList"></datalist></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Description <span class="required">*</span></label>
+                        <input type="text" id="expDescription" placeholder="What was this expense for?" required /></div>
+                    <div class="form-group"><label>Amount <span class="required">*</span></label>
+                        <div class="input-with-icon">
+                            <span id="expCurrencySymbol">₵</span>
+                            <input type="number" id="expAmount" step="0.01" min="0.01" placeholder="0.00" required />
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Currency</label>
+                        <select id="expCurrency">
+                            <option value="GHS">GHS - Ghanaian Cedi</option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="NGN">NGN - Nigerian Naira</option>
+                            <option value="XOF">XOF - CFA Franc</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Paid To</label>
+                        <input type="text" id="expPayee" placeholder="Person or company paid" /></div>
+                    <div class="form-group"><label>Payment Method</label>
+                        <select id="expMethod">
+                            <option value="Cash">Cash</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Mobile Money">Mobile Money</option>
+                            <option value="Card">Card</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Reference / Receipt No.</label>
+                        <input type="text" id="expReference" placeholder="Receipt, invoice or cheque number" /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Notes</label>
+                        <textarea id="expNotes" placeholder="Anything else worth noting"></textarea></div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="expenseCancel">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ===== DETAIL MODAL ===== -->
     <div class="modal" id="detailModal">
         <div class="modal-content modal-lg">
@@ -1601,7 +1838,41 @@
             incomingSort: { field: 'effectiveDate', dir: 'desc' },
             outgoingSort: { field: 'effectiveDate', dir: 'desc' },
             lastReport: null,
+            expenses: [],
         };
+
+        // ============================================================
+        //  ROLES & PERMISSIONS
+        //  view = pages the role can open, edit = areas the role can change.
+        //  To change who can do what, edit this table (and firestore.rules).
+        // ============================================================
+        const ALL_PAGES = ['dashboard', 'incoming', 'outgoing', 'calendar', 'reports', 'expenses', 'trash', 'settings'];
+        const ROLES = {
+            admin:              { label: 'Administrator',      view: [...ALL_PAGES, 'users'], edit: [] },
+            accountant:         { label: 'Accountant',         view: ALL_PAGES,               edit: ['cheques', 'expenses'] },
+            expense_accountant: { label: 'Expense Accountant', view: ['expenses'],            edit: ['expenses'] },
+            viewer:             { label: 'Viewer',             view: ALL_PAGES,               edit: [] },
+            pending:            { label: 'No access',          view: [],                      edit: [] }
+        };
+        let currentRole = null;
+        function canView(page) { const r = ROLES[currentRole]; return !!r && r.view.includes(page); }
+        function canEdit(area) { const r = ROLES[currentRole]; return !!r && r.edit.includes(area); }
+        function firstAllowedPage() { const r = ROLES[currentRole]; return r && r.view.length ? r.view[0] : null; }
+        function byId(id) { return document.getElementById(id); }
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function denyCheques() {
+            if (canEdit('cheques')) return false;
+            showNotification('View only', 'Your role can view cheque data but not change it', 'warning');
+            return true;
+        }
+        function denyExpenses() {
+            if (canEdit('expenses')) return false;
+            showNotification('View only', 'Your role can view expenses but not change them', 'warning');
+            return true;
+        }
+
 
         // ============================================================
         //  FIREBASE — GOOGLE SIGN-IN + SHARED FIRESTORE SYNC
@@ -1622,33 +1893,151 @@
         let applyingRemoteUpdate = false; // guards against a save->write->snapshot->save loop
         const SHARED_DOC = ['cheque-data', 'shared']; // all signed-in users read/write this one doc
 
+        let authRun = 0, unsubscribeRole = null, unsubscribeExpenses = null, unsubscribeUsers = null, unsubscribeInvites = null;
+        let allUsers = [], allInvites = [];
+
         if (firebaseReady) {
             firebase.initializeApp(firebaseConfig);
             fbAuth = firebase.auth();
             fbDb = firebase.firestore();
-            fbAuth.onAuthStateChanged(user => {
+            fbAuth.onAuthStateChanged(async user => {
+                const run = ++authRun;
+                if (unsubscribeRole) { unsubscribeRole(); unsubscribeRole = null; }
+                detachFirestoreSync();
                 currentUser = user;
+                currentRole = null;
                 updateGoogleSignInUI();
-                if (user) attachFirestoreSync(); else detachFirestoreSync();
+                if (!user) { applyRoleUI(); showGate('signin'); return; }
+                showGate('loading');
+                try {
+                    await ensureUserDoc(user);
+                } catch (err) {
+                    if (run !== authRun) return;
+                    console.error('Access check failed:', err);
+                    showGate('error', 'Could not check your access: ' + err.message);
+                    return;
+                }
+                if (run !== authRun) return;
+                // Live listener on this user's own role: approval / role changes apply instantly.
+                unsubscribeRole = fbDb.collection('users').doc(user.uid).onSnapshot(snap => {
+                    if (run !== authRun) return;
+                    const r = snap.exists ? snap.data().role : 'pending';
+                    const role = ROLES[r] ? r : 'pending';
+                    if (role === currentRole) return;
+                    currentRole = role;
+                    onRoleResolved();
+                }, err => {
+                    console.error('Role listener error:', err);
+                    showGate('error', 'Could not check your access: ' + err.message);
+                });
             });
+        } else {
+            showGate('error', 'The sign-in service could not be loaded. Check your internet connection and try again.');
         }
+
+        // Creates the user's profile on first sign-in: invited role, first-ever admin, or "pending".
+        async function ensureUserDoc(user) {
+            const userRef = fbDb.collection('users').doc(user.uid);
+            const snap = await userRef.get();
+            if (snap.exists) return;
+            const email = (user.email || '').toLowerCase();
+            const base = { email, name: user.displayName || '', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+
+            const inviteRef = fbDb.collection('invites').doc(email);
+            const invite = await inviteRef.get();
+            if (invite.exists && ROLES[invite.data().role]) {
+                const batch = fbDb.batch();
+                batch.set(userRef, { ...base, role: invite.data().role });
+                batch.delete(inviteRef);
+                await batch.commit();
+                return;
+            }
+
+            const bootRef = fbDb.collection('meta').doc('bootstrap');
+            const boot = await bootRef.get();
+            if (!boot.exists) {
+                try {
+                    const batch = fbDb.batch();
+                    batch.set(userRef, { ...base, role: 'admin' });
+                    batch.set(bootRef, { uid: user.uid, email, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    await batch.commit();
+                    return;
+                } catch (e) { /* someone else became the first admin a moment earlier */ }
+            }
+            await userRef.set({ ...base, role: 'pending' });
+        }
+
+        function onRoleResolved() {
+            detachFirestoreSync();
+            applyRoleUI();
+            updateGoogleSignInUI();
+            if (!ROLES[currentRole].view.length) { showGate('pending'); return; }
+            hideGate();
+            attachFirestoreSync();
+            if (currentRole === 'admin') attachAdminListeners();
+        }
+
+        function applyRoleUI() {
+            const signedIn = !!currentUser && !!currentRole;
+            document.body.classList.toggle('ro-cheques', signedIn && !canEdit('cheques'));
+            document.body.classList.toggle('ro-expenses', signedIn && !canEdit('expenses'));
+            document.querySelectorAll('.nav-link').forEach(l => { l.style.display = canView(l.dataset.page) ? '' : 'none'; });
+            const seesCheques = canView('incoming');
+            const sb = document.querySelector('.search-box');
+            if (sb) sb.style.display = seesCheques || !signedIn ? '' : 'none';
+            const cal = byId('calendarStatusLine');
+            if (cal) cal.style.display = seesCheques || !signedIn ? '' : 'none';
+            if (signedIn && !seesCheques && (state.incoming.length || state.outgoing.length || state.trash.length)) {
+                state.incoming = []; state.outgoing = []; state.trash = [];
+                updateUI();
+            }
+            if (signedIn && firstAllowedPage()) {
+                navigateTo(canView(state.currentPage) ? state.currentPage : firstAllowedPage());
+            }
+        }
+
+        function showGate(mode, msg) {
+            const gate = byId('authGate');
+            if (!gate) return;
+            gate.classList.remove('hidden');
+            ['loading', 'signin', 'pending', 'error'].forEach(m => {
+                const el = byId('gate-' + m);
+                if (el) el.style.display = m === mode ? 'block' : 'none';
+            });
+            if (mode === 'error') byId('gateErrorMsg').textContent = msg || 'Something went wrong.';
+            if (mode === 'pending') byId('gatePendingEmail').textContent = currentUser ? currentUser.email : '';
+        }
+        function hideGate() { const g = byId('authGate'); if (g) g.classList.add('hidden'); }
 
         const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
         let calendarAccessToken = null;
         let calendarTokenExpiresAt = 0;
         let selectedCalendarId = localStorage.getItem('checkSelectedCalendarId') || 'primary';
 
-        function signInWithGoogle() {
+        function signInWithGoogle(withCalendar = false) {
             if (!firebaseReady) {
-                showNotification('Firebase Not Configured', 'Fill in firebaseConfig in the script to enable Google sign-in', 'warning');
+                showNotification('Sign-in Unavailable', 'The sign-in service could not be loaded', 'warning');
                 return;
             }
             const provider = new firebase.auth.GoogleAuthProvider();
-            provider.addScope(CALENDAR_SCOPE);
-            provider.setCustomParameters({ prompt: 'consent' });
+            if (withCalendar) {
+                // Calendar is optional and separate from signing in.
+                provider.addScope(CALENDAR_SCOPE);
+                provider.setCustomParameters({ prompt: 'consent', ...(currentUser ? { login_hint: currentUser.email } : {}) });
+            } else {
+                provider.setCustomParameters({ prompt: 'select_account' });
+            }
             fbAuth.signInWithPopup(provider)
-                .then(handleGoogleSignInResult)
-                .catch(err => { console.error('Sign-in error:', err); showNotification('Sign-in Failed', err.message, 'error'); });
+                .then(result => { if (withCalendar) return handleGoogleSignInResult(result); })
+                .catch(err => {
+                    console.error('Sign-in error:', err);
+                    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+                    const msg = err.code === 'auth/popup-blocked'
+                        ? 'Your browser blocked the sign-in popup. Allow popups for this site and try again.'
+                        : err.message;
+                    showNotification('Sign-in Failed', msg, 'error');
+                    const ge = byId('gateError'); if (ge) ge.textContent = msg;
+                });
         }
 
         async function handleGoogleSignInResult(result) {
@@ -1688,41 +2077,50 @@
 
         function attachFirestoreSync() {
             if (!firebaseReady || !currentUser) return;
-            const docRef = fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]);
-            unsubscribeSnapshot = docRef.onSnapshot(snap => {
-                if (snap.exists) {
-                    const remote = snap.data();
-                    applyingRemoteUpdate = true;
-                    state.incoming = remote.incoming || [];
-                    state.outgoing = remote.outgoing || [];
-                    state.trash = remote.trash || [];
-                    state.companies = remote.companies || [];
-                    state.banks = remote.banks || [];
-                    refreshStatuses();
-                    updateUI();
-                    applyingRemoteUpdate = false;
-                } else {
-                    docRef.set({
-                        incoming: state.incoming,
-                        outgoing: state.outgoing,
-                        trash: state.trash,
-                        companies: state.companies,
-                        banks: state.banks,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-            }, err => {
-                console.error('Firestore sync error:', err);
-                showNotification('Sync Error', 'Could not reach Firestore — working from local data', 'error');
-            });
+            if (canView('incoming')) {
+                const docRef = fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]);
+                unsubscribeSnapshot = docRef.onSnapshot(snap => {
+                    if (snap.exists) {
+                        const remote = snap.data();
+                        applyingRemoteUpdate = true;
+                        state.incoming = remote.incoming || [];
+                        state.outgoing = remote.outgoing || [];
+                        state.trash = remote.trash || [];
+                        state.companies = remote.companies || [];
+                        state.banks = remote.banks || [];
+                        refreshStatuses();
+                        updateUI();
+                        applyingRemoteUpdate = false;
+                    } else if (canEdit('cheques')) {
+                        docRef.set({
+                            incoming: state.incoming,
+                            outgoing: state.outgoing,
+                            trash: state.trash,
+                            companies: state.companies,
+                            banks: state.banks,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }, err => {
+                    console.error('Firestore sync error:', err);
+                    showNotification('Sync Error', 'Could not reach Firestore — working from local data', 'error');
+                });
+            }
+            if (canView('expenses')) attachExpenseSync();
         }
 
         function detachFirestoreSync() {
             if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+            if (unsubscribeExpenses) { unsubscribeExpenses(); unsubscribeExpenses = null; }
+            if (unsubscribeUsers) { unsubscribeUsers(); unsubscribeUsers = null; }
+            if (unsubscribeInvites) { unsubscribeInvites(); unsubscribeInvites = null; }
+            state.expenses = [];
+            allUsers = []; allInvites = [];
+            if (typeof renderExpenses === 'function') renderExpenses();
         }
 
         function pushToFirestore() {
-            if (!firebaseReady || !currentUser) return;
+            if (!firebaseReady || !currentUser || !canEdit('cheques')) return;
             fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]).set({
                 incoming: state.incoming,
                 outgoing: state.outgoing,
@@ -1741,7 +2139,7 @@
             const signedIn = !!currentUser;
             const label = signedIn ? `<i class="fab fa-google"></i> Sign Out` : `<i class="fab fa-google"></i> Sign in with Google`;
             const statusHtml = signedIn
-                ? `<span class="dot connected"></span><span>${currentUser.email}</span>`
+                ? `<span class="dot connected"></span><span>${currentUser.email}${currentRole && ROLES[currentRole] ? ' · ' + ROLES[currentRole].label : ''}</span>`
                 : `<span class="dot disconnected"></span><span>Not signed in</span>`;
             if (sidebarBtn) { sidebarBtn.innerHTML = label; sidebarBtn.classList.toggle('connected', signedIn); }
             if (sidebarStatus) sidebarStatus.innerHTML = statusHtml;
@@ -1814,7 +2212,7 @@
         }
 
         function saveData() {
-            try {
+            if (canView('incoming')) try {
                 localStorage.setItem('checkData', JSON.stringify({
                     incoming: state.incoming,
                     outgoing: state.outgoing,
@@ -1993,6 +2391,7 @@
         //  NAVIGATION
         // ============================================================
         function navigateTo(page) {
+            if (currentUser && !canView(page)) { page = firstAllowedPage(); if (!page) return; }
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const target = document.getElementById(`page-${page}`);
             if (target) target.classList.add('active');
@@ -2006,6 +2405,8 @@
             if (page === 'calendar') renderCalendar();
             if (page === 'reports') generateReport('outstanding');
             if (page === 'trash') renderTrashTable();
+            if (page === 'expenses') renderExpenses();
+            if (page === 'users') renderUsersPage();
             document.getElementById('sidebar').classList.remove('open');
         }
 
@@ -2540,6 +2941,7 @@
         //  CRUD
         // ============================================================
         function openCheckModal(type, data = null) {
+            if (denyCheques()) return;
             const modal = document.getElementById('checkModal');
             const form = document.getElementById('checkForm');
             const isIncoming = type === 'incoming';
@@ -2598,6 +3000,7 @@
 
         function saveCheck(e) {
             e.preventDefault();
+            if (denyCheques()) return;
             const type = document.getElementById('checkType').value;
             const id = document.getElementById('checkId').value;
             const isIncoming = type === 'incoming';
@@ -2707,9 +3110,9 @@
                     `}
                     <div style="grid-column:1/-1;padding-top:16px;border-top:1px solid var(--gray-200);display:flex;gap:12px;flex-wrap:wrap;">
                         <button class="btn-secondary" onclick="document.getElementById('detailModal').classList.remove('active')">Close</button>
-                        <button class="btn-outline" onclick="document.getElementById('detailModal').classList.remove('active');editCheck('${c.id}','${type}')"><i class="fas fa-pen"></i> Edit</button>
-                        ${c.status !== 'cleared' ? `<button class="btn-primary" onclick="markCleared('${c.id}','${type}')"><i class="fas fa-check"></i> Mark Cleared</button>` : ''}
-                        ${c.status !== 'cancelled' ? `<button class="btn-danger" onclick="markCancelled('${c.id}','${type}')"><i class="fas fa-times"></i> Mark Cancelled</button>` : ''}
+                        <button class="btn-outline detail-edit-actions" onclick="document.getElementById('detailModal').classList.remove('active');editCheck('${c.id}','${type}')"><i class="fas fa-pen"></i> Edit</button>
+                        ${c.status !== 'cleared' ? `<button class="btn-primary detail-edit-actions" onclick="markCleared('${c.id}','${type}')"><i class="fas fa-check"></i> Mark Cleared</button>` : ''}
+                        ${c.status !== 'cancelled' ? `<button class="btn-danger detail-edit-actions" onclick="markCancelled('${c.id}','${type}')"><i class="fas fa-times"></i> Mark Cancelled</button>` : ''}
                     </div>
                 </div>
             `;
@@ -2723,6 +3126,7 @@
         }
 
         function deleteCheck(id, type) {
+            if (denyCheques()) return;
             if (!confirm('Move this cheque to Trash?')) return;
             const collection = type === 'incoming' ? state.incoming : state.outgoing;
             const idx = collection.findIndex(c => c.id === id);
@@ -2736,6 +3140,7 @@
         }
 
         function restoreFromTrash(id) {
+            if (denyCheques()) return;
             const idx = state.trash.findIndex(t => t.id === id);
             if (idx === -1) return;
             const [item] = state.trash.splice(idx, 1);
@@ -2748,6 +3153,7 @@
         }
 
         function permanentDeleteFromTrash(id) {
+            if (denyCheques()) return;
             if (!confirm('Permanently delete this cheque? This cannot be undone.')) return;
             state.trash = state.trash.filter(t => t.id !== id);
             saveData();
@@ -2757,6 +3163,7 @@
         }
 
         function emptyTrash() {
+            if (denyCheques()) return;
             if (state.trash.length === 0) return;
             if (!confirm(`Permanently delete all ${state.trash.length} item(s) in Trash? This cannot be undone.`)) return;
             state.trash = [];
@@ -2797,6 +3204,7 @@
         }
 
         function markCleared(id, type) {
+            if (denyCheques()) return;
             const collection = type === 'incoming' ? state.incoming : state.outgoing;
             const c = collection.find(item => item.id === id);
             if (c) {
@@ -2808,6 +3216,7 @@
         }
 
         function markCancelled(id, type) {
+            if (denyCheques()) return;
             const collection = type === 'incoming' ? state.incoming : state.outgoing;
             const c = collection.find(item => item.id === id);
             if (c) {
@@ -3078,6 +3487,7 @@
         }
 
         function importDataFromFile(file) {
+            if (denyCheques()) return;
             const reader = new FileReader();
             reader.onload = e => {
                 try {
@@ -3105,6 +3515,7 @@
                 outgoing: state.outgoing,
                 companies: state.companies,
                 banks: state.banks,
+                expenses: state.expenses,
                 exportedAt: new Date().toISOString()
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -3159,7 +3570,7 @@
                     .then(() => showNotification('Synced', 'Cheques synced to calendar', 'success'))
                     .catch(e => console.error('Manual calendar sync failed:', e));
             } else {
-                signInWithGoogle();
+                signInWithGoogle(true);
             }
         }
 
@@ -3516,6 +3927,7 @@
         document.getElementById('emptyTrashBtn').addEventListener('click', emptyTrash);
 
         document.getElementById('clearAllData').addEventListener('click', () => {
+            if (denyCheques()) return;
             if (confirm('Delete ALL cheque data? This cannot be undone!')) {
                 if (confirm('Really? All cheques will be permanently deleted.')) {
                     state.incoming = [];
@@ -3527,6 +3939,359 @@
                 }
             }
         });
+
+
+        // ============================================================
+        //  EXPENSES  (one Firestore document per expense, collection "expenses")
+        // ============================================================
+        const EXPENSE_CATEGORIES = [
+            'Rent', 'Utilities', 'Salaries & Wages', 'Transport & Fuel', 'Supplies & Stationery',
+            'Repairs & Maintenance', 'Marketing', 'Taxes & Licences', 'Bank Charges',
+            'Insurance', 'Professional Fees', 'Miscellaneous'
+        ];
+
+        function attachExpenseSync() {
+            unsubscribeExpenses = fbDb.collection('expenses').onSnapshot(snap => {
+                state.expenses = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                renderExpenses();
+            }, err => {
+                console.error('Expense sync error:', err);
+                showNotification('Sync Error', 'Could not load expenses: ' + err.message, 'error');
+            });
+        }
+
+        function expAmount(e) { return parseFloat(e.amount) || 0; }
+        function sumByCurrency(list) {
+            const t = {};
+            list.forEach(e => { const c = e.currency || 'GHS'; t[c] = (t[c] || 0) + expAmount(e); });
+            return t;
+        }
+        function formatTotals(t) {
+            const keys = Object.keys(t).sort((a, b) => t[b] - t[a]);
+            return keys.length ? keys.map(c => formatCurrency(t[c], c)).join(' + ') : formatCurrency(0, 'GHS');
+        }
+        function expYear(e) { return new Date(e.date + 'T00:00:00').getFullYear(); }
+        function expMonth(e) { return new Date(e.date + 'T00:00:00').getMonth(); }
+
+        function getFilteredExpenses() {
+            const m = byId('expFilterMonth').value, y = byId('expFilterYear').value;
+            const c = byId('expFilterCategory').value, q = byId('expSearch').value.trim().toLowerCase();
+            return state.expenses.filter(e => {
+                if (!e.date) return false;
+                if (y !== '' && expYear(e) !== parseInt(y, 10)) return false;
+                if (m !== '' && expMonth(e) !== parseInt(m, 10)) return false;
+                if (c && e.category !== c) return false;
+                if (q && ![e.description, e.payee, e.category, e.reference, e.notes, e.method].join(' ').toLowerCase().includes(q)) return false;
+                return true;
+            }).sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || '').localeCompare(a.createdAt || ''));
+        }
+
+        function fillSelectKeepingValue(sel, options, firstLabel) {
+            const prev = sel.value;
+            sel.innerHTML = `<option value="">${firstLabel}</option>` + options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+            if (options.map(String).includes(prev)) sel.value = prev;
+        }
+
+        function renderExpenses() {
+            const tbody = byId('expenseTableBody');
+            if (!tbody) return;
+
+            const years = new Set([new Date().getFullYear()]);
+            const cats = new Set(EXPENSE_CATEGORIES);
+            state.expenses.forEach(e => {
+                if (e.date && !isNaN(expYear(e))) years.add(expYear(e));
+                if (e.category) cats.add(e.category);
+            });
+            fillSelectKeepingValue(byId('expFilterYear'), [...years].sort((a, b) => b - a), 'Any Year');
+            fillSelectKeepingValue(byId('expFilterCategory'), [...cats].sort(), 'All Categories');
+
+            const list = getFilteredExpenses();
+            const now = new Date();
+            const thisMonth = state.expenses.filter(e => e.date && expYear(e) === now.getFullYear() && expMonth(e) === now.getMonth());
+            const thisYear = state.expenses.filter(e => e.date && expYear(e) === now.getFullYear());
+
+            // Top category (in the currency with the largest total)
+            const totals = sumByCurrency(list);
+            const mainCur = Object.keys(totals).sort((a, b) => totals[b] - totals[a])[0];
+            let topName = '—', topAmt = '';
+            if (mainCur) {
+                const byCat = {};
+                list.filter(e => (e.currency || 'GHS') === mainCur).forEach(e => { byCat[e.category] = (byCat[e.category] || 0) + expAmount(e); });
+                const best = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a])[0];
+                if (best) { topName = best; topAmt = formatCurrency(byCat[best], mainCur); }
+            }
+
+            byId('expenseStats').innerHTML = `
+                <div class="stat-card"><div class="stat-icon red"><i class="fas fa-receipt"></i></div>
+                    <div class="stat-info"><span class="stat-label">Shown Below</span><h3>${list.length}</h3></div>
+                    <div class="stat-amount">${formatTotals(totals)}</div></div>
+                <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-calendar-day"></i></div>
+                    <div class="stat-info"><span class="stat-label">This Month</span><h3>${thisMonth.length}</h3></div>
+                    <div class="stat-amount">${formatTotals(sumByCurrency(thisMonth))}</div></div>
+                <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-calendar"></i></div>
+                    <div class="stat-info"><span class="stat-label">This Year</span><h3>${thisYear.length}</h3></div>
+                    <div class="stat-amount">${formatTotals(sumByCurrency(thisYear))}</div></div>
+                <div class="stat-card"><div class="stat-icon yellow"><i class="fas fa-tags"></i></div>
+                    <div class="stat-info"><span class="stat-label">Top Category</span><h3 style="font-size:16px;">${esc(topName)}</h3></div>
+                    <div class="stat-amount">${topAmt}</div></div>`;
+
+            if (list.length === 0) {
+                const msg = state.expenses.length ? 'No expenses match these filters' : 'No expenses recorded yet';
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fas fa-receipt"></i><span>${msg}</span></td></tr>`;
+            } else {
+                tbody.innerHTML = list.map(e => `
+                    <tr>
+                        <td>${formatDate(e.date)}</td>
+                        <td><strong>${esc(e.description)}</strong>${e.notes ? `<div class="exp-note">${esc(e.notes)}</div>` : ''}</td>
+                        <td><span class="exp-cat">${esc(e.category)}</span></td>
+                        <td>${esc(e.payee) || '-'}</td>
+                        <td>${esc(e.method) || '-'}</td>
+                        <td class="text-mono">${esc(e.reference) || '-'}</td>
+                        <td><strong>${formatCurrency(expAmount(e), e.currency || 'GHS')}</strong></td>
+                        <td class="exp-by">${esc(e.createdBy)}</td>
+                        <td class="expense-edit">
+                            <div class="action-buttons">
+                                <button class="action-btn edit" title="Edit" onclick="editExpense('${esc(e.id)}')"><i class="fas fa-pen"></i></button>
+                                <button class="action-btn delete" title="Delete" onclick="deleteExpense('${esc(e.id)}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`).join('');
+            }
+
+            // Category breakdown, one block per currency
+            const breakdown = byId('expenseBreakdown');
+            if (list.length === 0) {
+                breakdown.innerHTML = '<div class="empty-state"><i class="fas fa-chart-pie"></i><span>Nothing to show yet</span></div>';
+            } else {
+                breakdown.innerHTML = Object.keys(totals).sort((a, b) => totals[b] - totals[a]).map(cur => {
+                    const byCat = {};
+                    list.filter(e => (e.currency || 'GHS') === cur).forEach(e => { byCat[e.category || 'Uncategorised'] = (byCat[e.category || 'Uncategorised'] || 0) + expAmount(e); });
+                    const rows = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]).map(cat => {
+                        const pct = totals[cur] ? (byCat[cat] / totals[cur] * 100) : 0;
+                        return `<div class="exp-break-row"><span>${esc(cat)}</span>
+                                <div class="exp-bar"><span style="width:${pct.toFixed(1)}%"></span></div>
+                                <span style="text-align:right;"><strong>${formatCurrency(byCat[cat], cur)}</strong> · ${pct.toFixed(0)}%</span></div>`;
+                    }).join('');
+                    return `<div class="exp-break-head">${cur} — ${formatCurrency(totals[cur], cur)}</div>${rows}`;
+                }).join('');
+            }
+        }
+
+        function updateExpCurrencySymbol() {
+            byId('expCurrencySymbol').textContent = getCurrencySymbol(byId('expCurrency').value);
+        }
+
+        function openExpenseModal(data = null) {
+            if (denyExpenses()) return;
+            byId('expenseForm').reset();
+            byId('expenseModalTitle').textContent = data ? 'Edit Expense' : 'New Expense';
+            byId('expenseId').value = data ? data.id : '';
+            const cats = new Set(EXPENSE_CATEGORIES);
+            state.expenses.forEach(e => { if (e.category) cats.add(e.category); });
+            byId('expCategoryList').innerHTML = [...cats].sort().map(c => `<option value="${esc(c)}"></option>`).join('');
+            if (data) {
+                byId('expDate').value = data.date || '';
+                byId('expCategory').value = data.category || '';
+                byId('expDescription').value = data.description || '';
+                byId('expAmount').value = data.amount || '';
+                byId('expCurrency').value = data.currency || 'GHS';
+                byId('expPayee').value = data.payee || '';
+                byId('expMethod').value = data.method || 'Cash';
+                byId('expReference').value = data.reference || '';
+                byId('expNotes').value = data.notes || '';
+            } else {
+                byId('expDate').value = new Date().toISOString().split('T')[0];
+                byId('expCurrency').value = 'GHS';
+                byId('expMethod').value = 'Cash';
+            }
+            updateExpCurrencySymbol();
+            byId('expenseModal').classList.add('active');
+        }
+
+        function closeExpenseModal() { byId('expenseModal').classList.remove('active'); }
+
+        function saveExpense(ev) {
+            ev.preventDefault();
+            if (denyExpenses()) return;
+            const id = byId('expenseId').value || ('EXP-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase());
+            const existing = state.expenses.find(x => x.id === id);
+            const amount = parseFloat(byId('expAmount').value);
+            const category = byId('expCategory').value.trim();
+            const description = byId('expDescription').value.trim();
+            if (!(amount > 0) || !category || !description || !byId('expDate').value) {
+                showNotification('Missing Details', 'Date, category, description and a positive amount are required', 'warning');
+                return;
+            }
+            const nowIso = new Date().toISOString();
+            const obj = {
+                date: byId('expDate').value,
+                category,
+                description,
+                amount,
+                currency: byId('expCurrency').value,
+                payee: byId('expPayee').value.trim(),
+                method: byId('expMethod').value,
+                reference: byId('expReference').value.trim(),
+                notes: byId('expNotes').value.trim(),
+                createdBy: (existing && existing.createdBy) || currentUser.email,
+                createdAt: (existing && existing.createdAt) || nowIso,
+                updatedBy: currentUser.email,
+                updatedAt: nowIso
+            };
+            fbDb.collection('expenses').doc(id).set(obj).catch(err => {
+                console.error('Save expense failed:', err);
+                showNotification('Not Saved', 'Could not save the expense: ' + err.message, 'error');
+            });
+            closeExpenseModal();
+            showNotification('Saved', existing ? 'Expense updated' : 'Expense added', 'success');
+        }
+
+        function editExpense(id) {
+            const e = state.expenses.find(x => x.id === id);
+            if (e) openExpenseModal(e);
+        }
+
+        function deleteExpense(id) {
+            if (denyExpenses()) return;
+            const e = state.expenses.find(x => x.id === id);
+            if (!e || !confirm(`Delete this expense?\n\n${e.description} — ${formatCurrency(expAmount(e), e.currency || 'GHS')}`)) return;
+            fbDb.collection('expenses').doc(id).delete().catch(err => {
+                console.error('Delete expense failed:', err);
+                showNotification('Not Deleted', 'Could not delete the expense: ' + err.message, 'error');
+            });
+            showNotification('Deleted', 'Expense deleted', 'success');
+        }
+
+        function exportExpenses() {
+            const list = getFilteredExpenses();
+            if (list.length === 0) { showNotification('Nothing to Export', 'No expenses in the current view', 'warning'); return; }
+            const headers = ['Date', 'Description', 'Category', 'Paid To', 'Method', 'Reference', 'Amount', 'Currency', 'Notes', 'Added By'];
+            const rows = list.map(e => [e.date, e.description, e.category, e.payee || '', e.method || '', e.reference || '', expAmount(e).toFixed(2), e.currency || 'GHS', e.notes || '', e.createdBy || '']);
+            const csv = [headers, ...rows].map(r => r.map(csvEscape).join(',')).join('\n');
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `expenses-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Exported', 'Expenses exported', 'success');
+        }
+
+        // ============================================================
+        //  USERS & ACCESS (administrator only)
+        // ============================================================
+        function attachAdminListeners() {
+            unsubscribeUsers = fbDb.collection('users').onSnapshot(s => {
+                allUsers = s.docs.map(d => ({ uid: d.id, ...d.data() }));
+                renderUsersPage();
+            }, err => console.error('Users listener error:', err));
+            unsubscribeInvites = fbDb.collection('invites').onSnapshot(s => {
+                allInvites = s.docs.map(d => ({ email: d.id, ...d.data() }));
+                renderUsersPage();
+            }, err => console.error('Invites listener error:', err));
+        }
+
+        function roleOptionsHtml(selected) {
+            return ['admin', 'accountant', 'expense_accountant', 'viewer', 'pending']
+                .map(r => `<option value="${r}" ${r === selected ? 'selected' : ''}>${ROLES[r].label}</option>`).join('');
+        }
+
+        function renderUsersPage() {
+            const body = byId('usersTableBody');
+            if (!body) return;
+            const waiting = allUsers.filter(u => u.role === 'pending').length;
+            const badge = byId('usersBadge');
+            if (badge) { badge.textContent = waiting; badge.style.display = waiting ? '' : 'none'; }
+            if (!byId('newUserRole').options.length) {
+                byId('newUserRole').innerHTML = roleOptionsHtml('viewer').replace(/<option value="pending">.*?<\/option>/, '');
+            }
+            if (allUsers.length === 0) {
+                body.innerHTML = '<tr><td colspan="4" class="empty-state"><span>No users yet</span></td></tr>';
+            } else {
+                const sorted = [...allUsers].sort((a, b) => (a.role === 'pending' ? -1 : 0) - (b.role === 'pending' ? -1 : 0) || (a.email || '').localeCompare(b.email || ''));
+                body.innerHTML = sorted.map(u => {
+                    const me = currentUser && u.uid === currentUser.uid;
+                    const joined = u.createdAt && u.createdAt.toDate ? u.createdAt.toDate().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+                    return `<tr>
+                        <td><strong>${esc(u.name) || '-'}</strong>${me ? ' <span class="exp-by">(you)</span>' : ''}</td>
+                        <td>${esc(u.email)}${u.role === 'pending' ? '<span class="pending-flag">Waiting for access</span>' : ''}</td>
+                        <td><select class="user-role-select" ${me ? 'disabled title="You cannot change your own role"' : ''} onchange="changeUserRole('${esc(u.uid)}', this.value)">${roleOptionsHtml(u.role)}</select></td>
+                        <td>${joined}</td></tr>`;
+                }).join('');
+            }
+            const inv = byId('invitesTableBody');
+            if (allInvites.length === 0) {
+                inv.innerHTML = '<tr><td colspan="3" class="empty-state"><span>Nobody waiting to sign in</span></td></tr>';
+            } else {
+                inv.innerHTML = allInvites.map(i => `<tr>
+                    <td>${esc(i.email)}</td>
+                    <td>${esc((ROLES[i.role] || {}).label || i.role)}</td>
+                    <td><div class="action-buttons"><button class="action-btn delete" title="Remove" onclick="revokeInvite('${esc(i.email)}')"><i class="fas fa-times"></i></button></div></td></tr>`).join('');
+            }
+        }
+
+        function changeUserRole(uid, role) {
+            if (currentRole !== 'admin' || !ROLES[role]) return;
+            if (currentUser && uid === currentUser.uid) return;
+            fbDb.collection('users').doc(uid).update({ role }).then(() => {
+                showNotification('Role Updated', `Now: ${ROLES[role].label}`, 'success');
+            }).catch(err => showNotification('Not Updated', err.message, 'error'));
+        }
+
+        function addInvite() {
+            if (currentRole !== 'admin') return;
+            const email = byId('newUserEmail').value.trim().toLowerCase();
+            const role = byId('newUserRole').value;
+            if (!/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(email)) {
+                showNotification('Check the Email', 'Enter a valid Google email address', 'warning');
+                return;
+            }
+            const existing = allUsers.find(u => (u.email || '').toLowerCase() === email);
+            const done = () => { byId('newUserEmail').value = ''; showNotification('User Added', `${email} — ${ROLES[role].label}`, 'success'); };
+            if (existing) {
+                if (currentUser && existing.uid === currentUser.uid) { showNotification('That is you', 'You cannot change your own role', 'warning'); return; }
+                fbDb.collection('users').doc(existing.uid).update({ role }).then(done).catch(err => showNotification('Not Saved', err.message, 'error'));
+            } else {
+                fbDb.collection('invites').doc(email).set({
+                    role, invitedBy: currentUser.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(done).catch(err => showNotification('Not Saved', err.message, 'error'));
+            }
+        }
+
+        function revokeInvite(email) {
+            if (currentRole !== 'admin') return;
+            if (!confirm(`Remove ${email}? They will have no access when they sign in.`)) return;
+            fbDb.collection('invites').doc(email).delete().catch(err => showNotification('Not Removed', err.message, 'error'));
+        }
+
+        // ---- sign-in gate, expenses, users ----
+        byId('gateSignInBtn').addEventListener('click', () => { byId('gateError').textContent = ''; signInWithGoogle(false); });
+        byId('gatePendingSignOut').addEventListener('click', signOutOfGoogle);
+        byId('gateErrorSignOut').addEventListener('click', () => { signOutOfGoogle(); showGate('signin'); });
+        byId('gateRetry').addEventListener('click', () => location.reload());
+
+        byId('addExpenseBtn').addEventListener('click', () => openExpenseModal());
+        byId('expenseForm').addEventListener('submit', saveExpense);
+        byId('expenseModalClose').addEventListener('click', closeExpenseModal);
+        byId('expenseCancel').addEventListener('click', closeExpenseModal);
+        byId('expCurrency').addEventListener('change', updateExpCurrencySymbol);
+        ['expFilterMonth', 'expFilterYear', 'expFilterCategory'].forEach(id => byId(id).addEventListener('change', renderExpenses));
+        byId('expSearch').addEventListener('input', renderExpenses);
+        byId('expClearFilters').addEventListener('click', () => {
+            byId('expFilterMonth').value = ''; byId('expFilterYear').value = '';
+            byId('expFilterCategory').value = ''; byId('expSearch').value = '';
+            renderExpenses();
+        });
+        byId('exportExpensesBtn').addEventListener('click', exportExpenses);
+        byId('addUserBtn').addEventListener('click', addInvite);
+        byId('newUserEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addInvite(); } });
+
+        window.editExpense = editExpense;
+        window.deleteExpense = deleteExpense;
+        window.changeUserRole = changeUserRole;
+        window.revokeInvite = revokeInvite;
 
         // ============================================================
         //  EXPOSE GLOBALLY
