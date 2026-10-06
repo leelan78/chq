@@ -1647,6 +1647,14 @@
                                 <button class="btn-outline" id="importDataBtn"><i class="fas fa-upload"></i> Import Data</button>
                                 <input type="file" id="importDataInput" accept=".json" style="display:none;" />
                             </div>
+                            <div class="setting-item">
+                                <button class="btn-outline" id="saveAndShareBtn"><i class="fas fa-cloud-upload-alt"></i> Save &amp; Share for Other Devices</button>
+                                <button class="btn-outline" id="loadFromFileBtn"><i class="fas fa-folder-open"></i> Load from File</button>
+                                <input type="file" id="loadFromFileInput" accept=".json" style="display:none;" />
+                            </div>
+                            <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-top:4px;">
+                                <i class="fas fa-info-circle"></i> Data saves to the cloud automatically (every 10 seconds and on <kbd>Ctrl</kbd>+<kbd>S</kbd>). "Save &amp; Share" forces an immediate cloud sync so other signed-in devices see your latest changes. "Load from File" restores any previously exported JSON file.
+                            </p>
                             <div class="setting-item cheque-edit-only">
                                 <button class="btn-danger" id="clearAllData"><i class="fas fa-trash"></i> Clear All Data</button>
                             </div>
@@ -1839,6 +1847,7 @@
             outgoingSort: { field: 'effectiveDate', dir: 'desc' },
             lastReport: null,
             expenses: [],
+            lastCloudSave: null,
         };
 
         // ============================================================
@@ -2120,8 +2129,9 @@
         }
 
         function pushToFirestore() {
-            if (!firebaseReady || !currentUser || !canEdit('cheques')) return;
-            fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]).set({
+            if (!firebaseReady || !currentUser || !canEdit('cheques')) return Promise.resolve();
+            state.lastCloudSave = new Date();
+            return fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]).set({
                 incoming: state.incoming,
                 outgoing: state.outgoing,
                 trash: state.trash,
@@ -2129,6 +2139,105 @@
                 banks: state.banks,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
+        }
+
+        // ============================================================
+        //  AUTO-SAVE + SHARE / LOAD FROM FILE
+        // ============================================================
+        let autoSaveTimer = null;
+        const AUTO_SAVE_INTERVAL_MS = 10 * 1000; // every 10 seconds
+
+        function startAutoSave() {
+            if (autoSaveTimer) clearInterval(autoSaveTimer);
+            autoSaveTimer = setInterval(() => {
+                if (!currentUser || !canEdit('cheques')) return;
+                // Only push if there is something worth syncing and no pending operation
+                pushToFirestore()
+                    .then(() => {
+                        // subtle UI hint (no toast) — update a tiny indicator if present
+                        const hint = byId('cloudSaveHint');
+                        if (hint) hint.textContent = 'Cloud: saved ' + new Date().toLocaleTimeString();
+                    })
+                    .catch(err => {
+                        console.error('Auto-save failed:', err);
+                    });
+            }, AUTO_SAVE_INTERVAL_MS);
+        }
+
+        function stopAutoSave() {
+            if (autoSaveTimer) { clearInterval(autoSaveTimer); autoSaveTimer = null; }
+        }
+
+        // Global Ctrl+S / Cmd+S — save to cloud immediately
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (!currentUser || !canEdit('cheques')) {
+                    showNotification('View only', 'You cannot save changes with your current role', 'warning');
+                    return;
+                }
+                pushToFirestore()
+                    .then(() => showNotification('Cloud Saved', 'All data saved to the cloud — other devices will see it', 'success'))
+                    .catch(err => {
+                        console.error('Manual cloud save failed:', err);
+                        showNotification('Save Failed', 'Could not save to cloud: ' + err.message, 'error');
+                    });
+            }
+        });
+
+        function saveAndShare() {
+            if (!currentUser) {
+                showNotification('Sign in required', 'Please sign in with Google to use cloud sharing', 'warning');
+                return;
+            }
+            if (!canEdit('cheques')) {
+                showNotification('View only', 'You cannot push changes with your current role', 'warning');
+                return;
+            }
+            pushToFirestore()
+                .then(() => showNotification('Shared', 'Data pushed to the cloud — other signed-in devices will update automatically', 'success', true))
+                .catch(err => {
+                    console.error('Save & Share failed:', err);
+                    showNotification('Share Failed', 'Could not save to cloud: ' + err.message, 'error');
+                });
+        }
+
+        function loadFromFile() {
+            const input = byId('loadFromFileInput');
+            input.value = '';
+            input.click();
+        }
+
+        function handleLoadFromFile(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    // Accept the same format as exportAllData
+                    if (!Array.isArray(parsed.incoming) || !Array.isArray(parsed.outgoing)) {
+                        throw new Error('Missing incoming/outgoing arrays');
+                    }
+                    // Overwrite local state
+                    state.incoming = parsed.incoming;
+                    state.outgoing = parsed.outgoing;
+                    state.companies = Array.isArray(parsed.companies) ? parsed.companies : state.companies;
+                    state.banks = Array.isArray(parsed.banks) ? parsed.banks : state.banks;
+                    if (Array.isArray(parsed.expenses) && canEdit('expenses')) {
+                        // expenses are stored in Firestore; we only show a notice
+                        console.log('Expenses found in file but not imported (use Expenses page for that)');
+                    }
+                    refreshStatuses();
+                    updateUI();
+                    if (currentUser && canEdit('cheques')) {
+                        pushToFirestore().catch(err => console.error('Cloud sync after load failed:', err));
+                    }
+                    showNotification('Loaded', 'Data loaded from file successfully', 'success', true);
+                } catch (err) {
+                    console.error('Load from file error:', err);
+                    showNotification('Load Failed', 'That file is not a valid export from this app', 'error');
+                }
+            };
+            reader.readAsText(file);
         }
 
         function updateGoogleSignInUI() {
@@ -2561,7 +2670,7 @@
                     const cmp = String(a.company || '').localeCompare(String(b.company || ''), undefined, { sensitivity: 'base', numeric: true });
                     return cmp * dir;
                 } else if (sort.field === 'chequeNo') {
-                    const cmp = String(a.checkNumber || '').localeCompare(String(b.checkNumber || ''), undefined, { numeric: true });
+                    const cmp = String(a.checkNumber || '').localeCompare(String(b.checkNumber || ''), { numeric: true });
                     return cmp * dir;
                 } else {
                     av = new Date(a.effectiveDate).getTime() || 0;
@@ -2756,7 +2865,7 @@
             if (key === 'name') {
                 arr.sort((a, b) => String(a.company || '').localeCompare(String(b.company || ''), undefined, { sensitivity: 'base' }));
             } else if (key === 'chequeNo') {
-                arr.sort((a, b) => String(a.checkNumber || '').localeCompare(String(b.checkNumber || ''), undefined, { numeric: true, sensitivity: 'base' }));
+                arr.sort((a, b) => String(a.checkNumber || '').localeCompare(String(b.checkNumber || ''), { numeric: true, sensitivity: 'base' }));
             } else {
                 arr.sort((a, b) => new Date(a.effectiveDate) - new Date(b.effectiveDate));
             }
@@ -3699,7 +3808,18 @@
             document.getElementById('reportEndDate').value = lastDay.toISOString().split('T')[0];
 
             generateReport('outstanding');
+
+            // Start auto-save once signed in
+            if (currentUser) startAutoSave();
         });
+
+        // Start auto-save after role is resolved
+        const originalOnRoleResolved = onRoleResolved;
+        onRoleResolved = function() {
+            originalOnRoleResolved.call(this);
+            if (currentUser && canEdit('cheques')) startAutoSave();
+            else stopAutoSave();
+        };
 
         // ============================================================
         //  EVENT LISTENERS
@@ -3896,6 +4016,15 @@
         document.getElementById('importDataInput').addEventListener('change', e => {
             const file = e.target.files[0];
             if (file) importDataFromFile(file);
+            e.target.value = '';
+        });
+
+        // ===== NEW: Save & Share + Load from File =====
+        document.getElementById('saveAndShareBtn').addEventListener('click', saveAndShare);
+        document.getElementById('loadFromFileBtn').addEventListener('click', loadFromFile);
+        document.getElementById('loadFromFileInput').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) handleLoadFromFile(file);
             e.target.value = '';
         });
 
@@ -4320,6 +4449,8 @@
         window.formatCurrency = formatCurrency;
         window.getStatusLabel = getStatusLabel;
         window.getStatusClass = getStatusClass;
+        window.saveAndShare = saveAndShare;
+        window.loadFromFile = loadFromFile;
 
         console.log('✅ S.A.A Legacy Pharmaceutical Cheque Tracking System loaded');
         console.log(`📊 ${state.incoming.length} customer payments, ${state.outgoing.length} supplier payments`);
