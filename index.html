@@ -1140,6 +1140,48 @@
         .user-role-select { padding: 6px 10px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; background: #fff; }
         .pending-flag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--warning-bg); color: #b45309; font-size: 11px; font-weight: 600; }
         @media (max-width: 640px) { .exp-break-row { grid-template-columns: 110px 1fr 120px; } }
+
+        /* ===== EXPENSE ACCOUNTABILITY ===== */
+        body.ro-funds .funds-edit, body.ro-approve .approve-edit { display: none !important; }
+        .ea-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--gray-200); margin-bottom: 20px; overflow-x: auto; }
+        .ea-tab { padding: 10px 16px; border: none; background: none; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--gray-500); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; display: flex; gap: 8px; align-items: center; transition: var(--transition); }
+        .ea-tab:hover { color: var(--gray-800); }
+        .ea-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .ea-pane { display: none; }
+        .ea-pane.active { display: block; }
+        .ea-row { display: grid; grid-template-columns: 1fr 180px 36px; gap: 10px; align-items: center; margin-bottom: 8px; }
+        .ea-row select { padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: #fff; }
+        .ea-total-box { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; background: var(--primary-bg); border-radius: var(--radius-sm); margin-top: 10px; }
+        .ea-total-box strong { font-size: 18px; color: var(--primary-dark); }
+        .ea-words { font-size: 12.5px; color: var(--gray-600); font-style: italic; }
+        .ea-sub { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+        .ea-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .ea-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background: var(--gray-100); border-radius: 999px; font-size: 12px; color: var(--gray-700); }
+        .ea-chip button { border: none; background: none; cursor: pointer; color: var(--gray-500); font-size: 12px; }
+        .ea-chip button:hover { color: var(--danger); }
+        .ea-attn { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .ea-attn a { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: var(--radius-sm); background: var(--warning-bg); color: #92400e; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+        .ea-attn a.bad { background: var(--danger-bg); color: #b91c1c; }
+        .ea-attn a.ok { background: var(--success-bg); color: #15803d; cursor: default; }
+        .ea-void td { color: var(--gray-400); text-decoration: line-through; }
+        .ea-void td:last-child, .ea-void td .status-badge { text-decoration: none; }
+        .ea-money { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .ea-info { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--info-bg); color: #1d4ed8; font-size: 13px; line-height: 1.5; }
+        .ea-warn { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--warning-bg); color: #92400e; font-size: 13px; line-height: 1.5; }
+        .ea-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-bottom: 16px; }
+        .ea-kv div span { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--gray-500); }
+        .ea-kv div strong { font-size: 14px; font-weight: 600; }
+        .ea-section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--gray-600); margin: 18px 0 8px; }
+        .ea-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--gray-200); }
+        .ea-hist { font-size: 12.5px; color: var(--gray-600); line-height: 1.6; }
+        .ea-hist li { margin-left: 18px; margin-bottom: 4px; }
+        .ea-link { color: var(--primary); cursor: pointer; font-weight: 600; background: none; border: none; font: inherit; font-weight: 600; padding: 0; text-align: left; }
+        .ea-link:hover { text-decoration: underline; }
+        .ea-report-table th, .ea-report-table td { white-space: nowrap; }
+        .ea-report-table tfoot td { font-weight: 700; background: var(--gray-50); }
+        #eaAskModal, #eaFileModal { z-index: 2200; }
+        #eaVoucherModal .modal-content, #eaProfileModal .modal-content { max-width: 900px; }
+        @media (max-width: 640px) { .ea-row { grid-template-columns: 1fr 120px 32px; } .ea-kv { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -1207,6 +1249,11 @@
             <a class="nav-link" data-page="expenses">
                 <i class="fas fa-receipt"></i>
                 <span>Expenses</span>
+            </a>
+            <a class="nav-link" data-page="accountability">
+                <i class="fas fa-scale-balanced"></i>
+                <span>Accountability</span>
+                <span class="badge" id="accBadge" style="display:none;">0</span>
             </a>
             <a class="nav-link" data-page="trash">
                 <i class="fas fa-trash"></i>
@@ -1530,6 +1577,142 @@
                 </div>
             </section>
 
+            <!-- ===== EXPENSE ACCOUNTABILITY ===== -->
+            <section class="page" id="page-accountability">
+                <div class="page-header">
+                    <div><h2>Expense Accountability</h2><p class="page-subtitle">Funds, payment vouchers, individuals, reimbursements and reconciliation — every cedi traceable</p></div>
+                    <div class="page-actions">
+                        <button class="btn-outline" id="eaSettingsBtn" type="button" style="display:none;"><i class="fas fa-sliders"></i> Voucher Settings</button>
+                        <button class="btn-outline funds-edit" id="eaAddFundBtn" type="button"><i class="fas fa-hand-holding-dollar"></i> Record Funds</button>
+                        <button class="btn-primary expense-edit" id="eaAddExpenseBtn" type="button"><i class="fas fa-plus"></i> Record Expense</button>
+                    </div>
+                </div>
+
+                <div class="ea-tabs" id="eaTabs">
+                    <button class="ea-tab active" data-tab="overview" type="button"><i class="fas fa-gauge"></i> Overview</button>
+                    <button class="ea-tab" data-tab="funds" type="button"><i class="fas fa-hand-holding-dollar"></i> Funds Received</button>
+                    <button class="ea-tab" data-tab="vouchers" type="button"><i class="fas fa-file-invoice"></i> Vouchers</button>
+                    <button class="ea-tab" data-tab="ledger" type="button"><i class="fas fa-book"></i> Cash Ledger</button>
+                    <button class="ea-tab" data-tab="people" type="button"><i class="fas fa-users"></i> People</button>
+                    <button class="ea-tab" data-tab="reimb" type="button"><i class="fas fa-rotate-left"></i> Reimbursements</button>
+                    <button class="ea-tab" data-tab="reports" type="button"><i class="fas fa-chart-column"></i> Reports</button>
+                    <button class="ea-tab" data-tab="audit" type="button"><i class="fas fa-shield-halved"></i> Audit Trail</button>
+                </div>
+
+                <!-- Overview -->
+                <div class="ea-pane active" id="eaPane-overview">
+                    <div class="stats-grid" id="eaStats" style="margin-bottom:20px;"></div>
+                    <div class="ea-attn" id="eaAttention"></div>
+                    <div class="card">
+                        <div class="card-header"><h3><i class="fas fa-clock-rotate-left"></i> Latest vouchers</h3></div>
+                        <div class="table-wrap"><table class="table">
+                            <thead><tr><th>Voucher</th><th>Date</th><th>Category</th><th>Recipients</th><th>Source</th><th class="ea-money">Total</th><th>Status</th></tr></thead>
+                            <tbody id="eaRecentBody"></tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- Funds -->
+                <div class="ea-pane" id="eaPane-funds">
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
+                        <div class="filter-item"><label>Type</label><select id="eaFundType"><option value="">All types</option>
+                            <option value="transfer">Transfer from Main Accountant</option><option value="opening">Opening balance</option>
+                            <option value="other">Other approved funds</option><option value="adjustment">Adjustments</option></select></div>
+                        <div class="filter-item" style="flex:1;min-width:180px;"><label>Search</label><input type="text" id="eaFundSearch" placeholder="Reference, source, purpose, receiver…" /></div>
+                    </div></div></div>
+                    <div class="card"><div class="table-wrap"><table class="table">
+                        <thead><tr><th>Date</th><th>Txn ID</th><th>Type</th><th>Reference</th><th>Source</th><th>Purpose</th><th>Received by</th><th class="ea-money">Amount</th><th>Receipt confirmed</th><th>Recorded by</th><th>Actions</th></tr></thead>
+                        <tbody id="eaFundBody"></tbody>
+                    </table></div></div>
+                </div>
+
+                <!-- Vouchers -->
+                <div class="ea-pane" id="eaPane-vouchers">
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
+                        <div class="filter-item"><label>Status</label><select id="eaVStatus"><option value="">All</option><option value="pending">Awaiting approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="void">Void</option></select></div>
+                        <div class="filter-item"><label>Category</label><select id="eaVCat"><option value="">All categories</option></select></div>
+                        <div class="filter-item"><label>From</label><input type="date" id="eaVFrom" /></div>
+                        <div class="filter-item"><label>To</label><input type="date" id="eaVTo" /></div>
+                        <div class="filter-item" style="flex:1;min-width:180px;"><label>Search</label><input type="text" id="eaVSearch" placeholder="Voucher no., recipient, description…" /></div>
+                        <div class="filter-item"><button class="btn-outline" id="eaVClear" type="button"><i class="fas fa-times"></i> Clear</button></div>
+                    </div></div></div>
+                    <div class="card"><div class="table-wrap"><table class="table">
+                        <thead><tr><th>Voucher</th><th>Date</th><th>Category</th><th>Description</th><th>Recipients</th><th>Source</th><th class="ea-money">Total</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="eaVBody"></tbody>
+                    </table></div></div>
+                </div>
+
+                <!-- Ledger -->
+                <div class="ea-pane" id="eaPane-ledger">
+                    <div class="card">
+                        <div class="card-header"><h3><i class="fas fa-book"></i> Cash ledger — running balance</h3>
+                            <div class="page-actions">
+                                <button class="btn-outline" type="button" onclick="eaPrintReport('ledger')"><i class="fas fa-print"></i> Print</button>
+                                <button class="btn-outline" type="button" onclick="eaExportReport('ledger')"><i class="fas fa-download"></i> Export</button>
+                            </div></div>
+                        <div class="table-wrap" id="eaLedgerBody"></div>
+                    </div>
+                </div>
+
+                <!-- People -->
+                <div class="ea-pane" id="eaPane-people">
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
+                        <div class="filter-item" style="flex:1;min-width:200px;"><label>Search a name</label><input type="text" id="eaPeopleSearch" placeholder="Search individuals…" /></div>
+                        <div class="filter-item"><button class="btn-primary expense-edit" id="eaAddPersonBtn" type="button"><i class="fas fa-user-plus"></i> Add Individual</button></div>
+                    </div></div></div>
+                    <div class="card"><div class="table-wrap"><table class="table">
+                        <thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Payments</th><th class="ea-money">Total received</th><th class="ea-money">Unretired advances</th><th>Actions</th></tr></thead>
+                        <tbody id="eaPeopleBody"></tbody>
+                    </table></div></div>
+                </div>
+
+                <!-- Reimbursements -->
+                <div class="ea-pane" id="eaPane-reimb">
+                    <div class="stats-grid" id="eaReimbStats" style="margin-bottom:20px;"></div>
+                    <div class="card" style="margin-bottom:20px;">
+                        <div class="card-header"><h3><i class="fas fa-wallet"></i> Expenses paid personally by the Expense Accountant</h3>
+                            <div class="page-actions"><button class="btn-primary funds-edit" id="eaAddReimbBtn" type="button"><i class="fas fa-plus"></i> Record Reimbursement</button></div></div>
+                        <div class="table-wrap"><table class="table">
+                            <thead><tr><th>Voucher</th><th>Date</th><th>Description</th><th>Status</th><th class="ea-money">Amount</th><th class="ea-money">Reimbursed</th><th class="ea-money">Outstanding</th></tr></thead>
+                            <tbody id="eaPersonalBody"></tbody>
+                        </table></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3><i class="fas fa-clock-rotate-left"></i> Reimbursements paid</h3></div>
+                        <div class="table-wrap"><table class="table">
+                            <thead><tr><th>Date</th><th>Txn ID</th><th>Method</th><th>Reference</th><th>Paid by</th><th>Notes</th><th class="ea-money">Amount</th><th>Actions</th></tr></thead>
+                            <tbody id="eaReimbBody"></tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- Reports -->
+                <div class="ea-pane" id="eaPane-reports">
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
+                        <div class="filter-item" style="min-width:260px;"><label>Report</label><select id="eaReportSel"></select></div>
+                        <div class="filter-item"><label>From</label><input type="date" id="eaRepFrom" /></div>
+                        <div class="filter-item"><label>To</label><input type="date" id="eaRepTo" /></div>
+                        <div class="filter-item"><button class="btn-primary" id="eaRunReport" type="button"><i class="fas fa-play"></i> Run</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaPrintReport()"><i class="fas fa-print"></i> Print</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaExportReport()"><i class="fas fa-download"></i> Export CSV</button></div>
+                    </div></div></div>
+                    <div class="card"><div class="card-body" id="eaReportOut"><div class="empty-state"><i class="fas fa-chart-column"></i><span>Pick a report and press Run</span></div></div></div>
+                </div>
+
+                <!-- Audit -->
+                <div class="ea-pane" id="eaPane-audit">
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
+                        <div class="filter-item"><label>Record type</label><select id="eaAuditEntity"><option value="">Everything</option><option value="voucher">Vouchers</option><option value="fund">Funds</option><option value="reimbursement">Reimbursements</option><option value="person">People</option><option value="settings">Settings</option></select></div>
+                        <div class="filter-item" style="flex:1;min-width:200px;"><label>Search</label><input type="text" id="eaAuditSearch" placeholder="Voucher no., user, reason…" /></div>
+                    </div>
+                    <p class="page-subtitle" style="margin-top:10px;">Nothing here can be edited or deleted. Showing the most recent 500 entries.</p></div></div>
+                    <div class="card"><div class="table-wrap"><table class="table">
+                        <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Record</th><th>What happened</th></tr></thead>
+                        <tbody id="eaAuditBody"></tbody>
+                    </table></div></div>
+                </div>
+            </section>
+
             <!-- ===== TRASH ===== -->
             <section class="page" id="page-trash">
                 <div class="page-header">
@@ -1568,9 +1751,9 @@
                             <div class="filter-item"><button class="btn-primary" id="addUserBtn" type="button"><i class="fas fa-plus"></i> Add User</button></div>
                         </div>
                         <div class="role-note">
-                            <strong>Administrator</strong> — sees everything and manages users, but cannot edit data.<br>
-                            <strong>Accountant</strong> — sees and edits everything (cheques and expenses).<br>
-                            <strong>Expense Accountant</strong> — sees and edits the Expenses section only.<br>
+                            <strong>Administrator (Director)</strong> — sees everything, manages users and approves / rejects / voids payment vouchers, but cannot edit other data.<br>
+                            <strong>Accountant (Main Accountant)</strong> — sees and edits everything, and records funds sent to the Expense Accountant and reimbursements.<br>
+                            <strong>Expense Accountant</strong> — sees the Expenses and Accountability sections; records expenses, vouchers and individuals, and confirms funds received.<br>
                             <strong>Viewer</strong> — sees everything, edits nothing.<br>
                             Anyone who signs in with Google without being added waits on a "no access" screen until you give them a role here.
                         </div>
@@ -1802,6 +1985,158 @@
         </div>
     </div>
 
+    <!-- ===== ACCOUNTABILITY: RECORD FUNDS ===== -->
+    <div class="modal" id="eaFundModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Record Funds</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
+            <form id="eaFundForm" class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Type <span class="required">*</span></label>
+                        <select id="eaFundTypeSel"><option value="transfer">Transfer from Main Accountant</option><option value="opening">Opening balance</option><option value="other">Other approved funds</option><option value="adjustment">Adjustment (+ / −)</option></select></div>
+                    <div class="form-group"><label>Date <span class="required">*</span></label><input type="date" id="eaFundDate" required /></div>
+                    <div class="form-group"><label id="eaFundAmtLabel">Amount received <span class="required">*</span></label>
+                        <div class="input-with-icon"><span>₵</span><input type="number" id="eaFundAmt" step="0.01" placeholder="0.00" required /></div></div>
+                    <div class="form-group"><label>Payment / reference number</label><input type="text" id="eaFundRef" placeholder="Cheque, transfer or receipt no." /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Source / account the money came from</label><input type="text" id="eaFundSource" placeholder="e.g. Main operating account – GCB" /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label id="eaFundPurposeLabel">Purpose / description <span class="required">*</span></label><input type="text" id="eaFundPurpose" placeholder="What is this money for?" required /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Expense Accountant who received it <span class="required">*</span></label>
+                        <input type="text" id="eaFundReceiver" list="eaReceiverList" placeholder="Name" required /><datalist id="eaReceiverList"></datalist></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Supporting document / photo</label>
+                        <input type="file" id="eaFundFile" accept="image/*,application/pdf" multiple />
+                        <div class="ea-chips" id="eaChips-fund"></div></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Notes</label><textarea id="eaFundNotes"></textarea></div>
+                </div>
+                <div class="form-actions"><button type="button" class="btn-secondary" data-close>Cancel</button><button type="submit" class="btn-primary">Save</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== ACCOUNTABILITY: RECORD EXPENSE ===== -->
+    <div class="modal" id="eaExpenseModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header"><h3 id="eaExpTitle">Record Expense</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
+            <form id="eaExpenseForm" class="modal-body">
+                <input type="hidden" id="eaExpId" />
+                <div class="form-grid">
+                    <div class="form-group"><label>Expense category <span class="required">*</span></label>
+                        <select id="eaExpCat" required></select>
+                        <input type="text" id="eaExpCatNew" placeholder="Type the new category" style="display:none;margin-top:6px;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;" /></div>
+                    <div class="form-group"><label>Expense date <span class="required">*</span></label><input type="date" id="eaExpDate" required /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Description / purpose <span class="required">*</span></label><input type="text" id="eaExpDesc" placeholder="What is this expense for?" required /></div>
+                    <div class="form-group"><label>Payment source <span class="required">*</span></label>
+                        <select id="eaExpSource"><option value="org">Organization Cash/Advance</option><option value="personal">Personal Funds – Reimbursement Required</option><option value="other">Other Approved Source</option></select></div>
+                    <div class="form-group"><label>Payment method</label>
+                        <select id="eaExpMethod"><option>Cash</option><option>Cheque</option><option>Bank Transfer</option><option>Mobile Money</option><option>Card</option><option>Other</option></select></div>
+                    <div class="form-group" style="grid-column:1/-1;display:none;" id="eaOtherSrcWrap"><label>Which approved source? <span class="required">*</span></label><input type="text" id="eaExpOtherSrc" placeholder="e.g. Director's direct payment, company card" /></div>
+                    <div style="grid-column:1/-1;display:none;" id="eaPersonalNote" class="ea-warn"><i class="fas fa-triangle-exclamation"></i> This will be recorded as paid from your own pocket. A receipt reference or attached receipt is required, and the amount is added to your reimbursement balance once the voucher is approved.</div>
+                    <div class="form-group"><label>Reference / receipt number</label><input type="text" id="eaExpRef" placeholder="Receipt, invoice or cheque no." /></div>
+                    <div class="form-group"><label>Receipt / document / photo</label><input type="file" id="eaExpFile" accept="image/*,application/pdf" multiple /><div class="ea-chips" id="eaChips-exp"></div></div>
+
+                    <div style="grid-column:1/-1;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <div class="ea-section-title" style="margin:0;">Recipients <span class="required" style="color:var(--danger)">*</span></div>
+                            <button type="button" class="btn-outline" id="eaAddRowBtn"><i class="fas fa-plus"></i> Add Recipient</button>
+                        </div>
+                        <div id="eaRows"></div>
+                        <div class="ea-total-box"><div><span class="stat-label">Combined total</span><br><strong id="eaTotal">₵0.00</strong></div><div class="ea-words" id="eaTotalWords"></div></div>
+                    </div>
+
+                    <div class="form-group" style="grid-column:1/-1;"><label style="display:flex;align-items:center;gap:8px;font-weight:500;">
+                        <input type="checkbox" id="eaExpAdvance" style="width:auto;" /> This is an advance — the recipient(s) must account for it / retire it later</label></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Notes</label><textarea id="eaExpNotes"></textarea></div>
+                </div>
+                <div class="form-actions"><button type="button" class="btn-secondary" data-close>Cancel</button><button type="submit" class="btn-primary" id="eaExpSubmit">Save &amp; Generate Voucher</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== ACCOUNTABILITY: VOUCHER VIEW ===== -->
+    <div class="modal" id="eaVoucherModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header"><h3 id="eaVoucherTitle">Payment Voucher</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
+            <div class="modal-body" id="eaVoucherBody"></div>
+        </div>
+    </div>
+
+    <!-- ===== ACCOUNTABILITY: PERSON ===== -->
+    <div class="modal" id="eaPersonModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="eaPersonTitle">Add Individual</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
+            <form id="eaPersonForm" class="modal-body">
+                <input type="hidden" id="eaPersonId" />
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column:1/-1;"><label>Full name <span class="required">*</span></label><input type="text" id="eaPersonName" required /></div>
+                    <div class="form-group"><label>Type</label><select id="eaPersonKind"><option value="individual">Individual</option><option value="vendor">Vendor / company</option></select></div>
+                    <div class="form-group"><label>Phone</label><input type="text" id="eaPersonPhone" /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Staff ID / role / notes</label><input type="text" id="eaPersonNote" placeholder="Helps tell people with similar names apart" /></div>
+                </div>
+                <div class="form-actions"><button type="button" class="btn-secondary" data-close>Cancel</button><button type="submit" class="btn-primary">Save</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== ACCOUNTABILITY: PERSON PROFILE ===== -->
+    <div class="modal" id="eaProfileModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header"><h3 id="eaProfileTitle">Individual</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
+            <div class="modal-body" id="eaProfileBody"></div>
+        </div>
+    </div>
+
+    <!-- ===== ACCOUNTABILITY: REIMBURSEMENT ===== -->
+    <div class="modal" id="eaReimbModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Record Reimbursement</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
+            <form id="eaReimbForm" class="modal-body">
+                <div class="ea-info" id="eaReimbInfo" style="margin-bottom:16px;"></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Date <span class="required">*</span></label><input type="date" id="eaReimbDate" required /></div>
+                    <div class="form-group"><label>Amount reimbursed <span class="required">*</span></label>
+                        <div class="input-with-icon"><span>₵</span><input type="number" id="eaReimbAmt" step="0.01" min="0.01" required /></div></div>
+                    <div class="form-group"><label>Payment method</label><select id="eaReimbMethod"><option>Cash</option><option>Cheque</option><option>Bank Transfer</option><option>Mobile Money</option><option>Other</option></select></div>
+                    <div class="form-group"><label>Reference number</label><input type="text" id="eaReimbRef" /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Notes</label><textarea id="eaReimbNotes"></textarea></div>
+                </div>
+                <div class="form-actions"><button type="button" class="btn-secondary" data-close>Cancel</button><button type="submit" class="btn-primary">Save Reimbursement</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== ACCOUNTABILITY: VOUCHER SETTINGS ===== -->
+    <div class="modal" id="eaSettingsModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Voucher Settings</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
+            <form id="eaSettingsForm" class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column:1/-1;"><label>Organization name (printed on vouchers)</label><input type="text" id="eaSetOrg" /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Address / contact line</label><input type="text" id="eaSetAddr" placeholder="Optional" /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Logo</label><input type="file" id="eaSetLogo" accept="image/*" />
+                        <div class="ea-chips" id="eaLogoPreview"></div></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label style="display:flex;align-items:center;gap:8px;font-weight:500;">
+                        <input type="checkbox" id="eaSetApproval" style="width:auto;" /> Vouchers need Director/Administrator approval</label></div>
+                </div>
+                <div class="form-actions"><button type="button" class="btn-secondary" data-close>Cancel</button><button type="submit" class="btn-primary">Save Settings</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== ACCOUNTABILITY: REASON PROMPT + FILE PREVIEW ===== -->
+    <div class="modal" id="eaAskModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="eaAskTitle">Reason</h3></div>
+            <div class="modal-body">
+                <div class="form-group"><label id="eaAskLabel">Reason</label><textarea id="eaAskText"></textarea></div>
+                <div class="form-actions"><button type="button" class="btn-secondary" id="eaAskCancel">Cancel</button><button type="button" class="btn-primary" id="eaAskOk">Confirm</button></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="eaFileModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header"><h3 id="eaFileTitle">Attachment</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
+            <div class="modal-body" id="eaFileBody"></div>
+        </div>
+    </div>
+
     <!-- ===== DETAIL MODAL ===== -->
     <div class="modal" id="detailModal">
         <div class="modal-content modal-lg">
@@ -1855,11 +2190,11 @@
         //  view = pages the role can open, edit = areas the role can change.
         //  To change who can do what, edit this table (and firestore.rules).
         // ============================================================
-        const ALL_PAGES = ['dashboard', 'incoming', 'outgoing', 'calendar', 'reports', 'expenses', 'trash', 'settings'];
+        const ALL_PAGES = ['dashboard', 'incoming', 'outgoing', 'calendar', 'reports', 'expenses', 'accountability', 'trash', 'settings'];
         const ROLES = {
-            admin:              { label: 'Administrator',      view: [...ALL_PAGES, 'users'], edit: [] },
-            accountant:         { label: 'Accountant',         view: ALL_PAGES,               edit: ['cheques', 'expenses'] },
-            expense_accountant: { label: 'Expense Accountant', view: ['expenses'],            edit: ['expenses'] },
+            admin:              { label: 'Administrator',      view: [...ALL_PAGES, 'users'], edit: ['approve'] },
+            accountant:         { label: 'Accountant',         view: ALL_PAGES,               edit: ['cheques', 'expenses', 'funds'] },
+            expense_accountant: { label: 'Expense Accountant', view: ['accountability', 'expenses'], edit: ['expenses'] },
             viewer:             { label: 'Viewer',             view: ALL_PAGES,               edit: [] },
             pending:            { label: 'No access',          view: [],                      edit: [] }
         };
@@ -1990,6 +2325,8 @@
             const signedIn = !!currentUser && !!currentRole;
             document.body.classList.toggle('ro-cheques', signedIn && !canEdit('cheques'));
             document.body.classList.toggle('ro-expenses', signedIn && !canEdit('expenses'));
+            document.body.classList.toggle('ro-funds', signedIn && !canEdit('funds'));
+            document.body.classList.toggle('ro-approve', signedIn && !canEdit('approve'));
             document.querySelectorAll('.nav-link').forEach(l => { l.style.display = canView(l.dataset.page) ? '' : 'none'; });
             const seesCheques = canView('incoming');
             const sb = document.querySelector('.search-box');
@@ -2116,6 +2453,7 @@
                 });
             }
             if (canView('expenses')) attachExpenseSync();
+            if (canView('accountability')) attachAccountabilitySync();
         }
 
         function detachFirestoreSync() {
@@ -2124,6 +2462,7 @@
             if (unsubscribeUsers) { unsubscribeUsers(); unsubscribeUsers = null; }
             if (unsubscribeInvites) { unsubscribeInvites(); unsubscribeInvites = null; }
             state.expenses = [];
+            if (typeof eaDetach === 'function') eaDetach();
             allUsers = []; allInvites = [];
             if (typeof renderExpenses === 'function') renderExpenses();
         }
@@ -2515,6 +2854,7 @@
             if (page === 'reports') generateReport('outstanding');
             if (page === 'trash') renderTrashTable();
             if (page === 'expenses') renderExpenses();
+            if (page === 'accountability') renderAccountability();
             if (page === 'users') renderUsersPage();
             document.getElementById('sidebar').classList.remove('open');
         }
@@ -4421,6 +4761,994 @@
         window.deleteExpense = deleteExpense;
         window.changeUserRole = changeUserRole;
         window.revokeInvite = revokeInvite;
+
+
+        // ============================================================
+        //  EXPENSE ACCOUNTABILITY
+        //  Collections: ea_funds, ea_vouchers, ea_people, ea_reimb,
+        //  ea_audit (append-only), ea_files, ea_meta (counters, settings)
+        // ============================================================
+        const EA = {
+            funds: [], vouchers: [], people: [], reimb: [], audit: [], settings: {},
+            tab: 'overview', files: { fund: [], exp: [] }, keep: [], viewId: null, profileId: null,
+            reportCur: null, askDone: null, askRequired: true, personCb: null, errShown: false
+        };
+        let eaUnsubs = [];
+        const EA_ORG_DEFAULT = 'S.A.A Legacy Pharmaceutical';
+        const EA_SOURCES = { org: 'Organization Cash/Advance', personal: 'Personal Funds – Reimbursement Required', other: 'Other Approved Source' };
+        const EA_SOURCE_SHORT = { org: 'Org cash', personal: 'Personal funds', other: 'Other source' };
+        const EA_FUND_TYPES = { transfer: 'Transfer from Main Accountant', opening: 'Opening balance', other: 'Other approved funds', adjustment: 'Adjustment' };
+        const EA_STATUS = { pending: ['due_soon', 'Awaiting approval'], approved: ['cleared', 'Approved'], rejected: ['overdue', 'Rejected'], void: ['cancelled', 'Void'] };
+
+        // ---------- small helpers ----------
+        const eaNum = x => parseFloat(x) || 0;
+        const eaRound = x => Math.round((x + Number.EPSILON) * 100) / 100;
+        function eaFmt(n) {
+            n = eaRound(eaNum(n));
+            return (n < 0 ? '-' : '') + '₵' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        const eaNow = () => new Date().toISOString();
+        function eaToday() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+        function eaDT(iso) { return iso ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'; }
+        const eaMe = () => (currentUser ? currentUser.email : '');
+        const eaMeName = () => (currentUser ? (currentUser.displayName || currentUser.email) : '');
+        const eaByDateDesc = (a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || '');
+        const eaPerson = id => EA.people.find(p => p.id === id);
+        const eaSpendVouchers = () => EA.vouchers.filter(v => v.status === 'approved' || v.status === 'pending');
+        const eaBadge = st => { const s = EA_STATUS[st] || ['pending', st]; return `<span class="status-badge ${s[0]}"><span class="dot"></span>${esc(s[1])}</span>`; };
+        function eaFail(err) {
+            console.error(err);
+            const msg = err && err.code === 'permission-denied'
+                ? 'Permission denied. The Firestore rules for the accountability collections may not be published yet (see firestore-rules-additions.txt).'
+                : (err && err.message) || String(err);
+            showNotification('Not Saved', msg, 'error');
+        }
+        function eaDeny(area, what) {
+            if (canEdit(area)) return false;
+            showNotification('Not allowed', `Your role cannot ${what}`, 'warning');
+            return true;
+        }
+
+        function eaWords(amount) {
+            const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            const below1000 = n => {
+                let s = '';
+                if (n >= 100) { s += ones[Math.floor(n / 100)] + ' Hundred'; n %= 100; if (n) s += ' and '; }
+                if (n >= 20) { s += tens[Math.floor(n / 10)]; if (n % 10) s += '-' + ones[n % 10]; }
+                else if (n > 0) s += ones[n];
+                return s;
+            };
+            const big = n => {
+                if (n === 0) return 'Zero';
+                let s = '';
+                for (const [v, name] of [[1e9, 'Billion'], [1e6, 'Million'], [1e3, 'Thousand']]) {
+                    if (n >= v) { s += (s ? ' ' : '') + below1000(Math.floor(n / v)) + ' ' + name; n %= v; }
+                }
+                if (n > 0) s += (s ? (n < 100 ? ' and ' : ' ') : '') + below1000(n);
+                return s;
+            };
+            amount = eaRound(Math.abs(amount));
+            const cedis = Math.floor(amount), pes = Math.round((amount - cedis) * 100);
+            let out = big(cedis) + ' Ghana Cedi' + (cedis === 1 ? '' : 's');
+            if (pes) out += ' and ' + big(pes) + ' Pesewa' + (pes === 1 ? '' : 's');
+            return out + ' Only';
+        }
+
+        // ---------- the numbers ----------
+        // Cash balance = opening + received + adjustments − expenses paid from organization cash.
+        // Personal-funds and other-source expenses never touch the cash balance.
+        function eaTotals(r = {}) {
+            const from = r.from || '0000-01-01', to = r.to || '9999-12-31';
+            const inR = d => (d || '') >= from && (d || '') <= to;
+            const sum = (a, fn) => eaRound(a.reduce((s, x) => s + fn(x), 0));
+            const F = EA.funds.filter(f => f.status !== 'void' && inR(f.date));
+            const V = eaSpendVouchers().filter(v => inR(v.date));
+            const R = EA.reimb.filter(x => x.status !== 'void' && inR(x.date));
+            const t = {};
+            t.opening = sum(F.filter(f => f.type === 'opening'), f => eaNum(f.amount));
+            t.transfers = sum(F.filter(f => f.type === 'transfer'), f => eaNum(f.amount));
+            t.otherFunds = sum(F.filter(f => f.type === 'other'), f => eaNum(f.amount));
+            t.adjust = sum(F.filter(f => f.type === 'adjustment'), f => eaNum(f.amount));
+            t.received = eaRound(t.transfers + t.otherFunds);
+            t.orgSpent = sum(V.filter(v => v.source === 'org' || !v.source), v => eaNum(v.total));
+            t.personal = sum(V.filter(v => v.source === 'personal'), v => eaNum(v.total));
+            t.otherSrc = sum(V.filter(v => v.source === 'other'), v => eaNum(v.total));
+            t.spent = eaRound(t.orgSpent + t.personal + t.otherSrc);
+            t.toIndividuals = 0;
+            V.forEach(v => (v.recipients || []).forEach(x => { const p = eaPerson(x.personId); if (!p || p.kind !== 'vendor') t.toIndividuals += eaNum(x.amount); }));
+            t.toIndividuals = eaRound(t.toIndividuals);
+            t.owed = sum(V.filter(v => v.source === 'personal' && v.status === 'approved'), v => eaNum(v.total));
+            t.personalPending = sum(V.filter(v => v.source === 'personal' && v.status === 'pending'), v => eaNum(v.total));
+            t.reimbursed = sum(R, x => eaNum(x.amount));
+            t.outstanding = eaRound(t.owed - t.reimbursed);
+            t.balance = eaRound(t.opening + t.received + t.adjust - t.orgSpent);
+            t.pendingCount = V.filter(v => v.status === 'pending').length;
+            return t;
+        }
+
+        // Reimbursements are applied oldest-voucher-first.
+        function eaReimbAlloc() {
+            const pv = EA.vouchers.filter(v => v.status === 'approved' && v.source === 'personal')
+                .sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.createdAt || '').localeCompare(b.createdAt || ''));
+            let pool = eaRound(EA.reimb.filter(x => x.status !== 'void').reduce((s, x) => s + eaNum(x.amount), 0));
+            const map = {};
+            pv.forEach(v => {
+                const tot = eaNum(v.total), used = Math.min(pool, tot);
+                pool = eaRound(pool - used);
+                map[v.id] = { reimbursed: eaRound(used), balance: eaRound(tot - used) };
+            });
+            return { map, excess: pool, list: pv };
+        }
+
+        // ---------- audit + writes ----------
+        function eaAuditObj(a) {
+            return { at: eaNow(), by: eaMe(), byName: eaMeName(), action: a.action, entity: a.entity, entityId: a.entityId || '', ref: a.ref || '', summary: a.summary || '', reason: a.reason || '', changes: a.changes || [] };
+        }
+        function eaUpdate(col, id, patch, audit) {
+            const batch = fbDb.batch();
+            batch.update(fbDb.collection(col).doc(id), { ...patch, updatedAt: eaNow(), updatedBy: eaMe() });
+            batch.set(fbDb.collection('ea_audit').doc(), eaAuditObj({ ...audit, entityId: id }));
+            return batch.commit();
+        }
+        // Creates a record with a unique, sequential transaction ID (and voucher number) inside one transaction.
+        async function eaCreateRecord(col, data, opts) {
+            const metaRef = fbDb.collection('ea_meta').doc('counters');
+            const auditRef = fbDb.collection('ea_audit').doc();
+            let result = null;
+            await fbDb.runTransaction(async tx => {
+                const s = await tx.get(metaRef);
+                const c = s.exists ? s.data() : {};
+                const n = (c.txn || 0) + 1, upd = { txn: n };
+                const id = 'TXN-' + String(n).padStart(6, '0');
+                const rec = { ...data, id, txnId: id };
+                if (opts.numberKey) {
+                    const next = (c[opts.numberKey] || 0) + 1;
+                    upd[opts.numberKey] = next;
+                    rec[opts.numberField] = opts.numberFormat(next);
+                }
+                tx.set(metaRef, upd, { merge: true });
+                tx.set(fbDb.collection(col).doc(id), rec);
+                tx.set(auditRef, eaAuditObj({ ...opts.audit(rec), entityId: id }));
+                result = rec;
+            });
+            return result;
+        }
+
+        // ---------- attachments (stored compressed in Firestore, collection ea_files) ----------
+        function eaReadDataUrl(file) {
+            return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('Could not read file')); r.readAsDataURL(file); });
+        }
+        function eaCompressImage(file, max = 1100, type = 'image/jpeg') {
+            return new Promise((res, rej) => {
+                const img = new Image(), url = URL.createObjectURL(file);
+                img.onload = () => {
+                    const k = Math.min(1, max / Math.max(img.width, img.height));
+                    const c = document.createElement('canvas');
+                    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+                    const ctx = c.getContext('2d');
+                    if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); }
+                    ctx.drawImage(img, 0, 0, c.width, c.height);
+                    URL.revokeObjectURL(url);
+                    let q = 0.72, d = c.toDataURL(type, q);
+                    while (type === 'image/jpeg' && d.length > 900000 && q > 0.3) { q -= 0.1; d = c.toDataURL(type, q); }
+                    res(d);
+                };
+                img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Could not read image')); };
+                img.src = url;
+            });
+        }
+        async function eaPickFiles(key, fileList) {
+            for (const f of fileList) {
+                try {
+                    let data, type = f.type;
+                    if (f.type.startsWith('image/')) { data = await eaCompressImage(f); type = 'image/jpeg'; }
+                    else if (f.type === 'application/pdf') {
+                        if (f.size > 600 * 1024) { showNotification('PDF too large', `${f.name} is over 600 KB — photograph it or shrink it first`, 'warning'); continue; }
+                        data = await eaReadDataUrl(f);
+                    } else { showNotification('Unsupported file', `${f.name}: only photos and PDFs can be attached`, 'warning'); continue; }
+                    EA.files[key].push({ id: 'FILE-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase(), name: f.name, type, size: data.length, data });
+                } catch (e) { showNotification('Attachment failed', e.message, 'error'); }
+            }
+            eaRenderChips(key);
+        }
+        function eaRenderChips(key) {
+            const box = byId('eaChips-' + key); if (!box) return;
+            const kept = key === 'exp' ? EA.keep : [];
+            box.innerHTML = kept.map((a, i) => `<span class="ea-chip"><i class="fas fa-paperclip"></i> ${esc(a.name)} <button type="button" title="Remove" onclick="eaRemoveKept(${i})"><i class="fas fa-times"></i></button></span>`).join('')
+                + EA.files[key].map((a, i) => `<span class="ea-chip"><i class="fas fa-paperclip"></i> ${esc(a.name)} <button type="button" title="Remove" onclick="eaRemoveFile('${key}',${i})"><i class="fas fa-times"></i></button></span>`).join('');
+        }
+        function eaRemoveFile(key, i) { EA.files[key].splice(i, 1); eaRenderChips(key); }
+        function eaRemoveKept(i) { EA.keep.splice(i, 1); eaRenderChips('exp'); }
+        async function eaUploadPending(key) {
+            const list = EA.files[key];
+            for (const f of list) {
+                await fbDb.collection('ea_files').doc(f.id).set({ name: f.name, type: f.type, size: f.size, data: f.data, owner: eaMe(), at: eaNow() });
+            }
+            return list.map(f => ({ id: f.id, name: f.name, type: f.type, size: f.size }));
+        }
+        async function eaViewFile(id) {
+            try {
+                const d = await fbDb.collection('ea_files').doc(id).get();
+                if (!d.exists) { showNotification('Not found', 'That attachment could not be found', 'warning'); return; }
+                const f = d.data();
+                byId('eaFileTitle').textContent = f.name;
+                const box = byId('eaFileBody');
+                if (f.type === 'application/pdf') {
+                    const blob = await (await fetch(f.data)).blob();
+                    box.innerHTML = `<iframe src="${URL.createObjectURL(blob)}" style="width:100%;height:70vh;border:0;"></iframe>`;
+                } else {
+                    box.innerHTML = `<img src="${f.data}" style="max-width:100%;display:block;margin:0 auto;" alt="">`;
+                }
+                byId('eaFileModal').classList.add('active');
+            } catch (e) { eaFail(e); }
+        }
+        const eaAttBtns = list => (list || []).map(a => `<button type="button" class="action-btn view" title="${esc(a.name)}" onclick="eaViewFile('${esc(a.id)}')"><i class="fas fa-paperclip"></i></button>`).join('');
+
+        // ---------- reason prompt ----------
+        function eaAsk(title, label, required = true) {
+            return new Promise(resolve => {
+                byId('eaAskTitle').textContent = title;
+                byId('eaAskLabel').textContent = label;
+                const t = byId('eaAskText'); t.value = '';
+                EA.askRequired = required;
+                EA.askDone = v => { byId('eaAskModal').classList.remove('active'); EA.askDone = null; resolve(v); };
+                byId('eaAskModal').classList.add('active');
+                setTimeout(() => t.focus(), 50);
+            });
+        }
+
+        // ---------- sync ----------
+        function attachAccountabilitySync() {
+            eaDetach();
+            const listen = (col, key, order) => {
+                let q = fbDb.collection(col);
+                if (order) q = q.orderBy(order[0], order[1]).limit(order[2]);
+                eaUnsubs.push(q.onSnapshot(s => {
+                    EA[key] = s.docs.map(d => ({ ...d.data(), id: d.id }));
+                    renderAccountability();
+                }, err => {
+                    console.error(col, err);
+                    if (!EA.errShown) { EA.errShown = true; showNotification('Accountability sync', 'Could not load accountability data: ' + err.message + ' — check that the new Firestore rules are published.', 'error'); }
+                }));
+            };
+            listen('ea_funds', 'funds'); listen('ea_vouchers', 'vouchers'); listen('ea_people', 'people');
+            listen('ea_reimb', 'reimb'); listen('ea_audit', 'audit', ['at', 'desc', 500]);
+            eaUnsubs.push(fbDb.collection('ea_meta').doc('settings').onSnapshot(s => {
+                EA.settings = s.exists ? s.data() : {};
+                renderAccountability();
+            }, err => console.error('ea_meta', err)));
+        }
+        function eaDetach() {
+            eaUnsubs.forEach(u => u()); eaUnsubs = [];
+            EA.funds = []; EA.vouchers = []; EA.people = []; EA.reimb = []; EA.audit = []; EA.settings = {}; EA.errShown = false;
+            renderAccountability();
+        }
+
+        // ============================================================
+        //  ACCOUNTABILITY — RENDERING
+        // ============================================================
+        function eaRecipientsText(v, max = 2) {
+            const n = (v.recipients || []).map(r => r.name);
+            return n.length <= max ? n.join(', ') : n.slice(0, max).join(', ') + ` +${n.length - max} more`;
+        }
+        function eaCategories() {
+            const c = new Set(EXPENSE_CATEGORIES);
+            EA.vouchers.forEach(v => { if (v.category) c.add(v.category); });
+            return [...c].sort();
+        }
+        function eaSetTab(t) {
+            EA.tab = t;
+            document.querySelectorAll('.ea-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+            document.querySelectorAll('.ea-pane').forEach(p => p.classList.toggle('active', p.id === 'eaPane-' + t));
+            renderAccountability();
+        }
+        function eaGoVouchers(status) { byId('eaVStatus').value = status || ''; eaSetTab('vouchers'); }
+
+        function renderAccountability() {
+            if (!byId('page-accountability')) return;
+            const pend = EA.vouchers.filter(v => v.status === 'pending').length;
+            const b = byId('accBadge');
+            if (b) { b.textContent = pend; b.style.display = pend && canEdit('approve') ? '' : 'none'; }
+            const sb = byId('eaSettingsBtn');
+            if (sb) sb.style.display = (canEdit('funds') || canEdit('approve')) ? '' : 'none';
+            if (state.currentPage !== 'accountability') return;
+            ({ overview: renderEAOverview, funds: renderEAFunds, vouchers: renderEAVouchers, ledger: renderEALedger, people: renderEAPeople, reimb: renderEAReimb, reports: () => {}, audit: renderEAAudit })[EA.tab]();
+            if (byId('eaVoucherModal').classList.contains('active') && EA.viewId) eaRenderVoucherModal();
+            if (byId('eaProfileModal').classList.contains('active') && EA.profileId) eaRenderProfile();
+            if (byId('eaExpenseModal').classList.contains('active')) eaRefreshRowSelects();
+        }
+
+        function renderEAOverview() {
+            const t = eaTotals();
+            const card = (icon, color, label, value, sub) => `<div class="stat-card"><div class="stat-icon ${color}"><i class="fas ${icon}"></i></div>
+                <div class="stat-info"><span class="stat-label">${label}</span><h3 style="font-size:21px;">${value}</h3></div><div class="stat-amount">${sub || ''}</div></div>`;
+            byId('eaStats').innerHTML =
+                card('fa-flag', 'blue', 'Opening balance', eaFmt(t.opening), '') +
+                card('fa-hand-holding-dollar', 'green', 'Received from Main Accountant', eaFmt(t.received), t.otherFunds ? 'incl. ' + eaFmt(t.otherFunds) + ' other funds' : '') +
+                card('fa-receipt', 'red', 'Total spent', eaFmt(t.spent), 'Org cash ' + eaFmt(t.orgSpent)) +
+                card('fa-user-group', 'purple', 'Given to individuals', eaFmt(t.toIndividuals), '') +
+                card('fa-wallet', 'orange', 'Paid personally by Expense Accountant', eaFmt(t.personal), t.personalPending ? eaFmt(t.personalPending) + ' awaiting approval' : '') +
+                card('fa-rotate-left', 'green', 'Reimbursed so far', eaFmt(t.reimbursed), '') +
+                card('fa-scale-balanced', t.outstanding > 0 ? 'yellow' : 'green', 'Owed to Expense Accountant', eaFmt(t.outstanding), 'Outstanding reimbursement') +
+                card('fa-sack-dollar', t.balance < 0 ? 'red' : 'green', 'Remaining cash balance', eaFmt(t.balance), t.adjust ? 'incl. ' + eaFmt(t.adjust) + ' adjustments' : '');
+
+            const attn = [];
+            if (t.pendingCount) attn.push(`<a onclick="eaGoVouchers('pending')"><i class="fas fa-hourglass-half"></i> ${t.pendingCount} voucher${t.pendingCount > 1 ? 's' : ''} awaiting approval</a>`);
+            const unconf = EA.funds.filter(f => f.status !== 'void' && f.type === 'transfer' && !f.confirmed).length;
+            if (unconf) attn.push(`<a onclick="eaSetTab('funds')"><i class="fas fa-circle-question"></i> ${unconf} transfer${unconf > 1 ? 's' : ''} from the Main Accountant not yet confirmed by the Expense Accountant</a>`);
+            const adv = eaSpendVouchers().filter(v => v.isAdvance && !v.retired).length;
+            if (adv) attn.push(`<a onclick="eaSetTab('people')"><i class="fas fa-user-clock"></i> ${adv} advance${adv > 1 ? 's' : ''} not yet retired</a>`);
+            if (t.balance < 0) attn.push(`<a class="bad"><i class="fas fa-triangle-exclamation"></i> The cash balance is negative (${eaFmt(t.balance)}) — more was paid out than was received</a>`);
+            const alloc = eaReimbAlloc();
+            if (alloc.excess > 0.005) attn.push(`<a class="bad"><i class="fas fa-triangle-exclamation"></i> Reimbursements exceed approved personal expenses by ${eaFmt(alloc.excess)}</a>`);
+            if (!attn.length && (EA.vouchers.length || EA.funds.length)) attn.push('<a class="ok"><i class="fas fa-circle-check"></i> Nothing needs attention</a>');
+            byId('eaAttention').innerHTML = attn.join('');
+
+            const recent = [...EA.vouchers].sort(eaByDateDesc).slice(0, 8);
+            byId('eaRecentBody').innerHTML = recent.length ? recent.map(v => `<tr style="cursor:pointer" onclick="eaOpenVoucher('${esc(v.id)}')">
+                <td class="text-mono"><strong>${esc(v.voucherNo)}</strong></td><td>${formatDate(v.date)}</td><td><span class="exp-cat">${esc(v.category)}</span></td>
+                <td>${esc(eaRecipientsText(v))}</td><td>${EA_SOURCE_SHORT[v.source] || ''}</td><td class="ea-money"><strong>${eaFmt(v.total)}</strong></td><td>${eaBadge(v.status)}</td></tr>`).join('')
+                : '<tr><td colspan="7" class="empty-state"><i class="fas fa-file-invoice"></i><span>No vouchers yet</span></td></tr>';
+        }
+
+        function renderEAFunds() {
+            const type = byId('eaFundType').value, q = byId('eaFundSearch').value.trim().toLowerCase();
+            const list = EA.funds.filter(f => (!type || f.type === type) && (!q || [f.id, f.reference, f.source, f.purpose, f.receivedBy, f.notes].join(' ').toLowerCase().includes(q))).sort(eaByDateDesc);
+            byId('eaFundBody').innerHTML = list.length ? list.map(f => {
+                const void_ = f.status === 'void';
+                let conf = '<span class="exp-by">—</span>';
+                if (void_) conf = `<span class="status-badge cancelled"><span class="dot"></span>Void</span><div class="exp-note">${esc(f.voidReason)}</div>`;
+                else if (f.type === 'transfer') conf = f.confirmed
+                    ? `<span class="status-badge cleared"><span class="dot"></span>Confirmed</span><div class="exp-note">${esc(f.confirmedBy)} · ${eaDT(f.confirmedAt)}</div>`
+                    : `<span class="status-badge due_soon"><span class="dot"></span>Awaiting</span>${canEdit('expenses') ? ` <button class="btn-outline" style="padding:2px 10px;font-size:12px;" onclick="eaConfirmFund('${esc(f.id)}')">Confirm receipt</button>` : ''}`;
+                return `<tr class="${void_ ? 'ea-void' : ''}"><td>${formatDate(f.date)}</td><td class="text-mono">${esc(f.id)}</td><td>${esc(EA_FUND_TYPES[f.type] || f.type)}</td>
+                    <td class="text-mono">${esc(f.reference) || '-'}</td><td>${esc(f.source) || '-'}</td><td>${esc(f.purpose)}${f.notes ? `<div class="exp-note">${esc(f.notes)}</div>` : ''}</td>
+                    <td>${esc(f.receivedBy)}</td><td class="ea-money"><strong>${eaFmt(f.amount)}</strong></td><td>${conf}</td><td class="exp-by">${esc(f.createdBy)}<br>${eaDT(f.createdAt)}</td>
+                    <td><div class="action-buttons">${eaAttBtns(f.attachments)}${canEdit('funds') && !void_ ? `<button class="action-btn delete" title="Void (keeps the record)" onclick="eaVoidFund('${esc(f.id)}')"><i class="fas fa-ban"></i></button>` : ''}</div></td></tr>`;
+            }).join('') : `<tr><td colspan="11" class="empty-state"><i class="fas fa-hand-holding-dollar"></i><span>${EA.funds.length ? 'Nothing matches' : 'No funds recorded yet'}</span></td></tr>`;
+        }
+
+        function getEAVouchers() {
+            const st = byId('eaVStatus').value, cat = byId('eaVCat').value, from = byId('eaVFrom').value, to = byId('eaVTo').value, q = byId('eaVSearch').value.trim().toLowerCase();
+            return EA.vouchers.filter(v => (!st || v.status === st) && (!cat || v.category === cat) && (!from || v.date >= from) && (!to || v.date <= to)
+                && (!q || [v.voucherNo, v.id, v.description, v.reference, v.category, v.notes, (v.recipients || []).map(r => r.name).join(' ')].join(' ').toLowerCase().includes(q))).sort(eaByDateDesc);
+        }
+        function renderEAVouchers() {
+            fillSelectKeepingValue(byId('eaVCat'), eaCategories(), 'All categories');
+            const list = getEAVouchers();
+            byId('eaVBody').innerHTML = list.length ? list.map(v => `<tr class="${v.status === 'void' ? 'ea-void' : ''}">
+                <td class="text-mono"><button class="ea-link" onclick="eaOpenVoucher('${esc(v.id)}')">${esc(v.voucherNo)}</button></td><td>${formatDate(v.date)}</td>
+                <td><span class="exp-cat">${esc(v.category)}</span></td><td>${esc(v.description)}${v.isAdvance ? ` <span class="pending-flag">${v.retired ? 'Advance retired' : 'Advance'}</span>` : ''}</td>
+                <td>${esc(eaRecipientsText(v))}</td><td>${EA_SOURCE_SHORT[v.source] || ''}</td><td class="ea-money"><strong>${eaFmt(v.total)}</strong></td><td>${eaBadge(v.status)}</td>
+                <td><div class="action-buttons"><button class="action-btn view" title="Open" onclick="eaOpenVoucher('${esc(v.id)}')"><i class="fas fa-eye"></i></button>
+                <button class="action-btn edit" title="Print voucher" onclick="eaPrintVoucher('${esc(v.id)}')"><i class="fas fa-print"></i></button></div></td></tr>`).join('')
+                : `<tr><td colspan="9" class="empty-state"><i class="fas fa-file-invoice"></i><span>${EA.vouchers.length ? 'Nothing matches these filters' : 'No vouchers yet'}</span></td></tr>`;
+        }
+
+        function eaReportTable(rep, extraClass = '') {
+            const money = rep.money || [];
+            const cell = (v, i) => money.includes(i) ? `<td class="ea-money">${v === '' || v == null ? '' : eaFmt(v)}</td>` : `<td>${esc(v)}</td>`;
+            return `<table class="table ea-report-table ${extraClass}"><thead><tr>${rep.headers.map((h, i) => `<th${money.includes(i) ? ' class="ea-money"' : ''}>${esc(h)}</th>`).join('')}</tr></thead><tbody>${
+                rep.rows.length ? rep.rows.map(r => `<tr>${r.map(cell).join('')}</tr>`).join('') : `<tr><td colspan="${rep.headers.length}" class="empty-state"><span>No data for this report</span></td></tr>`}</tbody>${
+                rep.foot ? `<tfoot><tr>${rep.foot.map(cell).join('')}</tr></tfoot>` : ''}</table>`;
+        }
+        function renderEALedger() { byId('eaLedgerBody').innerHTML = eaReportTable(EA_REPORTS.ledger.build({})); }
+
+        function eaPeopleIndex() {
+            const idx = {};
+            eaSpendVouchers().forEach(v => (v.recipients || []).forEach(r => { (idx[r.personId] = idx[r.personId] || []).push({ v, r }); }));
+            return idx;
+        }
+        function renderEAPeople() {
+            const q = byId('eaPeopleSearch').value.trim().toLowerCase(), idx = eaPeopleIndex();
+            const list = EA.people.filter(p => !q || [p.name, p.phone, p.note].join(' ').toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
+            byId('eaPeopleBody').innerHTML = list.length ? list.map(p => {
+                const pay = idx[p.id] || [];
+                const tot = eaRound(pay.reduce((s, x) => s + eaNum(x.r.amount), 0));
+                const adv = eaRound(pay.filter(x => x.v.isAdvance && !x.v.retired).reduce((s, x) => s + eaNum(x.r.amount), 0));
+                return `<tr><td><button class="ea-link" onclick="eaOpenProfile('${esc(p.id)}')">${esc(p.name)}</button>${p.note ? `<div class="exp-note">${esc(p.note)}</div>` : ''}</td>
+                    <td>${p.kind === 'vendor' ? 'Vendor / company' : 'Individual'}</td><td>${esc(p.phone) || '-'}</td><td>${pay.length}</td>
+                    <td class="ea-money"><strong>${eaFmt(tot)}</strong></td><td class="ea-money">${adv > 0 ? `<span style="color:#b45309;font-weight:600;">${eaFmt(adv)}</span>` : '-'}</td>
+                    <td><div class="action-buttons"><button class="action-btn view" title="Payment history" onclick="eaOpenProfile('${esc(p.id)}')"><i class="fas fa-clock-rotate-left"></i></button>
+                    ${canEdit('expenses') ? `<button class="action-btn edit" title="Edit" onclick="eaOpenPerson('${esc(p.id)}')"><i class="fas fa-pen"></i></button>` : ''}</div></td></tr>`;
+            }).join('') : `<tr><td colspan="7" class="empty-state"><i class="fas fa-users"></i><span>${EA.people.length ? 'No one matches' : 'No individuals yet — they are added when you record an expense'}</span></td></tr>`;
+        }
+
+        function eaOpenProfile(id) { EA.profileId = id; eaRenderProfile(); byId('eaProfileModal').classList.add('active'); }
+        function eaProfileData(id) {
+            const rows = [];
+            EA.vouchers.forEach(v => (v.recipients || []).forEach(r => { if (r.personId === id) rows.push({ v, r }); }));
+            rows.sort((a, b) => b.v.date.localeCompare(a.v.date));
+            return rows;
+        }
+        function eaRenderProfile() {
+            const p = eaPerson(EA.profileId); if (!p) return;
+            const rows = eaProfileData(p.id), live = rows.filter(x => x.v.status === 'approved' || x.v.status === 'pending');
+            const tot = eaRound(live.reduce((s, x) => s + eaNum(x.r.amount), 0));
+            const adv = live.filter(x => x.v.isAdvance && !x.v.retired);
+            byId('eaProfileTitle').textContent = p.name;
+            byId('eaProfileBody').innerHTML = `
+                <div class="ea-kv"><div><span>Type</span><strong>${p.kind === 'vendor' ? 'Vendor / company' : 'Individual'}</strong></div><div><span>Phone</span><strong>${esc(p.phone) || '-'}</strong></div>
+                <div><span>Total received</span><strong>${eaFmt(tot)}</strong></div><div><span>Number of payments</span><strong>${live.length}</strong></div>
+                <div style="grid-column:1/-1;"><span>Notes</span><strong>${esc(p.note) || '-'}</strong></div></div>
+                ${adv.length ? `<div class="ea-warn" style="margin-bottom:12px;"><strong>Outstanding / unretired advances:</strong> ${adv.map(x => `${esc(x.v.voucherNo)} (${eaFmt(x.r.amount)})`).join(', ')} — total ${eaFmt(adv.reduce((s, x) => s + eaNum(x.r.amount), 0))}</div>` : ''}
+                <div class="ea-section-title">Payment history</div>
+                <div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Voucher</th><th>Category</th><th>Purpose</th><th class="ea-money">Amount</th><th>Status</th><th>Signed</th></tr></thead><tbody>${
+                rows.length ? rows.map(x => `<tr class="${x.v.status === 'void' ? 'ea-void' : ''}"><td>${formatDate(x.v.date)}</td>
+                    <td class="text-mono"><button class="ea-link" onclick="eaOpenVoucher('${esc(x.v.id)}')">${esc(x.v.voucherNo)}</button></td><td>${esc(x.v.category)}</td>
+                    <td>${esc(x.v.description)}${x.v.isAdvance ? ` <span class="pending-flag">${x.v.retired ? 'Retired' : 'Advance'}</span>` : ''}</td>
+                    <td class="ea-money"><strong>${eaFmt(x.r.amount)}</strong></td><td>${eaBadge(x.v.status)}</td><td>${x.r.ack ? '<i class="fas fa-check" style="color:var(--success)"></i>' : '-'}</td></tr>`).join('')
+                : '<tr><td colspan="7" class="empty-state"><span>No payments yet</span></td></tr>'}</tbody></table></div>
+                <div class="ea-actions"><button class="btn-outline" onclick="eaPrintProfile()"><i class="fas fa-print"></i> Print statement</button></div>`;
+        }
+        function eaPrintProfile() {
+            const p = eaPerson(EA.profileId); if (!p) return;
+            const rows = eaProfileData(p.id).filter(x => x.v.status !== 'void' && x.v.status !== 'rejected');
+            const rep = { headers: ['Date', 'Voucher', 'Category', 'Purpose', 'Amount', 'Status', 'Advance'], money: [4],
+                rows: rows.map(x => [formatDate(x.v.date), x.v.voucherNo, x.v.category, x.v.description, eaNum(x.r.amount), EA_STATUS[x.v.status][1], x.v.isAdvance ? (x.v.retired ? 'Retired' : 'Outstanding') : '']),
+                foot: ['Total', '', '', '', eaRound(rows.reduce((s, x) => s + eaNum(x.r.amount), 0)), '', ''] };
+            eaPrintDoc('Payment statement — ' + p.name, 'Printed ' + eaDT(eaNow()), eaReportTable(rep, 'print'));
+        }
+
+        function renderEAReimb() {
+            const t = eaTotals(), a = eaReimbAlloc();
+            const card = (icon, color, label, value, sub) => `<div class="stat-card"><div class="stat-icon ${color}"><i class="fas ${icon}"></i></div><div class="stat-info"><span class="stat-label">${label}</span><h3 style="font-size:21px;">${value}</h3></div><div class="stat-amount">${sub || ''}</div></div>`;
+            byId('eaReimbStats').innerHTML = card('fa-wallet', 'orange', 'Approved personal expenses', eaFmt(t.owed), t.personalPending ? eaFmt(t.personalPending) + ' still awaiting approval' : '') +
+                card('fa-rotate-left', 'green', 'Reimbursed', eaFmt(t.reimbursed), '') + card('fa-scale-balanced', t.outstanding > 0 ? 'yellow' : 'green', 'Outstanding balance', eaFmt(t.outstanding), 'Owed to the Expense Accountant');
+            const personal = EA.vouchers.filter(v => v.source === 'personal' && v.status !== 'void').sort(eaByDateDesc);
+            byId('eaPersonalBody').innerHTML = personal.length ? personal.map(v => {
+                const al = a.map[v.id];
+                return `<tr><td class="text-mono"><button class="ea-link" onclick="eaOpenVoucher('${esc(v.id)}')">${esc(v.voucherNo)}</button></td><td>${formatDate(v.date)}</td><td>${esc(v.description)}</td><td>${eaBadge(v.status)}</td>
+                    <td class="ea-money">${eaFmt(v.total)}</td><td class="ea-money">${al ? eaFmt(al.reimbursed) : '-'}</td><td class="ea-money"><strong>${al ? eaFmt(al.balance) : '-'}</strong></td></tr>`;
+            }).join('') : '<tr><td colspan="7" class="empty-state"><i class="fas fa-wallet"></i><span>Nothing was paid personally</span></td></tr>';
+            const list = [...EA.reimb].sort(eaByDateDesc);
+            byId('eaReimbBody').innerHTML = list.length ? list.map(r => `<tr class="${r.status === 'void' ? 'ea-void' : ''}"><td>${formatDate(r.date)}</td><td class="text-mono">${esc(r.id)}</td><td>${esc(r.method)}</td>
+                <td class="text-mono">${esc(r.reference) || '-'}</td><td>${esc(r.createdBy)}</td><td>${esc(r.notes) || '-'}${r.status === 'void' ? `<div class="exp-note">Void: ${esc(r.voidReason)}</div>` : ''}</td>
+                <td class="ea-money"><strong>${eaFmt(r.amount)}</strong></td><td>${canEdit('funds') && r.status !== 'void' ? `<div class="action-buttons"><button class="action-btn delete" title="Void" onclick="eaVoidReimb('${esc(r.id)}')"><i class="fas fa-ban"></i></button></div>` : ''}</td></tr>`).join('')
+                : '<tr><td colspan="8" class="empty-state"><i class="fas fa-rotate-left"></i><span>No reimbursements recorded</span></td></tr>';
+        }
+
+        function renderEAAudit() {
+            const ent = byId('eaAuditEntity').value, q = byId('eaAuditSearch').value.trim().toLowerCase();
+            const list = EA.audit.filter(a => (!ent || a.entity === ent) && (!q || [a.byName, a.by, a.ref, a.entityId, a.summary, a.reason, a.action].join(' ').toLowerCase().includes(q)));
+            byId('eaAuditBody').innerHTML = list.length ? list.map(a => `<tr><td style="white-space:nowrap;">${eaDT(a.at)}</td><td>${esc(a.byName || a.by)}<div class="exp-note">${esc(a.by)}</div></td>
+                <td><span class="exp-cat">${esc(a.action)}</span></td><td class="text-mono">${esc(a.ref || a.entityId)}<div class="exp-note">${esc(a.entity)}</div></td>
+                <td>${esc(a.summary)}${a.reason ? `<div class="exp-note"><strong>Reason:</strong> ${esc(a.reason)}</div>` : ''}${(a.changes || []).map(c => `<div class="exp-note">${esc(c.f)}: ${esc(c.from) || '∅'} → ${esc(c.to) || '∅'}</div>`).join('')}</td></tr>`).join('')
+                : '<tr><td colspan="5" class="empty-state"><i class="fas fa-shield-halved"></i><span>No audit entries</span></td></tr>';
+        }
+
+        // ============================================================
+        //  VOUCHER VIEW + WORKFLOW
+        // ============================================================
+        function eaOpenVoucher(id) { EA.viewId = id; eaRenderVoucherModal(); byId('eaVoucherModal').classList.add('active'); }
+        function eaRenderVoucherModal() {
+            const v = EA.vouchers.find(x => x.id === EA.viewId);
+            if (!v) { byId('eaVoucherModal').classList.remove('active'); return; }
+            const prep = canEdit('expenses'), appr = canEdit('approve');
+            byId('eaVoucherTitle').textContent = 'Payment Voucher ' + v.voucherNo;
+            const hist = EA.audit.filter(a => a.entityId === v.id).sort((a, b) => a.at.localeCompare(b.at));
+            const person = x => eaPerson(x.personId);
+            byId('eaVoucherBody').innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">${eaBadge(v.status)}<span class="exp-by">Transaction ${esc(v.id)}</span></div>
+                ${v.status === 'rejected' ? `<div class="ea-warn" style="margin-bottom:12px;"><strong>Rejected</strong> by ${esc(v.rejectedBy)} on ${eaDT(v.rejectedAt)}: ${esc(v.rejectReason)}</div>` : ''}
+                ${v.status === 'void' ? `<div class="ea-warn" style="margin-bottom:12px;"><strong>Void</strong> — ${esc(v.voidBy)} on ${eaDT(v.voidAt)}: ${esc(v.voidReason)}</div>` : ''}
+                <div class="ea-kv">
+                    <div><span>Date</span><strong>${formatDate(v.date)}</strong></div><div><span>Category</span><strong>${esc(v.category)}</strong></div>
+                    <div style="grid-column:1/-1;"><span>Description / purpose</span><strong>${esc(v.description)}</strong></div>
+                    <div><span>Payment source</span><strong>${esc(EA_SOURCES[v.source])}${v.source === 'other' && v.otherSource ? ' — ' + esc(v.otherSource) : ''}</strong></div>
+                    <div><span>Payment method</span><strong>${esc(v.method) || '-'}</strong></div>
+                    <div><span>Reference / receipt no.</span><strong>${esc(v.reference) || '-'}</strong></div>
+                    <div><span>Prepared by</span><strong>${esc(v.preparedByName || v.preparedBy)}</strong><div class="ea-sub">${eaDT(v.createdAt)}</div></div>
+                    <div><span>Approved by</span><strong>${v.approvedBy ? esc(v.approvedByName || v.approvedBy) : (v.status === 'approved' ? 'Approval not required' : '-')}</strong>${v.approvedAt ? `<div class="ea-sub">${eaDT(v.approvedAt)}</div>` : ''}</div>
+                    ${v.notes ? `<div style="grid-column:1/-1;"><span>Notes</span><strong>${esc(v.notes)}</strong></div>` : ''}
+                    ${v.isAdvance ? `<div style="grid-column:1/-1;"><span>Advance</span><strong>${v.retired ? `Retired ${eaDT(v.retiredAt)} by ${esc(v.retiredBy)}${v.retireNote ? ' — ' + esc(v.retireNote) : ''}` : 'Not yet retired'}</strong></div>` : ''}
+                </div>
+                <div class="ea-section-title">Recipients</div>
+                <div class="table-wrap"><table class="table"><thead><tr><th>#</th><th>Name</th><th class="ea-money">Amount</th><th>Acknowledged receipt</th></tr></thead><tbody>${
+                (v.recipients || []).map((r, i) => `<tr><td>${i + 1}</td><td><button class="ea-link" onclick="eaOpenProfile('${esc(r.personId)}')">${esc(r.name)}</button></td><td class="ea-money"><strong>${eaFmt(r.amount)}</strong></td>
+                    <td><label style="display:flex;gap:8px;align-items:center;font-size:13px;"><input type="checkbox" ${r.ack ? 'checked' : ''} ${prep && v.status !== 'void' && v.status !== 'rejected' ? '' : 'disabled'} onchange="eaAck('${esc(v.id)}',${i},this.checked)" />
+                    ${r.ack ? `Signed · ${eaDT(r.ackAt)}` : 'Not yet'}</label></td></tr>`).join('')}</tbody>
+                <tfoot><tr><td></td><td><strong>Total</strong></td><td class="ea-money"><strong>${eaFmt(v.total)}</strong></td><td></td></tr></tfoot></table></div>
+                <p class="ea-words" style="margin-top:6px;">${esc(eaWords(v.total))}</p>
+                <div class="ea-section-title">Documents</div>
+                <div>${(v.attachments || []).length ? `Receipts: ${eaAttBtns(v.attachments)}` : '<span class="exp-by">No receipt attached.</span>'}
+                    <br>${(v.signedScans || []).length ? `Signed voucher scans: ${eaAttBtns(v.signedScans)}` : '<span class="exp-by">No signed copy uploaded yet.</span>'}
+                    ${prep && v.status !== 'void' && v.status !== 'rejected' ? `<br><label class="btn-outline" style="display:inline-block;margin-top:8px;cursor:pointer;"><i class="fas fa-upload"></i> Upload signed copy<input type="file" accept="image/*,application/pdf" style="display:none;" onchange="eaAddSigned('${esc(v.id)}',this)"></label>` : ''}</div>
+                <div class="ea-section-title">History</div>
+                <ul class="ea-hist">${hist.length ? hist.map(a => `<li><strong>${eaDT(a.at)}</strong> — ${esc(a.byName || a.by)}: ${esc(a.summary)}${a.reason ? ` <em>(Reason: ${esc(a.reason)})</em>` : ''}${(a.changes || []).map(c => `<br>&nbsp;&nbsp;${esc(c.f)}: ${esc(c.from) || '∅'} → ${esc(c.to) || '∅'}`).join('')}</li>`).join('') : '<li>No history loaded.</li>'}</ul>
+                <div class="ea-actions">
+                    <button class="btn-primary" onclick="eaPrintVoucher('${esc(v.id)}')"><i class="fas fa-print"></i> Print voucher</button>
+                    ${prep && v.status === 'pending' ? `<button class="btn-outline" onclick="eaEditVoucher('${esc(v.id)}')"><i class="fas fa-pen"></i> Edit</button>` : ''}
+                    ${appr && v.status === 'pending' ? `<button class="btn-primary" style="background:var(--success);" onclick="eaApprove('${esc(v.id)}')"><i class="fas fa-check"></i> Approve</button>
+                        <button class="btn-danger" onclick="eaReject('${esc(v.id)}')"><i class="fas fa-xmark"></i> Reject</button>` : ''}
+                    ${prep && v.isAdvance && !v.retired && (v.status === 'approved' || v.status === 'pending') ? `<button class="btn-outline" onclick="eaRetire('${esc(v.id)}')"><i class="fas fa-flag-checkered"></i> Mark advance retired</button>` : ''}
+                    ${appr && (v.status === 'approved' || v.status === 'pending') ? `<button class="btn-outline" style="color:var(--danger);" onclick="eaVoidVoucher('${esc(v.id)}')"><i class="fas fa-ban"></i> Void</button>` : ''}
+                </div>`;
+        }
+
+        function eaApprove(id) {
+            if (eaDeny('approve', 'approve vouchers')) return;
+            const v = EA.vouchers.find(x => x.id === id); if (!v || v.status !== 'pending') return;
+            if (v.preparedBy === eaMe() && !confirm('You prepared this voucher yourself. Approve it anyway?')) return;
+            eaUpdate('ea_vouchers', id, { status: 'approved', approvedBy: eaMe(), approvedByName: eaMeName(), approvedAt: eaNow() }, { action: 'approve', entity: 'voucher', ref: v.voucherNo, summary: `Approved ${v.voucherNo} (${eaFmt(v.total)})` })
+                .then(() => showNotification('Approved', v.voucherNo + ' approved', 'success')).catch(eaFail);
+        }
+        async function eaReject(id) {
+            if (eaDeny('approve', 'reject vouchers')) return;
+            const v = EA.vouchers.find(x => x.id === id); if (!v) return;
+            const reason = await eaAsk('Reject voucher ' + v.voucherNo, 'Why is it being rejected?'); if (reason == null) return;
+            eaUpdate('ea_vouchers', id, { status: 'rejected', rejectedBy: eaMe(), rejectedAt: eaNow(), rejectReason: reason }, { action: 'reject', entity: 'voucher', ref: v.voucherNo, summary: `Rejected ${v.voucherNo}`, reason })
+                .then(() => showNotification('Rejected', v.voucherNo + ' rejected', 'warning')).catch(eaFail);
+        }
+        async function eaVoidVoucher(id) {
+            if (eaDeny('approve', 'void vouchers')) return;
+            const v = EA.vouchers.find(x => x.id === id); if (!v) return;
+            const reason = await eaAsk('Void voucher ' + v.voucherNo, 'Why is this voucher being voided? It stays on record but stops counting in the totals.'); if (reason == null) return;
+            eaUpdate('ea_vouchers', id, { status: 'void', voidBy: eaMe(), voidAt: eaNow(), voidReason: reason }, { action: 'void', entity: 'voucher', ref: v.voucherNo, summary: `Voided ${v.voucherNo} (${eaFmt(v.total)})`, reason })
+                .then(() => showNotification('Voided', v.voucherNo + ' voided', 'success')).catch(eaFail);
+        }
+        async function eaRetire(id) {
+            if (eaDeny('expenses', 'retire advances')) return;
+            const v = EA.vouchers.find(x => x.id === id); if (!v) return;
+            const note = await eaAsk('Retire advance ' + v.voucherNo, 'How was the advance accounted for? (receipt no., balance returned…)', false); if (note == null) return;
+            eaUpdate('ea_vouchers', id, { retired: true, retiredAt: eaNow(), retiredBy: eaMe(), retireNote: note }, { action: 'retire', entity: 'voucher', ref: v.voucherNo, summary: `Advance ${v.voucherNo} retired`, reason: note })
+                .then(() => showNotification('Retired', 'Advance marked as retired', 'success')).catch(eaFail);
+        }
+        function eaAck(id, i, checked) {
+            if (eaDeny('expenses', 'record acknowledgements')) return;
+            const v = EA.vouchers.find(x => x.id === id); if (!v) return;
+            const rec = (v.recipients || []).map(r => ({ ...r }));
+            rec[i] = checked ? { ...rec[i], ack: true, ackAt: eaNow(), ackBy: eaMe() } : { ...rec[i], ack: false, ackAt: '', ackBy: '' };
+            eaUpdate('ea_vouchers', id, { recipients: rec }, { action: 'acknowledge', entity: 'voucher', ref: v.voucherNo, summary: `${rec[i].name} ${checked ? 'acknowledged' : 'acknowledgement removed'} on ${v.voucherNo}` }).catch(eaFail);
+        }
+        async function eaAddSigned(id, input) {
+            if (eaDeny('expenses', 'upload signed copies')) return;
+            const v = EA.vouchers.find(x => x.id === id); if (!v || !input.files.length) return;
+            EA.files.sign = [];
+            await eaPickFiles('sign', input.files);
+            input.value = '';
+            if (!EA.files.sign.length) return;
+            try {
+                const meta = await eaUploadPending('sign');
+                await eaUpdate('ea_vouchers', id, { signedScans: [...(v.signedScans || []), ...meta] }, { action: 'signed-copy', entity: 'voucher', ref: v.voucherNo, summary: `Signed copy uploaded for ${v.voucherNo} (${meta.map(m => m.name).join(', ')})` });
+                showNotification('Uploaded', 'Signed copy attached to the voucher', 'success');
+            } catch (e) { eaFail(e); } finally { EA.files.sign = []; }
+        }
+
+        // ============================================================
+        //  RECORD EXPENSE (multi-recipient voucher)
+        // ============================================================
+        function eaPeopleOptions(sel) {
+            return '<option value="">Select individual…</option>' + [...EA.people].sort((a, b) => a.name.localeCompare(b.name)).map(p => `<option value="${esc(p.id)}"${p.id === sel ? ' selected' : ''}>${esc(p.name)}</option>`).join('') + '<option value="__new__">＋ Add new individual…</option>';
+        }
+        function eaRefreshRowSelects() { document.querySelectorAll('#eaRows .ea-rsel').forEach(s => { const v = s.value; s.innerHTML = eaPeopleOptions(v); s.value = v; }); }
+        function eaCalcTotal() {
+            let t = 0; document.querySelectorAll('#eaRows .ea-ramt').forEach(i => { t += eaNum(i.value); });
+            t = eaRound(t);
+            byId('eaTotal').textContent = eaFmt(t);
+            byId('eaTotalWords').textContent = t > 0 ? eaWords(t) : '';
+            return t;
+        }
+        function eaAddRow(pid = '', amt = '') {
+            const d = document.createElement('div'); d.className = 'ea-row';
+            d.innerHTML = `<select class="ea-rsel">${eaPeopleOptions(pid)}</select><div class="input-with-icon"><span>₵</span><input type="number" class="ea-ramt" step="0.01" min="0.01" placeholder="0.00" value="${esc(amt)}"></div><button type="button" class="action-btn delete" title="Remove"><i class="fas fa-times"></i></button>`;
+            const sel = d.querySelector('select');
+            sel.addEventListener('change', () => {
+                if (sel.value !== '__new__') return;
+                sel.value = '';
+                eaOpenPerson(null, p => { sel.innerHTML = eaPeopleOptions(p.id); sel.value = p.id; });
+            });
+            d.querySelector('input').addEventListener('input', eaCalcTotal);
+            d.querySelector('button').addEventListener('click', () => { if (document.querySelectorAll('#eaRows .ea-row').length > 1) { d.remove(); eaCalcTotal(); } });
+            byId('eaRows').appendChild(d); eaCalcTotal();
+        }
+        function eaFillCategorySelect(selected) {
+            byId('eaExpCat').innerHTML = '<option value="">Select category…</option>' + eaCategories().map(c => `<option value="${esc(c)}"${c === selected ? ' selected' : ''}>${esc(c)}</option>`).join('') + '<option value="__new__">＋ New category…</option>';
+        }
+        function eaToggleSourceUI() {
+            const s = byId('eaExpSource').value;
+            byId('eaOtherSrcWrap').style.display = s === 'other' ? '' : 'none';
+            byId('eaPersonalNote').style.display = s === 'personal' ? '' : 'none';
+        }
+        function eaOpenExpense(v = null) {
+            if (eaDeny('expenses', 'record expenses')) return;
+            byId('eaExpenseForm').reset();
+            EA.files.exp = []; EA.keep = v ? [...(v.attachments || [])] : [];
+            byId('eaExpId').value = v ? v.id : '';
+            byId('eaExpTitle').textContent = v ? 'Edit Voucher ' + v.voucherNo : 'Record Expense';
+            byId('eaExpSubmit').textContent = v ? 'Save Changes' : 'Save & Generate Voucher';
+            eaFillCategorySelect(v ? v.category : '');
+            byId('eaExpCatNew').style.display = 'none';
+            byId('eaExpDate').value = v ? v.date : eaToday();
+            byId('eaExpDesc').value = v ? v.description : '';
+            byId('eaExpSource').value = v ? v.source : 'org';
+            byId('eaExpMethod').value = v ? v.method : 'Cash';
+            byId('eaExpOtherSrc').value = v ? (v.otherSource || '') : '';
+            byId('eaExpRef').value = v ? (v.reference || '') : '';
+            byId('eaExpNotes').value = v ? (v.notes || '') : '';
+            byId('eaExpAdvance').checked = !!(v && v.isAdvance);
+            byId('eaRows').innerHTML = '';
+            if (v) (v.recipients || []).forEach(r => eaAddRow(r.personId, r.amount)); else eaAddRow();
+            eaToggleSourceUI(); eaRenderChips('exp'); eaCalcTotal();
+            byId('eaExpenseModal').classList.add('active');
+        }
+        function eaEditVoucher(id) { const v = EA.vouchers.find(x => x.id === id); if (v && v.status === 'pending') { byId('eaVoucherModal').classList.remove('active'); eaOpenExpense(v); } }
+
+        async function eaSaveExpense(ev) {
+            ev.preventDefault();
+            if (eaDeny('expenses', 'record expenses')) return;
+            const id = byId('eaExpId').value, old = id ? EA.vouchers.find(x => x.id === id) : null;
+            let category = byId('eaExpCat').value; if (category === '__new__') category = byId('eaExpCatNew').value.trim();
+            const date = byId('eaExpDate').value, description = byId('eaExpDesc').value.trim(), source = byId('eaExpSource').value;
+            const otherSource = byId('eaExpOtherSrc').value.trim(), reference = byId('eaExpRef').value.trim();
+            const rows = [...document.querySelectorAll('#eaRows .ea-row')].map(r => ({ pid: r.querySelector('.ea-rsel').value, amt: eaRound(eaNum(r.querySelector('.ea-ramt').value)) }));
+            if (!category || !date || !description) { showNotification('Missing details', 'Category, date and description are required', 'warning'); return; }
+            if (rows.some(r => !r.pid || !(r.amt > 0))) { showNotification('Check recipients', 'Every recipient needs a person and an amount above zero', 'warning'); return; }
+            if (new Set(rows.map(r => r.pid)).size !== rows.length) { showNotification('Duplicate recipient', 'The same person is listed twice — combine them into one line', 'warning'); return; }
+            if (source === 'other' && !otherSource) { showNotification('Missing source', 'Say which approved source paid for this', 'warning'); return; }
+            if (source === 'personal' && !reference && !EA.files.exp.length && !EA.keep.length) { showNotification('Receipt needed', 'Personal-funds expenses need a receipt reference or an attached receipt', 'warning'); return; }
+            const recipients = rows.map(r => {
+                const p = eaPerson(r.pid), prev = old && (old.recipients || []).find(x => x.personId === r.pid && eaRound(x.amount) === r.amt);
+                return prev ? { ...prev } : { personId: r.pid, name: p ? p.name : '?', amount: r.amt, ack: false };
+            });
+            const total = eaRound(rows.reduce((s, r) => s + r.amt, 0));
+            if (source === 'org') {
+                const bal = eaTotals().balance + (old && old.source === 'org' ? eaNum(old.total) : 0);
+                if (total > bal + 0.005 && !confirm(`This is more than the remaining cash balance (${eaFmt(bal)}). Record it anyway?`)) return;
+            }
+            const btn = byId('eaExpSubmit'); btn.disabled = true;
+            try {
+                const newMeta = await eaUploadPending('exp');
+                const attachments = [...EA.keep, ...newMeta];
+                const common = { date, category, description, source, otherSource: source === 'other' ? otherSource : '', method: byId('eaExpMethod').value, reference, notes: byId('eaExpNotes').value.trim(),
+                    recipients, total, currency: 'GHS', isAdvance: byId('eaExpAdvance').checked, attachments };
+                if (old) {
+                    const reason = await eaAsk('Edit voucher ' + old.voucherNo, 'Why are you changing this voucher?'); if (reason == null) { btn.disabled = false; return; }
+                    const rs = r => (r || []).map(x => `${x.name} ${eaRound(x.amount).toFixed(2)}`).join('; ');
+                    const fields = [['date', 'Date'], ['category', 'Category'], ['description', 'Description'], ['source', 'Payment source'], ['otherSource', 'Other source'], ['method', 'Method'], ['reference', 'Reference'], ['notes', 'Notes'], ['total', 'Total'], ['isAdvance', 'Advance']];
+                    const changes = fields.filter(([k]) => String(old[k] ?? '') !== String(common[k] ?? '')).map(([k, l]) => ({ f: l, from: String(old[k] ?? ''), to: String(common[k] ?? '') }));
+                    if (rs(old.recipients) !== rs(recipients)) changes.push({ f: 'Recipients', from: rs(old.recipients), to: rs(recipients) });
+                    if ((old.attachments || []).length !== attachments.length) changes.push({ f: 'Receipts', from: String((old.attachments || []).length), to: String(attachments.length) });
+                    if (!changes.length) { showNotification('No changes', 'Nothing was different', 'info'); closeEAModal('eaExpenseModal'); btn.disabled = false; return; }
+                    await eaUpdate('ea_vouchers', old.id, common, { action: 'edit', entity: 'voucher', ref: old.voucherNo, summary: `Edited ${old.voucherNo} before approval`, reason, changes });
+                    closeEAModal('eaExpenseModal'); showNotification('Saved', 'Voucher updated', 'success'); eaOpenVoucher(old.id);
+                } else {
+                    const needsApproval = EA.settings.requireApproval !== false;
+                    const year = new Date().getFullYear();
+                    const rec = await eaCreateRecord('ea_vouchers', { ...common, preparedBy: eaMe(), preparedByName: eaMeName(), createdBy: eaMe(), createdAt: eaNow(), status: needsApproval ? 'pending' : 'approved', retired: false, signedScans: [] }, {
+                        numberKey: 'pv_' + year, numberField: 'voucherNo', numberFormat: n => `PV-${year}-${String(n).padStart(4, '0')}`,
+                        audit: r => ({ action: 'create', entity: 'voucher', ref: r.voucherNo, summary: `Created ${r.voucherNo}: ${eaFmt(r.total)} to ${recipients.length} recipient${recipients.length > 1 ? 's' : ''} (${EA_SOURCES[source]})` })
+                    });
+                    if (!EA.vouchers.find(x => x.id === rec.id)) EA.vouchers.push(rec);
+                    closeEAModal('eaExpenseModal');
+                    showNotification('Voucher created', rec.voucherNo + (needsApproval ? ' — awaiting approval' : ''), 'success', true);
+                    eaOpenVoucher(rec.id);
+                }
+            } catch (e) { eaFail(e); }
+            btn.disabled = false;
+        }
+
+        // ============================================================
+        //  FUNDS / REIMBURSEMENTS / PEOPLE / SETTINGS
+        // ============================================================
+        function eaFundTypeUI() {
+            const t = byId('eaFundTypeSel').value;
+            byId('eaFundAmtLabel').innerHTML = (t === 'adjustment' ? 'Amount (use − to reduce)' : 'Amount received') + ' <span class="required">*</span>';
+            byId('eaFundPurposeLabel').innerHTML = (t === 'adjustment' ? 'Reason for adjustment' : 'Purpose / description') + ' <span class="required">*</span>';
+        }
+        function eaOpenFund() {
+            if (eaDeny('funds', 'record funds')) return;
+            byId('eaFundForm').reset(); EA.files.fund = []; eaRenderChips('fund');
+            byId('eaFundDate').value = eaToday();
+            byId('eaFundReceiver').value = localStorage.getItem('eaLastReceiver') || '';
+            byId('eaReceiverList').innerHTML = [...new Set(EA.funds.map(f => f.receivedBy).filter(Boolean))].map(n => `<option value="${esc(n)}"></option>`).join('');
+            eaFundTypeUI(); byId('eaFundModal').classList.add('active');
+        }
+        async function eaSaveFund(ev) {
+            ev.preventDefault();
+            if (eaDeny('funds', 'record funds')) return;
+            const type = byId('eaFundTypeSel').value, amount = eaRound(eaNum(byId('eaFundAmt').value));
+            if (!amount || (type !== 'adjustment' && amount <= 0)) { showNotification('Check amount', type === 'adjustment' ? 'Enter a non-zero amount' : 'Amount must be above zero', 'warning'); return; }
+            const receiver = byId('eaFundReceiver').value.trim(), purpose = byId('eaFundPurpose').value.trim();
+            if (!receiver || !purpose) { showNotification('Missing details', 'Purpose and receiving Expense Accountant are required', 'warning'); return; }
+            try {
+                const attachments = await eaUploadPending('fund');
+                const rec = await eaCreateRecord('ea_funds', {
+                    type, date: byId('eaFundDate').value, amount, reference: byId('eaFundRef').value.trim(), source: byId('eaFundSource').value.trim(), purpose, receivedBy: receiver,
+                    notes: byId('eaFundNotes').value.trim(), attachments, confirmed: type !== 'transfer', status: 'active', createdBy: eaMe(), createdAt: eaNow()
+                }, { audit: r => ({ action: 'create', entity: 'fund', ref: r.id, summary: `${EA_FUND_TYPES[type]}: ${eaFmt(amount)} for ${receiver} — ${purpose}` }) });
+                localStorage.setItem('eaLastReceiver', receiver);
+                closeEAModal('eaFundModal'); showNotification('Recorded', `${rec.id} — ${eaFmt(amount)}`, 'success');
+            } catch (e) { eaFail(e); }
+        }
+        function eaConfirmFund(id) {
+            if (eaDeny('expenses', 'confirm receipts')) return;
+            const f = EA.funds.find(x => x.id === id); if (!f) return;
+            if (!confirm(`Confirm that you received ${eaFmt(f.amount)} (${f.id})?`)) return;
+            eaUpdate('ea_funds', id, { confirmed: true, confirmedBy: eaMe(), confirmedAt: eaNow() }, { action: 'confirm', entity: 'fund', ref: id, summary: `Receipt of ${eaFmt(f.amount)} confirmed by Expense Accountant` })
+                .then(() => showNotification('Confirmed', 'Receipt confirmed', 'success')).catch(eaFail);
+        }
+        async function eaVoidFund(id) {
+            if (eaDeny('funds', 'void funds')) return;
+            const f = EA.funds.find(x => x.id === id); if (!f) return;
+            const reason = await eaAsk('Void ' + id, 'Why is this entry being voided? Enter the corrected entry afterwards if needed.'); if (reason == null) return;
+            eaUpdate('ea_funds', id, { status: 'void', voidBy: eaMe(), voidAt: eaNow(), voidReason: reason }, { action: 'void', entity: 'fund', ref: id, summary: `Voided ${EA_FUND_TYPES[f.type]} of ${eaFmt(f.amount)}`, reason })
+                .then(() => showNotification('Voided', id + ' voided', 'success')).catch(eaFail);
+        }
+
+        function eaOpenReimb() {
+            if (eaDeny('funds', 'record reimbursements')) return;
+            const t = eaTotals();
+            if (t.outstanding <= 0.005) { showNotification('Nothing to reimburse', 'There is no outstanding reimbursement balance', 'info'); return; }
+            byId('eaReimbForm').reset(); byId('eaReimbDate').value = eaToday(); byId('eaReimbAmt').value = t.outstanding.toFixed(2);
+            byId('eaReimbInfo').textContent = `Outstanding reimbursement balance: ${eaFmt(t.outstanding)}. It reduces automatically when you save.`;
+            byId('eaReimbModal').classList.add('active');
+        }
+        async function eaSaveReimb(ev) {
+            ev.preventDefault();
+            if (eaDeny('funds', 'record reimbursements')) return;
+            const amount = eaRound(eaNum(byId('eaReimbAmt').value)), out = eaTotals().outstanding;
+            if (!(amount > 0)) { showNotification('Check amount', 'Amount must be above zero', 'warning'); return; }
+            if (amount > out + 0.005) { showNotification('Too much', `Only ${eaFmt(out)} is outstanding`, 'warning'); return; }
+            try {
+                const rec = await eaCreateRecord('ea_reimb', { date: byId('eaReimbDate').value, amount, method: byId('eaReimbMethod').value, reference: byId('eaReimbRef').value.trim(), notes: byId('eaReimbNotes').value.trim(), status: 'active', createdBy: eaMe(), createdAt: eaNow() },
+                    { audit: r => ({ action: 'create', entity: 'reimbursement', ref: r.id, summary: `Reimbursed Expense Accountant ${eaFmt(amount)}` }) });
+                closeEAModal('eaReimbModal'); showNotification('Recorded', `${rec.id} — ${eaFmt(amount)} reimbursed`, 'success');
+            } catch (e) { eaFail(e); }
+        }
+        async function eaVoidReimb(id) {
+            if (eaDeny('funds', 'void reimbursements')) return;
+            const r = EA.reimb.find(x => x.id === id); if (!r) return;
+            const reason = await eaAsk('Void ' + id, 'Why is this reimbursement being voided?'); if (reason == null) return;
+            eaUpdate('ea_reimb', id, { status: 'void', voidBy: eaMe(), voidAt: eaNow(), voidReason: reason }, { action: 'void', entity: 'reimbursement', ref: id, summary: `Voided reimbursement of ${eaFmt(r.amount)}`, reason })
+                .then(() => showNotification('Voided', id + ' voided', 'success')).catch(eaFail);
+        }
+
+        function eaOpenPerson(id = null, cb = null) {
+            if (eaDeny('expenses', 'add or edit individuals')) return;
+            const p = id ? eaPerson(id) : null;
+            EA.personCb = cb;
+            byId('eaPersonForm').reset();
+            byId('eaPersonTitle').textContent = p ? 'Edit ' + p.name : 'Add Individual';
+            byId('eaPersonId').value = p ? p.id : '';
+            if (p) { byId('eaPersonName').value = p.name; byId('eaPersonKind').value = p.kind || 'individual'; byId('eaPersonPhone').value = p.phone || ''; byId('eaPersonNote').value = p.note || ''; }
+            byId('eaPersonModal').classList.add('active');
+        }
+        function eaSavePerson(ev) {
+            ev.preventDefault();
+            if (eaDeny('expenses', 'add or edit individuals')) return;
+            const id = byId('eaPersonId').value, name = byId('eaPersonName').value.trim();
+            if (!name) return;
+            const dup = EA.people.find(p => p.id !== id && p.name.toLowerCase() === name.toLowerCase());
+            if (dup && !confirm(`There is already someone called "${dup.name}"${dup.note ? ' (' + dup.note + ')' : ''}. Add another with the same name?`)) return;
+            const obj = { name, kind: byId('eaPersonKind').value, phone: byId('eaPersonPhone').value.trim(), note: byId('eaPersonNote').value.trim() };
+            const old = id ? eaPerson(id) : null;
+            const pid = id || ('PER-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase());
+            const batch = fbDb.batch();
+            const doc = { ...(old || {}), ...obj, id: pid, createdBy: old ? old.createdBy : eaMe(), createdAt: old ? old.createdAt : eaNow(), updatedBy: eaMe(), updatedAt: eaNow() };
+            batch.set(fbDb.collection('ea_people').doc(pid), doc);
+            const changes = old ? ['name', 'kind', 'phone', 'note'].filter(k => (old[k] || '') !== obj[k]).map(k => ({ f: k, from: old[k] || '', to: obj[k] })) : [];
+            batch.set(fbDb.collection('ea_audit').doc(), eaAuditObj({ action: old ? 'edit' : 'create', entity: 'person', entityId: pid, ref: name, summary: old ? `Edited ${name}` : `Added ${name}`, changes }));
+            batch.commit().catch(eaFail);
+            if (!old && !EA.people.find(x => x.id === pid)) EA.people.push(doc);
+            closeEAModal('eaPersonModal');
+            if (EA.personCb) { EA.personCb(doc); EA.personCb = null; }
+            else showNotification('Saved', name, 'success');
+        }
+
+        function eaOpenSettings() {
+            if (!(canEdit('funds') || canEdit('approve'))) return;
+            const s = EA.settings;
+            byId('eaSetOrg').value = s.orgName || EA_ORG_DEFAULT; byId('eaSetAddr').value = s.orgAddress || '';
+            byId('eaSetApproval').checked = s.requireApproval !== false; EA.newLogo = null;
+            byId('eaLogoPreview').innerHTML = s.logo ? `<img src="${s.logo}" style="height:40px;" alt="logo">` : '';
+            byId('eaSettingsModal').classList.add('active');
+        }
+        function eaSaveSettings(ev) {
+            ev.preventDefault();
+            const prev = EA.settings, patch = { orgName: byId('eaSetOrg').value.trim() || EA_ORG_DEFAULT, orgAddress: byId('eaSetAddr').value.trim(), requireApproval: byId('eaSetApproval').checked };
+            if (EA.newLogo) patch.logo = EA.newLogo;
+            const changes = [];
+            if ((prev.orgName || EA_ORG_DEFAULT) !== patch.orgName) changes.push({ f: 'Organization name', from: prev.orgName || EA_ORG_DEFAULT, to: patch.orgName });
+            if ((prev.orgAddress || '') !== patch.orgAddress) changes.push({ f: 'Address', from: prev.orgAddress || '', to: patch.orgAddress });
+            if ((prev.requireApproval !== false) !== patch.requireApproval) changes.push({ f: 'Approval required', from: String(prev.requireApproval !== false), to: String(patch.requireApproval) });
+            if (EA.newLogo) changes.push({ f: 'Logo', from: '', to: 'updated' });
+            const batch = fbDb.batch();
+            batch.set(fbDb.collection('ea_meta').doc('settings'), { ...patch, updatedBy: eaMe(), updatedAt: eaNow() }, { merge: true });
+            batch.set(fbDb.collection('ea_audit').doc(), eaAuditObj({ action: 'edit', entity: 'settings', entityId: 'settings', ref: 'Voucher settings', summary: 'Voucher settings changed', changes }));
+            batch.commit().then(() => { closeEAModal('eaSettingsModal'); showNotification('Saved', 'Voucher settings updated', 'success'); }).catch(eaFail);
+        }
+        function closeEAModal(id) { byId(id).classList.remove('active'); }
+
+        // ============================================================
+        //  PRINTING
+        // ============================================================
+        const EA_PRINT_CSS = `*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:20px;font-size:12px}.hd{display:flex;align-items:center;gap:14px;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:12px}.hd img{height:56px}.hd h1{font-size:20px;margin:0}.muted{color:#555;font-size:11px}h2{font-size:17px;margin:10px 0 6px;letter-spacing:1px}table{width:100%;border-collapse:collapse;margin:8px 0}th,td{border:1px solid #444;padding:6px 8px;text-align:left;vertical-align:top}th{background:#eee}.ea-money,.r{text-align:right}tfoot td{font-weight:700;background:#f4f4f4}.grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;margin:8px 0}.grid b{display:inline-block;min-width:120px}.sigcell{height:48px;width:200px}.stamp{position:fixed;top:38%;left:10%;font-size:70px;font-weight:800;color:rgba(200,0,0,.13);transform:rotate(-25deg);letter-spacing:6px}.sigs{display:grid;grid-template-columns:1fr 1fr;gap:34px;margin-top:38px}.sigbox{border-top:1px solid #111;padding-top:4px;font-size:11px}.words{font-style:italic;margin:4px 0 10px}@page{size:A4;margin:12mm}`;
+        function eaOrgHeader() {
+            const s = EA.settings;
+            return `<div class="hd">${s.logo ? `<img src="${s.logo}" alt="">` : ''}<div><h1>${esc(s.orgName || EA_ORG_DEFAULT)}</h1>${s.orgAddress ? `<div class="muted">${esc(s.orgAddress)}</div>` : ''}</div></div>`;
+        }
+        function eaPrintHTML(title, inner) {
+            const f = document.createElement('iframe');
+            f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+            document.body.appendChild(f);
+            const d = f.contentWindow.document;
+            d.open(); d.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${EA_PRINT_CSS}</style></head><body>${inner}</body></html>`); d.close();
+            f.contentWindow.onafterprint = () => f.remove();
+            setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); }, 400);
+            setTimeout(() => { if (f.parentNode) f.remove(); }, 180000);
+        }
+        function eaPrintDoc(title, sub, inner) { eaPrintHTML(title, `${eaOrgHeader()}<h2>${esc(title)}</h2><div class="muted">${esc(sub)}</div>${inner}`); }
+
+        function eaPrintVoucher(id) {
+            const v = EA.vouchers.find(x => x.id === id); if (!v) return;
+            const stamp = { pending: 'PENDING APPROVAL', rejected: 'REJECTED', void: 'VOID' }[v.status];
+            const rows = (v.recipients || []).map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td class="r">${eaFmt(r.amount)}</td><td class="sigcell">${r.ack ? `<span class="muted">Acknowledged electronically ${esc(eaDT(r.ackAt))}</span>` : ''}</td></tr>`).join('');
+            eaPrintHTML('Payment Voucher ' + v.voucherNo, `${stamp ? `<div class="stamp">${stamp}</div>` : ''}${eaOrgHeader()}
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;"><h2>PAYMENT VOUCHER</h2><div style="text-align:right;"><div><b>Voucher No:</b> ${esc(v.voucherNo)}</div><div><b>Date:</b> ${formatDate(v.date)}</div></div></div>
+                <div class="grid"><div><b>Expense category:</b> ${esc(v.category)}</div><div><b>Payment method:</b> ${esc(v.method) || '-'}</div>
+                <div><b>Payment source:</b> ${esc(EA_SOURCES[v.source])}${v.source === 'other' && v.otherSource ? ' — ' + esc(v.otherSource) : ''}</div><div><b>Reference / receipt no:</b> ${esc(v.reference) || '-'}</div>
+                <div style="grid-column:1/-1;"><b>Description / purpose:</b> ${esc(v.description)}</div>${v.isAdvance ? '<div style="grid-column:1/-1;"><b>Note:</b> This payment is an ADVANCE and must be retired / accounted for.</div>' : ''}</div>
+                <table><thead><tr><th style="width:30px;">#</th><th>Recipient</th><th class="r" style="width:110px;">Amount</th><th>Signature / acknowledgement of receipt</th></tr></thead><tbody>${rows}</tbody>
+                <tfoot><tr><td></td><td>TOTAL</td><td class="r">${eaFmt(v.total)}</td><td></td></tr></tfoot></table>
+                <div class="words"><b>Amount in words:</b> ${esc(eaWords(v.total))}</div>
+                ${v.notes ? `<div><b>Notes:</b> ${esc(v.notes)}</div>` : ''}
+                <div class="sigs"><div class="sigbox"><b>Prepared by (Expense Accountant):</b> ${esc(v.preparedByName || v.preparedBy)}<br><br>Signature: ______________________ Date: ____________</div>
+                <div class="sigbox"><b>Reviewed / approved by (Director / Administrator):</b> ${v.approvedAt ? esc(v.approvedByName || v.approvedBy) + '<br><span class="muted">Approved electronically ' + esc(eaDT(v.approvedAt)) + '</span>' : (v.status === 'approved' ? 'Approval not required' : '')}<br><br>Signature: ______________________ Date: ____________</div></div>
+                <div class="muted" style="margin-top:26px;">Transaction ID ${esc(v.id)} · Created ${esc(eaDT(v.createdAt))} · Printed ${esc(eaDT(eaNow()))}</div>`);
+        }
+
+        // ============================================================
+        //  REPORTS
+        // ============================================================
+        const eaRange = r => { const from = r.from || '0000-01-01', to = r.to || '9999-12-31'; return d => (d || '') >= from && (d || '') <= to; };
+        const eaSumRows = (rows, i) => eaRound(rows.reduce((s, r) => s + eaNum(r[i]), 0));
+        const EA_REPORTS = {
+            'funds-received': { label: 'Money received by Expense Accountant', build(r) {
+                const inR = eaRange(r), list = EA.funds.filter(f => f.status !== 'void' && f.type !== 'adjustment' && inR(f.date)).sort((a, b) => a.date.localeCompare(b.date));
+                const rows = list.map(f => [formatDate(f.date), f.id, EA_FUND_TYPES[f.type], f.reference || '', f.source || '', f.purpose || '', f.receivedBy || '', eaNum(f.amount), f.confirmed ? 'Yes' : 'Awaiting']);
+                return { title: 'Money received by Expense Accountant', headers: ['Date', 'Txn ID', 'Type', 'Reference', 'Source', 'Purpose', 'Received by', 'Amount', 'Confirmed'], money: [7], rows, foot: ['Total', '', '', '', '', '', '', eaSumRows(rows, 7), ''] };
+            } },
+            'by-category': { label: 'Expenses by category', build(r) {
+                const inR = eaRange(r), m = {};
+                eaSpendVouchers().filter(v => inR(v.date)).forEach(v => { const k = v.category || 'Uncategorised'; (m[k] = m[k] || { n: 0, a: 0 }); m[k].n++; m[k].a += eaNum(v.total); });
+                const tot = Object.values(m).reduce((s, x) => s + x.a, 0);
+                const rows = Object.keys(m).sort((a, b) => m[b].a - m[a].a).map(k => [k, m[k].n, eaRound(m[k].a), tot ? (m[k].a / tot * 100).toFixed(1) + '%' : '']);
+                return { title: 'Expenses by category', headers: ['Category', 'Vouchers', 'Amount', 'Share'], money: [2], rows, foot: ['Total', eaSumRows(rows, 1), eaSumRows(rows, 2), ''] };
+            } },
+            'by-date': { label: 'Expenses by date range', build(r) {
+                const inR = eaRange(r), rows = eaSpendVouchers().filter(v => inR(v.date)).sort((a, b) => a.date.localeCompare(b.date)).map(v => [formatDate(v.date), v.voucherNo, v.category, v.description, EA_SOURCE_SHORT[v.source], eaNum(v.total), EA_STATUS[v.status][1]]);
+                return { title: 'Expenses by date range', headers: ['Date', 'Voucher', 'Category', 'Description', 'Source', 'Amount', 'Status'], money: [5], rows, foot: ['Total', '', '', '', '', eaSumRows(rows, 5), ''] };
+            } },
+            'by-recipient': { label: 'Expenses by recipient', build(r) {
+                const inR = eaRange(r), m = {};
+                eaSpendVouchers().filter(v => inR(v.date)).forEach(v => (v.recipients || []).forEach(x => { const k = x.personId || x.name; (m[k] = m[k] || { name: x.name, n: 0, a: 0 }); m[k].n++; m[k].a += eaNum(x.amount); }));
+                const rows = Object.values(m).sort((a, b) => b.a - a.a).map(x => [x.name, x.n, eaRound(x.a)]);
+                return { title: 'Expenses by recipient', headers: ['Recipient', 'Payments', 'Amount'], money: [2], rows, foot: ['Total', eaSumRows(rows, 1), eaSumRows(rows, 2)] };
+            } },
+            'payments-individuals': { label: 'Payments made to individuals', build(r) {
+                const inR = eaRange(r), rows = [];
+                eaSpendVouchers().filter(v => inR(v.date)).sort((a, b) => a.date.localeCompare(b.date)).forEach(v => (v.recipients || []).forEach(x => { const p = eaPerson(x.personId); if (!p || p.kind !== 'vendor') rows.push([formatDate(v.date), v.voucherNo, x.name, v.category, v.description, eaNum(x.amount), x.ack ? 'Yes' : 'No']); }));
+                return { title: 'Payments made to individuals', headers: ['Date', 'Voucher', 'Individual', 'Category', 'Purpose', 'Amount', 'Acknowledged'], money: [5], rows, foot: ['Total', '', '', '', '', eaSumRows(rows, 5), ''] };
+            } },
+            'personal': { label: 'Personally funded expenses', build(r) {
+                const inR = eaRange(r), al = eaReimbAlloc().map;
+                const rows = EA.vouchers.filter(v => v.source === 'personal' && (v.status === 'approved' || v.status === 'pending') && inR(v.date)).sort((a, b) => a.date.localeCompare(b.date))
+                    .map(v => [formatDate(v.date), v.voucherNo, v.description, v.preparedByName || v.preparedBy, eaNum(v.total), EA_STATUS[v.status][1], al[v.id] ? al[v.id].balance : '']);
+                return { title: 'Personally funded expenses', headers: ['Date', 'Voucher', 'Description', 'Paid by', 'Amount', 'Status', 'Still owed'], money: [4, 6], rows, foot: ['Total', '', '', '', eaSumRows(rows, 4), '', eaSumRows(rows, 6)] };
+            } },
+            'reimb-due': { label: 'Reimbursements due to Expense Accountant', build() {
+                const a = eaReimbAlloc();
+                const rows = a.list.filter(v => a.map[v.id].balance > 0.004).map(v => [formatDate(v.date), v.voucherNo, v.description, eaNum(v.total), a.map[v.id].reimbursed, a.map[v.id].balance]);
+                return { title: 'Reimbursements due to Expense Accountant', headers: ['Date', 'Voucher', 'Description', 'Amount', 'Reimbursed', 'Still owed'], money: [3, 4, 5], rows, foot: ['Total', '', '', eaSumRows(rows, 3), eaSumRows(rows, 4), eaSumRows(rows, 5)], note: 'Only approved vouchers count. Reimbursements are applied to the oldest vouchers first.' };
+            } },
+            'reimb-paid': { label: 'Reimbursements already paid', build(r) {
+                const inR = eaRange(r), rows = EA.reimb.filter(x => x.status !== 'void' && inR(x.date)).sort((a, b) => a.date.localeCompare(b.date)).map(x => [formatDate(x.date), x.id, x.method, x.reference || '', x.createdBy, eaNum(x.amount), x.notes || '']);
+                return { title: 'Reimbursements already paid', headers: ['Date', 'Txn ID', 'Method', 'Reference', 'Recorded by', 'Amount', 'Notes'], money: [5], rows, foot: ['Total', '', '', '', '', eaSumRows(rows, 5), ''] };
+            } },
+            'advances': { label: 'Outstanding advances', build() {
+                const rows = [], today = new Date(eaToday() + 'T00:00:00');
+                eaSpendVouchers().filter(v => v.isAdvance && !v.retired).sort((a, b) => a.date.localeCompare(b.date)).forEach(v => (v.recipients || []).forEach(x =>
+                    rows.push([formatDate(v.date), v.voucherNo, x.name, v.description, eaNum(x.amount), Math.max(0, Math.round((today - new Date(v.date + 'T00:00:00')) / 86400000))])));
+                return { title: 'Outstanding advances', headers: ['Date', 'Voucher', 'Individual', 'Purpose', 'Amount', 'Days outstanding'], money: [4], rows, foot: ['Total', '', '', '', eaSumRows(rows, 4), ''] };
+            } },
+            'cash-recon': { label: 'Cash / balance reconciliation', build(r) {
+                const t = eaTotals({ to: r.to });
+                const rows = [['Opening balance', t.opening], ['Add: transfers received from Main Accountant', t.transfers], ['Add: other approved funds', t.otherFunds], ['Add / (less): adjustments', t.adjust],
+                    ['Total funds available', eaRound(t.opening + t.received + t.adjust)], ['Less: expenses and payments from organization cash', t.orgSpent], ['CURRENT CASH BALANCE', t.balance],
+                    ['', ''], ['Memo — paid personally by Expense Accountant', t.personal], ['Memo — of which approved and owed', t.owed], ['Memo — reimbursed so far', t.reimbursed], ['Memo — outstanding reimbursement', t.outstanding], ['Memo — paid from other approved sources', t.otherSrc]];
+                return { title: 'Cash / balance reconciliation', headers: ['Item', 'Amount'], money: [1], rows, note: 'Position as at the “To” date (everything up to it, ignoring “From”). Includes vouchers still awaiting approval; voided and rejected ones are left out.' };
+            } },
+            'register': { label: 'Payment vouchers (register)', build(r) {
+                const inR = eaRange(r), rows = EA.vouchers.filter(v => inR(v.date)).sort((a, b) => a.date.localeCompare(b.date)).map(v => [v.voucherNo, formatDate(v.date), v.category, v.description, eaNum(v.total), EA_STATUS[v.status][1], v.preparedByName || v.preparedBy, v.approvedByName || '', v.approvedAt ? eaDT(v.approvedAt) : '', (v.signedScans || []).length ? 'Yes' : 'No']);
+                return { title: 'Payment vouchers register', headers: ['Voucher', 'Date', 'Category', 'Description', 'Amount', 'Status', 'Prepared by', 'Approved by', 'Approved at', 'Signed copy'], money: [4], rows, foot: ['Total (all statuses)', '', '', '', eaSumRows(rows, 4), '', '', '', '', ''] };
+            } },
+            'monthly': { label: 'Monthly expense summary', build(r) {
+                const inR = eaRange(r), m = {};
+                const slot = d => (m[d.slice(0, 7)] = m[d.slice(0, 7)] || { n: 0, org: 0, per: 0, oth: 0, in: 0 });
+                eaSpendVouchers().filter(v => inR(v.date)).forEach(v => { const s = slot(v.date); s.n++; if (v.source === 'personal') s.per += eaNum(v.total); else if (v.source === 'other') s.oth += eaNum(v.total); else s.org += eaNum(v.total); });
+                EA.funds.filter(f => f.status !== 'void' && (f.type === 'transfer' || f.type === 'other') && inR(f.date)).forEach(f => { slot(f.date).in += eaNum(f.amount); });
+                const rows = Object.keys(m).sort().map(k => { const s = m[k]; return [new Date(k + '-01T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }), s.n, eaRound(s.org), eaRound(s.per), eaRound(s.oth), eaRound(s.org + s.per + s.oth), eaRound(s.in)]; });
+                return { title: 'Monthly expense summary', headers: ['Month', 'Vouchers', 'Org cash', 'Personal funds', 'Other source', 'Total spent', 'Funds received'], money: [2, 3, 4, 5, 6], rows, foot: ['Total', eaSumRows(rows, 1), eaSumRows(rows, 2), eaSumRows(rows, 3), eaSumRows(rows, 4), eaSumRows(rows, 5), eaSumRows(rows, 6)] };
+            } },
+            'main-vs-ea': { label: 'Main Accountant vs. Expense Accountant reconciliation', build(r) {
+                const inR = eaRange(r), list = EA.funds.filter(f => f.status !== 'void' && f.type === 'transfer' && inR(f.date)).sort((a, b) => a.date.localeCompare(b.date));
+                const rows = list.map(f => [formatDate(f.date), f.id, f.reference || '', f.source || '', f.purpose || '', f.receivedBy || '', eaNum(f.amount), f.confirmed ? 'Confirmed ' + eaDT(f.confirmedAt) : 'NOT CONFIRMED', f.confirmed ? eaNum(f.amount) : 0]);
+                const main = eaSumRows(rows, 6), ea = eaSumRows(rows, 8);
+                return { title: 'Main Accountant vs. Expense Accountant reconciliation', headers: ['Date', 'Txn ID', 'Reference', 'Source account', 'Purpose', 'Received by', 'Main Accountant recorded', 'Expense Accountant confirmation', 'Expense Accountant confirmed'], money: [6, 8], rows,
+                    foot: ['Total', '', '', '', '', '', main, '', ea], note: Math.abs(main - ea) < 0.005 ? 'Both sides agree — every transfer is confirmed.' : `Difference of ${eaFmt(main - ea)}: the Main Accountant has recorded transfers the Expense Accountant has not yet confirmed.` };
+            } },
+            'ledger': { label: 'Cash ledger (running balance)', build(r) {
+                const items = [];
+                EA.funds.filter(f => f.status !== 'void').forEach(f => { const a = eaNum(f.amount); items.push({ d: f.date, c: f.createdAt || '', ref: f.id, desc: EA_FUND_TYPES[f.type] + (f.purpose ? ' — ' + f.purpose : ''), inn: a > 0 ? a : 0, out: a < 0 ? -a : 0 }); });
+                EA.vouchers.filter(v => (v.status === 'approved' || v.status === 'pending') && v.source === 'org').forEach(v => items.push({ d: v.date, c: v.createdAt || '', ref: v.voucherNo, desc: v.category + ' — ' + v.description + (v.status === 'pending' ? ' (awaiting approval)' : ''), inn: 0, out: eaNum(v.total) }));
+                items.sort((a, b) => a.d.localeCompare(b.d) || a.c.localeCompare(b.c));
+                const inR = eaRange(r || {}); let bal = 0; const rows = [];
+                items.forEach(i => { bal = eaRound(bal + i.inn - i.out); if (inR(i.d)) rows.push([formatDate(i.d), i.ref, i.desc, i.inn || '', i.out || '', bal]); });
+                return { title: 'Cash ledger', headers: ['Date', 'Reference', 'Details', 'Money in', 'Money out', 'Balance'], money: [3, 4, 5], rows, foot: ['Closing balance', '', '', eaSumRows(rows, 3), eaSumRows(rows, 4), bal] };
+            } }
+        };
+        function eaRunReport() {
+            const key = byId('eaReportSel').value, def = EA_REPORTS[key]; if (!def) return;
+            const r = { from: byId('eaRepFrom').value, to: byId('eaRepTo').value };
+            const rep = def.build(r);
+            rep.sub = (r.from || r.to) ? `Period: ${r.from ? formatDate(r.from) : 'start'} to ${r.to ? formatDate(r.to) : 'today'}` : 'All dates';
+            EA.reportCur = rep;
+            byId('eaReportOut').innerHTML = `<h3 style="margin-bottom:2px;">${esc(rep.title)}</h3><p class="page-subtitle" style="margin-bottom:12px;">${esc(rep.sub)}</p><div class="table-wrap">${eaReportTable(rep)}</div>${rep.note ? `<p class="page-subtitle" style="margin-top:12px;">${esc(rep.note)}</p>` : ''}`;
+        }
+        function eaRepFor(src) {
+            if (src === 'ledger') { const rep = EA_REPORTS.ledger.build({}); rep.sub = 'All dates'; return rep; }
+            if (!EA.reportCur) { showNotification('Run a report first', 'Pick a report and press Run', 'info'); return null; }
+            return EA.reportCur;
+        }
+        function eaPrintReport(src) { const rep = eaRepFor(src); if (rep) eaPrintDoc(rep.title, rep.sub + (rep.note ? ' — ' + rep.note : ''), eaReportTable(rep, 'print')); }
+        function eaExportReport(src) {
+            const rep = eaRepFor(src); if (!rep) return;
+            const csv = [rep.headers, ...rep.rows, ...(rep.foot ? [rep.foot] : [])].map(r => r.map(csvEscape).join(',')).join('\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' }));
+            a.download = `${rep.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${eaToday()}.csv`; a.click(); URL.revokeObjectURL(a.href);
+        }
+
+        // ============================================================
+        //  ACCOUNTABILITY — WIRING
+        // ============================================================
+        byId('eaReportSel').innerHTML = Object.keys(EA_REPORTS).filter(k => k !== 'ledger').map(k => `<option value="${k}">${esc(EA_REPORTS[k].label)}</option>`).join('');
+        document.querySelectorAll('.ea-tab').forEach(b => b.addEventListener('click', () => eaSetTab(b.dataset.tab)));
+        document.querySelectorAll('#eaFundModal,#eaExpenseModal,#eaVoucherModal,#eaPersonModal,#eaProfileModal,#eaReimbModal,#eaSettingsModal,#eaFileModal').forEach(m =>
+            m.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeEAModal(m.id))));
+        byId('eaAddFundBtn').addEventListener('click', eaOpenFund);
+        byId('eaAddExpenseBtn').addEventListener('click', () => eaOpenExpense());
+        byId('eaAddPersonBtn').addEventListener('click', () => eaOpenPerson());
+        byId('eaAddReimbBtn').addEventListener('click', eaOpenReimb);
+        byId('eaSettingsBtn').addEventListener('click', eaOpenSettings);
+        byId('eaAddRowBtn').addEventListener('click', () => eaAddRow());
+        byId('eaFundForm').addEventListener('submit', eaSaveFund);
+        byId('eaExpenseForm').addEventListener('submit', eaSaveExpense);
+        byId('eaPersonForm').addEventListener('submit', eaSavePerson);
+        byId('eaReimbForm').addEventListener('submit', eaSaveReimb);
+        byId('eaSettingsForm').addEventListener('submit', eaSaveSettings);
+        byId('eaFundTypeSel').addEventListener('change', eaFundTypeUI);
+        byId('eaExpSource').addEventListener('change', eaToggleSourceUI);
+        byId('eaExpCat').addEventListener('change', () => { const n = byId('eaExpCatNew'); n.style.display = byId('eaExpCat').value === '__new__' ? '' : 'none'; if (n.style.display === '') n.focus(); });
+        byId('eaFundFile').addEventListener('change', e => { eaPickFiles('fund', e.target.files).then(() => { e.target.value = ''; }); });
+        byId('eaExpFile').addEventListener('change', e => { eaPickFiles('exp', e.target.files).then(() => { e.target.value = ''; }); });
+        byId('eaSetLogo').addEventListener('change', async e => {
+            const f = e.target.files[0]; if (!f) return;
+            try { EA.newLogo = await eaCompressImage(f, 260, 'image/png'); byId('eaLogoPreview').innerHTML = `<img src="${EA.newLogo}" style="height:40px;" alt="logo">`; } catch (err) { showNotification('Logo failed', err.message, 'error'); }
+        });
+        byId('eaAskOk').addEventListener('click', () => {
+            const v = byId('eaAskText').value.trim();
+            if (EA.askRequired && !v) { showNotification('Reason needed', 'Please type a reason — it goes in the audit trail', 'warning'); return; }
+            if (EA.askDone) EA.askDone(v);
+        });
+        byId('eaAskCancel').addEventListener('click', () => { if (EA.askDone) EA.askDone(null); });
+        ['eaFundType', 'eaFundSearch'].forEach(id => byId(id).addEventListener('input', renderEAFunds));
+        ['eaVStatus', 'eaVCat', 'eaVFrom', 'eaVTo', 'eaVSearch'].forEach(id => byId(id).addEventListener('input', renderEAVouchers));
+        byId('eaVClear').addEventListener('click', () => { ['eaVStatus', 'eaVCat', 'eaVFrom', 'eaVTo', 'eaVSearch'].forEach(id => { byId(id).value = ''; }); renderEAVouchers(); });
+        byId('eaPeopleSearch').addEventListener('input', renderEAPeople);
+        ['eaAuditEntity', 'eaAuditSearch'].forEach(id => byId(id).addEventListener('input', renderEAAudit));
+        byId('eaRunReport').addEventListener('click', eaRunReport);
 
         // ============================================================
         //  EXPOSE GLOBALLY
