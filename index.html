@@ -1182,6 +1182,7 @@
         #eaAskModal, #eaFileModal { z-index: 2200; }
         #eaVoucherModal .modal-content, #eaProfileModal .modal-content { max-width: 900px; }
         @media (max-width: 640px) { .ea-row { grid-template-columns: 1fr 120px 32px; } .ea-kv { grid-template-columns: 1fr; } }
+        .ea-xtitle { margin: 20px 0 6px; font-size: 14px; font-weight: 700; color: var(--gray-700); }
     </style>
 </head>
 <body>
@@ -1590,7 +1591,8 @@
 
                 <div class="ea-tabs" id="eaTabs">
                     <button class="ea-tab active" data-tab="overview" type="button"><i class="fas fa-gauge"></i> Overview</button>
-                    <button class="ea-tab" data-tab="funds" type="button"><i class="fas fa-hand-holding-dollar"></i> Funds Received</button>
+                    <button class="ea-tab" data-tab="main" type="button"><i class="fas fa-vault"></i> Main Cash</button>
+                    <button class="ea-tab" data-tab="funds" type="button"><i class="fas fa-hand-holding-dollar"></i> Funds</button>
                     <button class="ea-tab" data-tab="vouchers" type="button"><i class="fas fa-file-invoice"></i> Vouchers</button>
                     <button class="ea-tab" data-tab="ledger" type="button"><i class="fas fa-book"></i> Cash Ledger</button>
                     <button class="ea-tab" data-tab="people" type="button"><i class="fas fa-users"></i> People</button>
@@ -1612,12 +1614,33 @@
                     </div>
                 </div>
 
+                <!-- Main Cash -->
+                <div class="ea-pane" id="eaPane-main">
+                    <div class="stats-grid" id="eaMainStats" style="margin-bottom:20px;"></div>
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
+                        <div class="filter-item"><button class="btn-primary funds-edit" type="button" onclick="eaOpenFund('main_in')"><i class="fas fa-vault"></i> Record cash I have at hand</button></div>
+                        <div class="filter-item"><button class="btn-outline funds-edit" type="button" onclick="eaOpenFund('transfer')"><i class="fas fa-hand-holding-dollar"></i> Give to Expense Accountant</button></div>
+                        <div class="filter-item"><button class="btn-outline funds-edit" type="button" onclick="eaOpenExpense(null,'main')"><i class="fas fa-receipt"></i> Spend from my cash</button></div>
+                    </div></div></div>
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
+                        <div class="filter-item"><label>From</label><input type="date" id="eaMainFrom" /></div>
+                        <div class="filter-item"><label>To</label><input type="date" id="eaMainTo" /></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Main','week',0)">This week</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Main','week',-1)">Last week</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Main','month',0)">This month</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Main','all',0)">All</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaPrintReport('main')"><i class="fas fa-print"></i> Print</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaExportReport('main')"><i class="fas fa-download"></i> Export</button></div>
+                    </div></div></div>
+                    <div class="card"><div class="card-header"><h3><i class="fas fa-vault"></i> Main Accountant cash ledger</h3></div><div class="table-wrap" id="eaMainBody"></div></div>
+                </div>
+
                 <!-- Funds -->
                 <div class="ea-pane" id="eaPane-funds">
                     <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
                         <div class="filter-item"><label>Type</label><select id="eaFundType"><option value="">All types</option>
-                            <option value="transfer">Transfer from Main Accountant</option><option value="opening">Opening balance</option>
-                            <option value="other">Other approved funds</option><option value="adjustment">Adjustments</option></select></div>
+                            <option value="main_in">Cash at hand (Main Accountant)</option><option value="transfer">Given to Expense Accountant</option><option value="main_adjust">Main cash adjustments</option>
+                            <option value="opening">Opening balance</option><option value="other">Other approved funds</option><option value="adjustment">Expense Accountant adjustments</option></select></div>
                         <div class="filter-item" style="flex:1;min-width:180px;"><label>Search</label><input type="text" id="eaFundSearch" placeholder="Reference, source, purpose, receiver…" /></div>
                     </div></div></div>
                     <div class="card"><div class="table-wrap"><table class="table">
@@ -1644,12 +1667,22 @@
 
                 <!-- Ledger -->
                 <div class="ea-pane" id="eaPane-ledger">
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
+                        <div class="filter-item"><label>From</label><input type="date" id="eaLedFrom" /></div>
+                        <div class="filter-item"><label>To</label><input type="date" id="eaLedTo" /></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Led','week',0)">This week</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Led','week',-1)">Last week</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Led','month',0)">This month</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Led','all',0)">All</button></div>
+                    </div>
+                    <div class="exp-filter-bar" style="margin-top:12px;">
+                        <div class="filter-item"><button class="btn-primary" type="button" onclick="eaPrintWeekly()"><i class="fas fa-print"></i> Print weekly report</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaPrintReport('ledger')"><i class="fas fa-print"></i> Print ledger</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaExportReport('ledger')"><i class="fas fa-download"></i> Export</button></div>
+                    </div>
+                    <p class="page-subtitle" style="margin-top:10px;">The weekly report uses the dates above (or the current Monday–Sunday week if they are empty) and adds a summary and spending by category.</p></div></div>
                     <div class="card">
-                        <div class="card-header"><h3><i class="fas fa-book"></i> Cash ledger — running balance</h3>
-                            <div class="page-actions">
-                                <button class="btn-outline" type="button" onclick="eaPrintReport('ledger')"><i class="fas fa-print"></i> Print</button>
-                                <button class="btn-outline" type="button" onclick="eaExportReport('ledger')"><i class="fas fa-download"></i> Export</button>
-                            </div></div>
+                        <div class="card-header"><h3><i class="fas fa-book"></i> Expense Accountant cash ledger — running balance</h3></div>
                         <div class="table-wrap" id="eaLedgerBody"></div>
                     </div>
                 </div>
@@ -1692,6 +1725,9 @@
                         <div class="filter-item" style="min-width:260px;"><label>Report</label><select id="eaReportSel"></select></div>
                         <div class="filter-item"><label>From</label><input type="date" id="eaRepFrom" /></div>
                         <div class="filter-item"><label>To</label><input type="date" id="eaRepTo" /></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Rep','week',0)">This week</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Rep','week',-1)">Last week</button></div>
+                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Rep','month',0)">This month</button></div>
                         <div class="filter-item"><button class="btn-primary" id="eaRunReport" type="button"><i class="fas fa-play"></i> Run</button></div>
                         <div class="filter-item"><button class="btn-outline" type="button" onclick="eaPrintReport()"><i class="fas fa-print"></i> Print</button></div>
                         <div class="filter-item"><button class="btn-outline" type="button" onclick="eaExportReport()"><i class="fas fa-download"></i> Export CSV</button></div>
@@ -1752,7 +1788,7 @@
                         </div>
                         <div class="role-note">
                             <strong>Administrator (Director)</strong> — sees everything, manages users and approves / rejects / voids payment vouchers, but cannot edit other data.<br>
-                            <strong>Accountant (Main Accountant)</strong> — sees and edits everything, and records funds sent to the Expense Accountant and reimbursements.<br>
+                            <strong>Accountant (Main Accountant)</strong> — sees and edits everything; records the cash he has at hand, money given to the Expense Accountant, his own spending and reimbursements.<br>
                             <strong>Expense Accountant</strong> — sees the Expenses and Accountability sections; records expenses, vouchers and individuals, and confirms funds received.<br>
                             <strong>Viewer</strong> — sees everything, edits nothing.<br>
                             Anyone who signs in with Google without being added waits on a "no access" screen until you give them a role here.
@@ -1990,17 +2026,29 @@
         <div class="modal-content">
             <div class="modal-header"><h3>Record Funds</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
             <form id="eaFundForm" class="modal-body">
+                <div class="ea-info" id="eaFundInfo" style="margin-bottom:16px;display:none;"></div>
                 <div class="form-grid">
-                    <div class="form-group"><label>Type <span class="required">*</span></label>
-                        <select id="eaFundTypeSel"><option value="transfer">Transfer from Main Accountant</option><option value="opening">Opening balance</option><option value="other">Other approved funds</option><option value="adjustment">Adjustment (+ / −)</option></select></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>What are you recording? <span class="required">*</span></label>
+                        <select id="eaFundTypeSel">
+                            <optgroup label="Main Accountant">
+                                <option value="main_in">Cash I have at hand</option>
+                                <option value="transfer">Give money to the Expense Accountant</option>
+                                <option value="main_adjust">Adjust my cash (+ / −)</option>
+                            </optgroup>
+                            <optgroup label="Expense Accountant's records">
+                                <option value="opening">Opening balance</option>
+                                <option value="other">Other approved funds</option>
+                                <option value="adjustment">Adjustment (+ / −)</option>
+                            </optgroup>
+                        </select></div>
                     <div class="form-group"><label>Date <span class="required">*</span></label><input type="date" id="eaFundDate" required /></div>
-                    <div class="form-group"><label id="eaFundAmtLabel">Amount received <span class="required">*</span></label>
+                    <div class="form-group"><label id="eaFundAmtLabel">Amount <span class="required">*</span></label>
                         <div class="input-with-icon"><span>₵</span><input type="number" id="eaFundAmt" step="0.01" placeholder="0.00" required /></div></div>
                     <div class="form-group"><label>Payment / reference number</label><input type="text" id="eaFundRef" placeholder="Cheque, transfer or receipt no." /></div>
-                    <div class="form-group" style="grid-column:1/-1;"><label>Source / account the money came from</label><input type="text" id="eaFundSource" placeholder="e.g. Main operating account – GCB" /></div>
-                    <div class="form-group" style="grid-column:1/-1;"><label id="eaFundPurposeLabel">Purpose / description <span class="required">*</span></label><input type="text" id="eaFundPurpose" placeholder="What is this money for?" required /></div>
-                    <div class="form-group" style="grid-column:1/-1;"><label>Expense Accountant who received it <span class="required">*</span></label>
-                        <input type="text" id="eaFundReceiver" list="eaReceiverList" placeholder="Name" required /><datalist id="eaReceiverList"></datalist></div>
+                    <div class="form-group"><label id="eaFundSourceLabel">Source / account</label><input type="text" id="eaFundSource" list="eaSourceList" placeholder="e.g. Main operating account – GCB" /><datalist id="eaSourceList"></datalist></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label id="eaFundPurposeLabel">Purpose / description <span class="required">*</span></label><input type="text" id="eaFundPurpose" list="eaPurposeList" placeholder="What is this money for?" required /><datalist id="eaPurposeList"></datalist></div>
+                    <div class="form-group" style="grid-column:1/-1;" id="eaFundReceiverWrap"><label>Expense Accountant who receives it <span class="required">*</span></label>
+                        <input type="text" id="eaFundReceiver" list="eaReceiverList" placeholder="Name" /><datalist id="eaReceiverList"></datalist></div>
                     <div class="form-group" style="grid-column:1/-1;"><label>Supporting document / photo</label>
                         <input type="file" id="eaFundFile" accept="image/*,application/pdf" multiple />
                         <div class="ea-chips" id="eaChips-fund"></div></div>
@@ -2022,12 +2070,13 @@
                         <select id="eaExpCat" required></select>
                         <input type="text" id="eaExpCatNew" placeholder="Type the new category" style="display:none;margin-top:6px;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;" /></div>
                     <div class="form-group"><label>Expense date <span class="required">*</span></label><input type="date" id="eaExpDate" required /></div>
-                    <div class="form-group" style="grid-column:1/-1;"><label>Description / purpose <span class="required">*</span></label><input type="text" id="eaExpDesc" placeholder="What is this expense for?" required /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Description / purpose <span class="required">*</span></label><input type="text" id="eaExpDesc" list="eaDescList" autocomplete="off" placeholder="Type, or pick one you used before" required /><datalist id="eaDescList"></datalist></div>
                     <div class="form-group"><label>Payment source <span class="required">*</span></label>
                         <select id="eaExpSource"><option value="org">Organization Cash/Advance</option><option value="personal">Personal Funds – Reimbursement Required</option><option value="other">Other Approved Source</option></select></div>
                     <div class="form-group"><label>Payment method</label>
                         <select id="eaExpMethod"><option>Cash</option><option>Cheque</option><option>Bank Transfer</option><option>Mobile Money</option><option>Card</option><option>Other</option></select></div>
                     <div class="form-group" style="grid-column:1/-1;display:none;" id="eaOtherSrcWrap"><label>Which approved source? <span class="required">*</span></label><input type="text" id="eaExpOtherSrc" placeholder="e.g. Director's direct payment, company card" /></div>
+                    <div style="grid-column:1/-1;display:none;" id="eaMainNote" class="ea-info"><i class="fas fa-vault"></i> This is paid from the cash you hold as Main Accountant. It reduces your cash at hand (see the Main Cash tab), not the Expense Accountant's balance.</div>
                     <div style="grid-column:1/-1;display:none;" id="eaPersonalNote" class="ea-warn"><i class="fas fa-triangle-exclamation"></i> This will be recorded as paid from your own pocket. A receipt reference or attached receipt is required, and the amount is added to your reimbursement balance once the voucher is approved.</div>
                     <div class="form-group"><label>Reference / receipt number</label><input type="text" id="eaExpRef" placeholder="Receipt, invoice or cheque no." /></div>
                     <div class="form-group"><label>Receipt / document / photo</label><input type="file" id="eaExpFile" accept="image/*,application/pdf" multiple /><div class="ea-chips" id="eaChips-exp"></div></div>
@@ -4775,9 +4824,9 @@
         };
         let eaUnsubs = [];
         const EA_ORG_DEFAULT = 'S.A.A Legacy Pharmaceutical';
-        const EA_SOURCES = { org: 'Organization Cash/Advance', personal: 'Personal Funds – Reimbursement Required', other: 'Other Approved Source' };
-        const EA_SOURCE_SHORT = { org: 'Org cash', personal: 'Personal funds', other: 'Other source' };
-        const EA_FUND_TYPES = { transfer: 'Transfer from Main Accountant', opening: 'Opening balance', other: 'Other approved funds', adjustment: 'Adjustment' };
+        const EA_SOURCES = { main: 'Main Accountant Cash (my own cash at hand)', org: 'Organization Cash/Advance', personal: 'Personal Funds – Reimbursement Required', other: 'Other Approved Source' };
+        const EA_SOURCE_SHORT = { main: 'Main cash', org: 'Org cash', personal: 'Personal funds', other: 'Other source' };
+        const EA_FUND_TYPES = { main_in: 'Cash at hand (Main Accountant)', main_adjust: 'Main cash adjustment', transfer: 'Transfer from Main Accountant', opening: 'Opening balance', other: 'Other approved funds', adjustment: 'Adjustment' };
         const EA_STATUS = { pending: ['due_soon', 'Awaiting approval'], approved: ['cleared', 'Approved'], rejected: ['overdue', 'Rejected'], void: ['cancelled', 'Void'] };
 
         // ---------- small helpers ----------
@@ -4854,7 +4903,12 @@
             t.orgSpent = sum(V.filter(v => v.source === 'org' || !v.source), v => eaNum(v.total));
             t.personal = sum(V.filter(v => v.source === 'personal'), v => eaNum(v.total));
             t.otherSrc = sum(V.filter(v => v.source === 'other'), v => eaNum(v.total));
-            t.spent = eaRound(t.orgSpent + t.personal + t.otherSrc);
+            t.mainIn = sum(F.filter(f => f.type === 'main_in'), f => eaNum(f.amount));
+            t.mainAdj = sum(F.filter(f => f.type === 'main_adjust'), f => eaNum(f.amount));
+            t.mainSpent = sum(V.filter(v => v.source === 'main'), v => eaNum(v.total));
+            // Main Accountant's own cash: what he has at hand, minus what he gives to the Expense Accountant, minus what he spends himself
+            t.mainBalance = eaRound(t.mainIn + t.mainAdj - t.transfers - t.mainSpent);
+            t.spent = eaRound(t.orgSpent + t.personal + t.otherSrc + t.mainSpent);
             t.toIndividuals = 0;
             V.forEach(v => (v.recipients || []).forEach(x => { const p = eaPerson(x.personId); if (!p || p.kind !== 'vendor') t.toIndividuals += eaNum(x.amount); }));
             t.toIndividuals = eaRound(t.toIndividuals);
@@ -5053,7 +5107,7 @@
             const sb = byId('eaSettingsBtn');
             if (sb) sb.style.display = (canEdit('funds') || canEdit('approve')) ? '' : 'none';
             if (state.currentPage !== 'accountability') return;
-            ({ overview: renderEAOverview, funds: renderEAFunds, vouchers: renderEAVouchers, ledger: renderEALedger, people: renderEAPeople, reimb: renderEAReimb, reports: () => {}, audit: renderEAAudit })[EA.tab]();
+            ({ overview: renderEAOverview, main: renderEAMain, funds: renderEAFunds, vouchers: renderEAVouchers, ledger: renderEALedger, people: renderEAPeople, reimb: renderEAReimb, reports: () => {}, audit: renderEAAudit })[EA.tab]();
             if (byId('eaVoucherModal').classList.contains('active') && EA.viewId) eaRenderVoucherModal();
             if (byId('eaProfileModal').classList.contains('active') && EA.profileId) eaRenderProfile();
             if (byId('eaExpenseModal').classList.contains('active')) eaRefreshRowSelects();
@@ -5064,9 +5118,10 @@
             const card = (icon, color, label, value, sub) => `<div class="stat-card"><div class="stat-icon ${color}"><i class="fas ${icon}"></i></div>
                 <div class="stat-info"><span class="stat-label">${label}</span><h3 style="font-size:21px;">${value}</h3></div><div class="stat-amount">${sub || ''}</div></div>`;
             byId('eaStats').innerHTML =
+                card('fa-vault', t.mainBalance < 0 ? 'red' : 'blue', 'Main Accountant cash at hand', eaFmt(t.mainBalance), 'Given out ' + eaFmt(t.transfers) + (t.mainSpent ? ' · spent ' + eaFmt(t.mainSpent) : '')) +
                 card('fa-flag', 'blue', 'Opening balance', eaFmt(t.opening), '') +
                 card('fa-hand-holding-dollar', 'green', 'Received from Main Accountant', eaFmt(t.received), t.otherFunds ? 'incl. ' + eaFmt(t.otherFunds) + ' other funds' : '') +
-                card('fa-receipt', 'red', 'Total spent', eaFmt(t.spent), 'Org cash ' + eaFmt(t.orgSpent)) +
+                card('fa-receipt', 'red', 'Total spent', eaFmt(t.spent), 'Expense Acct cash ' + eaFmt(t.orgSpent)) +
                 card('fa-user-group', 'purple', 'Given to individuals', eaFmt(t.toIndividuals), '') +
                 card('fa-wallet', 'orange', 'Paid personally by Expense Accountant', eaFmt(t.personal), t.personalPending ? eaFmt(t.personalPending) + ' awaiting approval' : '') +
                 card('fa-rotate-left', 'green', 'Reimbursed so far', eaFmt(t.reimbursed), '') +
@@ -5079,6 +5134,7 @@
             if (unconf) attn.push(`<a onclick="eaSetTab('funds')"><i class="fas fa-circle-question"></i> ${unconf} transfer${unconf > 1 ? 's' : ''} from the Main Accountant not yet confirmed by the Expense Accountant</a>`);
             const adv = eaSpendVouchers().filter(v => v.isAdvance && !v.retired).length;
             if (adv) attn.push(`<a onclick="eaSetTab('people')"><i class="fas fa-user-clock"></i> ${adv} advance${adv > 1 ? 's' : ''} not yet retired</a>`);
+            if (t.mainBalance < 0) attn.push(`<a class="bad" onclick="eaSetTab('main')"><i class="fas fa-triangle-exclamation"></i> The Main Accountant's cash at hand is negative (${eaFmt(t.mainBalance)}) — record the cash received, or check what was given out</a>`);
             if (t.balance < 0) attn.push(`<a class="bad"><i class="fas fa-triangle-exclamation"></i> The cash balance is negative (${eaFmt(t.balance)}) — more was paid out than was received</a>`);
             const alloc = eaReimbAlloc();
             if (alloc.excess > 0.005) attn.push(`<a class="bad"><i class="fas fa-triangle-exclamation"></i> Reimbursements exceed approved personal expenses by ${eaFmt(alloc.excess)}</a>`);
@@ -5133,7 +5189,49 @@
                 rep.rows.length ? rep.rows.map(r => `<tr>${r.map(cell).join('')}</tr>`).join('') : `<tr><td colspan="${rep.headers.length}" class="empty-state"><span>No data for this report</span></td></tr>`}</tbody>${
                 rep.foot ? `<tfoot><tr>${rep.foot.map(cell).join('')}</tr></tfoot>` : ''}</table>`;
         }
-        function renderEALedger() { byId('eaLedgerBody').innerHTML = eaReportTable(EA_REPORTS.ledger.build({})); }
+        const eaLedRange = () => ({ from: byId('eaLedFrom').value, to: byId('eaLedTo').value });
+        const eaMainRange = () => ({ from: byId('eaMainFrom').value, to: byId('eaMainTo').value });
+        function renderEALedger() { byId('eaLedgerBody').innerHTML = eaReportFull(EA_REPORTS.ledger.build(eaLedRange())); }
+        function renderEAMain() {
+            const t = eaTotals();
+            const card = (icon, color, label, value, sub) => `<div class="stat-card"><div class="stat-icon ${color}"><i class="fas ${icon}"></i></div><div class="stat-info"><span class="stat-label">${label}</span><h3 style="font-size:21px;">${value}</h3></div><div class="stat-amount">${sub || ''}</div></div>`;
+            byId('eaMainStats').innerHTML =
+                card('fa-vault', t.mainBalance < 0 ? 'red' : 'green', 'Cash at hand now', eaFmt(t.mainBalance), 'Recorded in minus given out and spent') +
+                card('fa-arrow-down', 'blue', 'Cash recorded in', eaFmt(t.mainIn + t.mainAdj), t.mainAdj ? 'incl. ' + eaFmt(t.mainAdj) + ' adjustments' : '') +
+                card('fa-hand-holding-dollar', 'purple', 'Given to Expense Accountant', eaFmt(t.transfers), '') +
+                card('fa-receipt', 'orange', 'Spent by Main Accountant', eaFmt(t.mainSpent), 'From his own cash');
+            byId('eaMainBody').innerHTML = eaReportFull(EA_REPORTS['main-ledger'].build(eaMainRange()));
+        }
+        function eaFillSuggestLists() {
+            const uniq = a => [...new Set(a.map(x => (x || '').trim()).filter(Boolean))];
+            byId('eaPurposeList').innerHTML = uniq([...EA.funds].sort(eaByDateDesc).map(f => f.purpose)).slice(0, 200).map(x => `<option value="${esc(x)}"></option>`).join('');
+            byId('eaSourceList').innerHTML = uniq([...EA.funds].sort(eaByDateDesc).map(f => f.source)).slice(0, 100).map(x => `<option value="${esc(x)}"></option>`).join('');
+        }
+        function eaFillDescList() {
+            const cnt = {};
+            EA.vouchers.forEach(v => {
+                const k = (v.description || '').trim(); if (!k) return;
+                const l = k.toLowerCase(); const c = (cnt[l] = cnt[l] || { t: k, n: 0, last: '' });
+                c.n++; if ((v.createdAt || '') >= c.last) { c.last = v.createdAt || ''; c.t = k; }
+            });
+            byId('eaDescList').innerHTML = Object.values(cnt).sort((a, b) => b.n - a.n || b.last.localeCompare(a.last)).slice(0, 300).map(x => `<option value="${esc(x.t)}"></option>`).join('');
+        }
+        function eaIso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+        function eaWeekRange(off = 0) {
+            const d = new Date(); d.setHours(12, 0, 0, 0);
+            const mon = new Date(d); mon.setDate(d.getDate() - ((d.getDay() + 6) % 7) + off * 7);
+            const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+            return { from: eaIso(mon), to: eaIso(sun) };
+        }
+        function eaMonthRange(off = 0) {
+            const d = new Date();
+            return { from: eaIso(new Date(d.getFullYear(), d.getMonth() + off, 1, 12)), to: eaIso(new Date(d.getFullYear(), d.getMonth() + off + 1, 0, 12)) };
+        }
+        function eaQuick(prefix, kind, off) {
+            const r = kind === 'all' ? { from: '', to: '' } : kind === 'week' ? eaWeekRange(off) : eaMonthRange(off);
+            byId('ea' + prefix + 'From').value = r.from; byId('ea' + prefix + 'To').value = r.to;
+            ({ Led: renderEALedger, Main: renderEAMain, Rep: eaRunReport })[prefix]();
+        }
 
         function eaPeopleIndex() {
             const idx = {};
@@ -5350,8 +5448,9 @@
             const s = byId('eaExpSource').value;
             byId('eaOtherSrcWrap').style.display = s === 'other' ? '' : 'none';
             byId('eaPersonalNote').style.display = s === 'personal' ? '' : 'none';
+            byId('eaMainNote').style.display = s === 'main' ? '' : 'none';
         }
-        function eaOpenExpense(v = null) {
+        function eaOpenExpense(v = null, preset = null) {
             if (eaDeny('expenses', 'record expenses')) return;
             byId('eaExpenseForm').reset();
             EA.files.exp = []; EA.keep = v ? [...(v.attachments || [])] : [];
@@ -5362,7 +5461,10 @@
             byId('eaExpCatNew').style.display = 'none';
             byId('eaExpDate').value = v ? v.date : eaToday();
             byId('eaExpDesc').value = v ? v.description : '';
-            byId('eaExpSource').value = v ? v.source : 'org';
+            const canMain = canEdit('funds') || (v && v.source === 'main');
+            byId('eaExpSource').innerHTML = [...(canMain ? [['main', EA_SOURCES.main]] : []), ['org', EA_SOURCES.org], ['personal', EA_SOURCES.personal], ['other', EA_SOURCES.other]].map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('');
+            byId('eaExpSource').value = v ? v.source : (preset || (canEdit('funds') ? 'main' : 'org'));
+            eaFillDescList();
             byId('eaExpMethod').value = v ? v.method : 'Cash';
             byId('eaExpOtherSrc').value = v ? (v.otherSource || '') : '';
             byId('eaExpRef').value = v ? (v.reference || '') : '';
@@ -5396,6 +5498,10 @@
             if (source === 'org') {
                 const bal = eaTotals().balance + (old && old.source === 'org' ? eaNum(old.total) : 0);
                 if (total > bal + 0.005 && !confirm(`This is more than the remaining cash balance (${eaFmt(bal)}). Record it anyway?`)) return;
+            }
+            if (source === 'main') {
+                const bal = eaTotals().mainBalance + (old && old.source === 'main' ? eaNum(old.total) : 0);
+                if (total > bal + 0.005 && !confirm(`This is more than your cash at hand (${eaFmt(bal)}). Record it anyway?`)) return;
             }
             const btn = byId('eaExpSubmit'); btn.disabled = true;
             try {
@@ -5432,33 +5538,55 @@
         // ============================================================
         //  FUNDS / REIMBURSEMENTS / PEOPLE / SETTINGS
         // ============================================================
+        const EA_FUND_UI = {
+            main_in:     { amt: 'Amount I have at hand', purpose: 'Description', ph: 'e.g. Cash withdrawn from the bank', src: 'Where did this cash come from?', recv: false },
+            transfer:    { amt: 'Amount to give', purpose: 'Purpose / description', ph: 'What is this money for?', src: 'Source / account the money came from', recv: true },
+            main_adjust: { amt: 'Amount (use − to reduce)', purpose: 'Reason for adjustment', ph: 'Why is the cash being adjusted?', src: 'Source / account', recv: false },
+            opening:     { amt: 'Opening balance', purpose: 'Purpose / description', ph: 'Opening balance brought forward', src: 'Source / account', recv: true },
+            other:       { amt: 'Amount received', purpose: 'Purpose / description', ph: 'What is this money for?', src: 'Source / account the money came from', recv: true },
+            adjustment:  { amt: 'Amount (use − to reduce)', purpose: 'Reason for adjustment', ph: 'Why is the balance being adjusted?', src: 'Source / account', recv: true }
+        };
         function eaFundTypeUI() {
-            const t = byId('eaFundTypeSel').value;
-            byId('eaFundAmtLabel').innerHTML = (t === 'adjustment' ? 'Amount (use − to reduce)' : 'Amount received') + ' <span class="required">*</span>';
-            byId('eaFundPurposeLabel').innerHTML = (t === 'adjustment' ? 'Reason for adjustment' : 'Purpose / description') + ' <span class="required">*</span>';
+            const t = byId('eaFundTypeSel').value, c = EA_FUND_UI[t];
+            byId('eaFundAmtLabel').innerHTML = c.amt + ' <span class="required">*</span>';
+            byId('eaFundPurposeLabel').innerHTML = c.purpose + ' <span class="required">*</span>';
+            byId('eaFundPurpose').placeholder = c.ph;
+            byId('eaFundSourceLabel').textContent = c.src;
+            byId('eaFundReceiverWrap').style.display = c.recv ? '' : 'none';
+            byId('eaFundReceiver').required = c.recv;
+            const info = byId('eaFundInfo'), mb = eaTotals().mainBalance, amt = eaRound(eaNum(byId('eaFundAmt').value));
+            if (t === 'transfer') { info.style.display = ''; info.innerHTML = `Your cash at hand: <strong>${eaFmt(mb)}</strong>${amt > 0 ? ` → after giving ${eaFmt(amt)}: <strong>${eaFmt(mb - amt)}</strong>` : ''}. It is taken off your cash automatically.`; }
+            else if (t === 'main_in' || t === 'main_adjust') { info.style.display = ''; info.innerHTML = `Your cash at hand now: <strong>${eaFmt(mb)}</strong>${amt ? ` → after this: <strong>${eaFmt(mb + amt)}</strong>` : ''}.`; }
+            else info.style.display = 'none';
         }
-        function eaOpenFund() {
+        function eaOpenFund(type) {
             if (eaDeny('funds', 'record funds')) return;
             byId('eaFundForm').reset(); EA.files.fund = []; eaRenderChips('fund');
+            byId('eaFundTypeSel').value = typeof type === 'string' ? type : 'main_in';
             byId('eaFundDate').value = eaToday();
             byId('eaFundReceiver').value = localStorage.getItem('eaLastReceiver') || '';
             byId('eaReceiverList').innerHTML = [...new Set(EA.funds.map(f => f.receivedBy).filter(Boolean))].map(n => `<option value="${esc(n)}"></option>`).join('');
-            eaFundTypeUI(); byId('eaFundModal').classList.add('active');
+            eaFillSuggestLists(); eaFundTypeUI(); byId('eaFundModal').classList.add('active');
         }
         async function eaSaveFund(ev) {
             ev.preventDefault();
             if (eaDeny('funds', 'record funds')) return;
-            const type = byId('eaFundTypeSel').value, amount = eaRound(eaNum(byId('eaFundAmt').value));
-            if (!amount || (type !== 'adjustment' && amount <= 0)) { showNotification('Check amount', type === 'adjustment' ? 'Enter a non-zero amount' : 'Amount must be above zero', 'warning'); return; }
-            const receiver = byId('eaFundReceiver').value.trim(), purpose = byId('eaFundPurpose').value.trim();
-            if (!receiver || !purpose) { showNotification('Missing details', 'Purpose and receiving Expense Accountant are required', 'warning'); return; }
+            const type = byId('eaFundTypeSel').value, ui = EA_FUND_UI[type], amount = eaRound(eaNum(byId('eaFundAmt').value));
+            const signed = type === 'adjustment' || type === 'main_adjust';
+            if (!amount || (!signed && amount <= 0)) { showNotification('Check amount', signed ? 'Enter a non-zero amount' : 'Amount must be above zero', 'warning'); return; }
+            const receiver = ui.recv ? byId('eaFundReceiver').value.trim() : '', purpose = byId('eaFundPurpose').value.trim();
+            if (!purpose || (ui.recv && !receiver)) { showNotification('Missing details', ui.recv ? 'Purpose and the receiving Expense Accountant are required' : 'A description is required', 'warning'); return; }
+            if (type === 'transfer') {
+                const mb = eaTotals().mainBalance;
+                if (amount > mb + 0.005 && !confirm(`You are giving ${eaFmt(amount)} but your recorded cash at hand is only ${eaFmt(mb)}. Record it anyway? (Your cash at hand will go negative until you record more cash.)`)) return;
+            }
             try {
                 const attachments = await eaUploadPending('fund');
                 const rec = await eaCreateRecord('ea_funds', {
                     type, date: byId('eaFundDate').value, amount, reference: byId('eaFundRef').value.trim(), source: byId('eaFundSource').value.trim(), purpose, receivedBy: receiver,
                     notes: byId('eaFundNotes').value.trim(), attachments, confirmed: type !== 'transfer', status: 'active', createdBy: eaMe(), createdAt: eaNow()
-                }, { audit: r => ({ action: 'create', entity: 'fund', ref: r.id, summary: `${EA_FUND_TYPES[type]}: ${eaFmt(amount)} for ${receiver} — ${purpose}` }) });
-                localStorage.setItem('eaLastReceiver', receiver);
+                }, { audit: r => ({ action: 'create', entity: 'fund', ref: r.id, summary: `${EA_FUND_TYPES[type]}: ${eaFmt(amount)}${receiver ? ' for ' + receiver : ''} — ${purpose}` }) });
+                if (receiver) localStorage.setItem('eaLastReceiver', receiver);
                 closeEAModal('eaFundModal'); showNotification('Recorded', `${rec.id} — ${eaFmt(amount)}`, 'success');
             } catch (e) { eaFail(e); }
         }
@@ -5594,7 +5722,7 @@
                 <tfoot><tr><td></td><td>TOTAL</td><td class="r">${eaFmt(v.total)}</td><td></td></tr></tfoot></table>
                 <div class="words"><b>Amount in words:</b> ${esc(eaWords(v.total))}</div>
                 ${v.notes ? `<div><b>Notes:</b> ${esc(v.notes)}</div>` : ''}
-                <div class="sigs"><div class="sigbox"><b>Prepared by (Expense Accountant):</b> ${esc(v.preparedByName || v.preparedBy)}<br><br>Signature: ______________________ Date: ____________</div>
+                <div class="sigs"><div class="sigbox"><b>Prepared by (${v.source === 'main' ? 'Main Accountant' : 'Expense Accountant'}):</b> ${esc(v.preparedByName || v.preparedBy)}<br><br>Signature: ______________________ Date: ____________</div>
                 <div class="sigbox"><b>Reviewed / approved by (Director / Administrator):</b> ${v.approvedAt ? esc(v.approvedByName || v.approvedBy) + '<br><span class="muted">Approved electronically ' + esc(eaDT(v.approvedAt)) + '</span>' : (v.status === 'approved' ? 'Approval not required' : '')}<br><br>Signature: ______________________ Date: ____________</div></div>
                 <div class="muted" style="margin-top:26px;">Transaction ID ${esc(v.id)} · Created ${esc(eaDT(v.createdAt))} · Printed ${esc(eaDT(eaNow()))}</div>`);
         }
@@ -5602,11 +5730,70 @@
         // ============================================================
         //  REPORTS
         // ============================================================
+        // ---- ledgers with a running balance and "brought forward" ----
+        function eaEAItems() {
+            const items = [];
+            EA.funds.filter(f => f.status !== 'void' && ['opening', 'transfer', 'other', 'adjustment'].includes(f.type)).forEach(f => {
+                const a = eaNum(f.amount);
+                items.push({ d: f.date, c: f.createdAt || '', ref: f.id, desc: EA_FUND_TYPES[f.type] + (f.purpose ? ' — ' + f.purpose : ''), inn: a > 0 ? a : 0, out: a < 0 ? -a : 0, memo: 0 });
+            });
+            eaSpendVouchers().filter(v => v.source !== 'main').forEach(v => {
+                const tot = eaNum(v.total), cash = v.source === 'org' || !v.source;
+                items.push({ d: v.date, c: v.createdAt || '', ref: v.voucherNo, inn: 0, out: cash ? tot : 0, memo: cash ? 0 : tot,
+                    desc: `${v.category} — ${v.description} → ${eaRecipientsText(v, 3)}${cash ? '' : ' [' + EA_SOURCE_SHORT[v.source] + ']'}${v.status === 'pending' ? ' (awaiting approval)' : ''}` });
+            });
+            return items;
+        }
+        function eaMainItems() {
+            const items = [];
+            EA.funds.filter(f => f.status !== 'void' && ['main_in', 'main_adjust', 'transfer'].includes(f.type)).forEach(f => {
+                const a = eaNum(f.amount);
+                if (f.type === 'transfer') items.push({ d: f.date, c: f.createdAt || '', ref: f.id, desc: `Given to ${f.receivedBy || 'Expense Accountant'}${f.purpose ? ' — ' + f.purpose : ''}`, inn: 0, out: a });
+                else items.push({ d: f.date, c: f.createdAt || '', ref: f.id, desc: EA_FUND_TYPES[f.type] + (f.purpose ? ' — ' + f.purpose : ''), inn: a > 0 ? a : 0, out: a < 0 ? -a : 0 });
+            });
+            eaSpendVouchers().filter(v => v.source === 'main').forEach(v => items.push({ d: v.date, c: v.createdAt || '', ref: v.voucherNo, inn: 0, out: eaNum(v.total),
+                desc: `Spent: ${v.category} — ${v.description} → ${eaRecipientsText(v, 3)}${v.status === 'pending' ? ' (awaiting approval)' : ''}` }));
+            return items;
+        }
+        function eaCashLedger(items, r, withMemo) {
+            r = r || {};
+            const from = r.from || '', inR = eaRange(r);
+            items.sort((a, b) => a.d.localeCompare(b.d) || a.c.localeCompare(b.c));
+            let bal = 0, bf = 0; const rows = [];
+            items.forEach(i => {
+                if (from && i.d < from) { bal = eaRound(bal + i.inn - i.out); bf = bal; return; }
+                if (!inR(i.d)) return;
+                bal = eaRound(bal + i.inn - i.out);
+                rows.push(withMemo ? [formatDate(i.d), i.ref, i.desc, i.inn || '', i.out || '', i.memo || '', bal] : [formatDate(i.d), i.ref, i.desc, i.inn || '', i.out || '', bal]);
+            });
+            const sumIn = eaSumRows(rows, 3), sumOut = eaSumRows(rows, 4);
+            const headers = withMemo ? ['Date', 'Reference', 'Details', 'Money in', 'Money out (cash)', 'Paid personally / other', 'Balance'] : ['Date', 'Reference', 'Details', 'Money in', 'Money out', 'Balance'];
+            const bfRow = from ? (withMemo ? ['', '', 'Balance brought forward', '', '', '', bf] : ['', '', 'Balance brought forward', '', '', bf]) : null;
+            const foot = withMemo ? ['Closing balance', '', '', sumIn, sumOut, eaSumRows(rows, 5), bal] : ['Closing balance', '', '', sumIn, sumOut, bal];
+            return { headers, money: withMemo ? [3, 4, 5, 6] : [3, 4, 5], rows: bfRow ? [bfRow, ...rows] : rows, foot, bf, closing: bal, sumIn, sumOut };
+        }
+        const eaWeekLabel = r => (r.from || r.to) ? `${r.from ? formatDate(r.from) : 'start'} to ${r.to ? formatDate(r.to) : 'today'}` : 'All dates';
         const eaRange = r => { const from = r.from || '0000-01-01', to = r.to || '9999-12-31'; return d => (d || '') >= from && (d || '') <= to; };
         const eaSumRows = (rows, i) => eaRound(rows.reduce((s, r) => s + eaNum(r[i]), 0));
         const EA_REPORTS = {
+            'weekly': { label: 'Weekly expense ledger & report', build(r) {
+                const L = eaCashLedger(eaEAItems(), r, true), inR = eaRange(r);
+                const V = eaSpendVouchers().filter(v => v.source !== 'main' && inR(v.date));
+                const cat = {};
+                V.forEach(v => { const k = v.category || 'Uncategorised', s = (cat[k] = cat[k] || { n: 0, org: 0, per: 0, oth: 0 }), a = eaNum(v.total); s.n++; if (v.source === 'personal') s.per += a; else if (v.source === 'other') s.oth += a; else s.org += a; });
+                const catRows = Object.keys(cat).sort((a, b) => (cat[b].org + cat[b].per + cat[b].oth) - (cat[a].org + cat[a].per + cat[a].oth)).map(k => [k, cat[k].n, eaRound(cat[k].org), eaRound(cat[k].per), eaRound(cat[k].oth), eaRound(cat[k].org + cat[k].per + cat[k].oth)]);
+                const pend = V.filter(v => v.status === 'pending').length;
+                return { title: 'Weekly expense ledger & report', headers: L.headers, money: L.money, rows: L.rows, foot: L.foot, signoff: true,
+                    note: pend ? `${pend} voucher${pend > 1 ? 's' : ''} in this period ${pend > 1 ? 'are' : 'is'} still awaiting approval.` : '',
+                    extra: [
+                        { title: 'Summary for the period', headers: ['Item', 'Amount'], money: [1], rows: [['Balance brought forward', L.bf], ['Add: money received', L.sumIn], ['Less: paid out of cash', L.sumOut], ['Closing cash balance', L.closing],
+                            ['Memo — paid personally by the Expense Accountant', eaRound(cat ? Object.values(cat).reduce((s, x) => s + x.per, 0) : 0)], ['Memo — paid from other approved sources', eaRound(Object.values(cat).reduce((s, x) => s + x.oth, 0))]] },
+                        { title: 'Spending by category', headers: ['Category', 'Vouchers', 'Cash', 'Personal funds', 'Other source', 'Total'], money: [2, 3, 4, 5], rows: catRows,
+                            foot: ['Total', eaSumRows(catRows, 1), eaSumRows(catRows, 2), eaSumRows(catRows, 3), eaSumRows(catRows, 4), eaSumRows(catRows, 5)] }
+                    ] };
+            } },
             'funds-received': { label: 'Money received by Expense Accountant', build(r) {
-                const inR = eaRange(r), list = EA.funds.filter(f => f.status !== 'void' && f.type !== 'adjustment' && inR(f.date)).sort((a, b) => a.date.localeCompare(b.date));
+                const inR = eaRange(r), list = EA.funds.filter(f => f.status !== 'void' && ['transfer', 'other', 'opening'].includes(f.type) && inR(f.date)).sort((a, b) => a.date.localeCompare(b.date));
                 const rows = list.map(f => [formatDate(f.date), f.id, EA_FUND_TYPES[f.type], f.reference || '', f.source || '', f.purpose || '', f.receivedBy || '', eaNum(f.amount), f.confirmed ? 'Yes' : 'Awaiting']);
                 return { title: 'Money received by Expense Accountant', headers: ['Date', 'Txn ID', 'Type', 'Reference', 'Source', 'Purpose', 'Received by', 'Amount', 'Confirmed'], money: [7], rows, foot: ['Total', '', '', '', '', '', '', eaSumRows(rows, 7), ''] };
             } },
@@ -5657,7 +5844,7 @@
                 const t = eaTotals({ to: r.to });
                 const rows = [['Opening balance', t.opening], ['Add: transfers received from Main Accountant', t.transfers], ['Add: other approved funds', t.otherFunds], ['Add / (less): adjustments', t.adjust],
                     ['Total funds available', eaRound(t.opening + t.received + t.adjust)], ['Less: expenses and payments from organization cash', t.orgSpent], ['CURRENT CASH BALANCE', t.balance],
-                    ['', ''], ['Memo — paid personally by Expense Accountant', t.personal], ['Memo — of which approved and owed', t.owed], ['Memo — reimbursed so far', t.reimbursed], ['Memo — outstanding reimbursement', t.outstanding], ['Memo — paid from other approved sources', t.otherSrc]];
+                    ['', ''], ['Memo — paid personally by Expense Accountant', t.personal], ['Memo — of which approved and owed', t.owed], ['Memo — reimbursed so far', t.reimbursed], ['Memo — outstanding reimbursement', t.outstanding], ['Memo — paid from other approved sources', t.otherSrc], ['Memo — spent directly by the Main Accountant from his own cash', t.mainSpent]];
                 return { title: 'Cash / balance reconciliation', headers: ['Item', 'Amount'], money: [1], rows, note: 'Position as at the “To” date (everything up to it, ignoring “From”). Includes vouchers still awaiting approval; voided and rejected ones are left out.' };
             } },
             'register': { label: 'Payment vouchers (register)', build(r) {
@@ -5666,11 +5853,11 @@
             } },
             'monthly': { label: 'Monthly expense summary', build(r) {
                 const inR = eaRange(r), m = {};
-                const slot = d => (m[d.slice(0, 7)] = m[d.slice(0, 7)] || { n: 0, org: 0, per: 0, oth: 0, in: 0 });
-                eaSpendVouchers().filter(v => inR(v.date)).forEach(v => { const s = slot(v.date); s.n++; if (v.source === 'personal') s.per += eaNum(v.total); else if (v.source === 'other') s.oth += eaNum(v.total); else s.org += eaNum(v.total); });
+                const slot = d => (m[d.slice(0, 7)] = m[d.slice(0, 7)] || { n: 0, org: 0, per: 0, oth: 0, main: 0, in: 0 });
+                eaSpendVouchers().filter(v => inR(v.date)).forEach(v => { const s = slot(v.date); s.n++; if (v.source === 'personal') s.per += eaNum(v.total); else if (v.source === 'other') s.oth += eaNum(v.total); else if (v.source === 'main') s.main += eaNum(v.total); else s.org += eaNum(v.total); });
                 EA.funds.filter(f => f.status !== 'void' && (f.type === 'transfer' || f.type === 'other') && inR(f.date)).forEach(f => { slot(f.date).in += eaNum(f.amount); });
-                const rows = Object.keys(m).sort().map(k => { const s = m[k]; return [new Date(k + '-01T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }), s.n, eaRound(s.org), eaRound(s.per), eaRound(s.oth), eaRound(s.org + s.per + s.oth), eaRound(s.in)]; });
-                return { title: 'Monthly expense summary', headers: ['Month', 'Vouchers', 'Org cash', 'Personal funds', 'Other source', 'Total spent', 'Funds received'], money: [2, 3, 4, 5, 6], rows, foot: ['Total', eaSumRows(rows, 1), eaSumRows(rows, 2), eaSumRows(rows, 3), eaSumRows(rows, 4), eaSumRows(rows, 5), eaSumRows(rows, 6)] };
+                const rows = Object.keys(m).sort().map(k => { const s = m[k]; return [new Date(k + '-01T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }), s.n, eaRound(s.org), eaRound(s.main), eaRound(s.per), eaRound(s.oth), eaRound(s.org + s.main + s.per + s.oth), eaRound(s.in)]; });
+                return { title: 'Monthly expense summary', headers: ['Month', 'Vouchers', 'Expense Acct cash', 'Main Acct cash', 'Personal funds', 'Other source', 'Total spent', 'Funds given to Expense Acct'], money: [2, 3, 4, 5, 6, 7], rows, foot: ['Total', eaSumRows(rows, 1), eaSumRows(rows, 2), eaSumRows(rows, 3), eaSumRows(rows, 4), eaSumRows(rows, 5), eaSumRows(rows, 6), eaSumRows(rows, 7)] };
             } },
             'main-vs-ea': { label: 'Main Accountant vs. Expense Accountant reconciliation', build(r) {
                 const inR = eaRange(r), list = EA.funds.filter(f => f.status !== 'void' && f.type === 'transfer' && inR(f.date)).sort((a, b) => a.date.localeCompare(b.date));
@@ -5679,33 +5866,46 @@
                 return { title: 'Main Accountant vs. Expense Accountant reconciliation', headers: ['Date', 'Txn ID', 'Reference', 'Source account', 'Purpose', 'Received by', 'Main Accountant recorded', 'Expense Accountant confirmation', 'Expense Accountant confirmed'], money: [6, 8], rows,
                     foot: ['Total', '', '', '', '', '', main, '', ea], note: Math.abs(main - ea) < 0.005 ? 'Both sides agree — every transfer is confirmed.' : `Difference of ${eaFmt(main - ea)}: the Main Accountant has recorded transfers the Expense Accountant has not yet confirmed.` };
             } },
-            'ledger': { label: 'Cash ledger (running balance)', build(r) {
-                const items = [];
-                EA.funds.filter(f => f.status !== 'void').forEach(f => { const a = eaNum(f.amount); items.push({ d: f.date, c: f.createdAt || '', ref: f.id, desc: EA_FUND_TYPES[f.type] + (f.purpose ? ' — ' + f.purpose : ''), inn: a > 0 ? a : 0, out: a < 0 ? -a : 0 }); });
-                EA.vouchers.filter(v => (v.status === 'approved' || v.status === 'pending') && v.source === 'org').forEach(v => items.push({ d: v.date, c: v.createdAt || '', ref: v.voucherNo, desc: v.category + ' — ' + v.description + (v.status === 'pending' ? ' (awaiting approval)' : ''), inn: 0, out: eaNum(v.total) }));
-                items.sort((a, b) => a.d.localeCompare(b.d) || a.c.localeCompare(b.c));
-                const inR = eaRange(r || {}); let bal = 0; const rows = [];
-                items.forEach(i => { bal = eaRound(bal + i.inn - i.out); if (inR(i.d)) rows.push([formatDate(i.d), i.ref, i.desc, i.inn || '', i.out || '', bal]); });
-                return { title: 'Cash ledger', headers: ['Date', 'Reference', 'Details', 'Money in', 'Money out', 'Balance'], money: [3, 4, 5], rows, foot: ['Closing balance', '', '', eaSumRows(rows, 3), eaSumRows(rows, 4), bal] };
+            'ledger': { label: 'Cash ledger (Expense Accountant)', build(r) {
+                const L = eaCashLedger(eaEAItems(), r, true);
+                return { title: 'Expense Accountant cash ledger', headers: L.headers, money: L.money, rows: L.rows, foot: L.foot };
+            } },
+            'main-ledger': { label: 'Main Accountant cash ledger', build(r) {
+                const L = eaCashLedger(eaMainItems(), r, false);
+                return { title: 'Main Accountant cash ledger', headers: L.headers, money: L.money, rows: L.rows, foot: L.foot };
             } }
         };
+
+        function eaReportFull(rep, cls = '') {
+            return eaReportTable(rep, cls) + (rep.extra || []).map(x => `<h3 class="ea-xtitle">${esc(x.title)}</h3>` + eaReportTable(x, cls)).join('');
+        }
         function eaRunReport() {
             const key = byId('eaReportSel').value, def = EA_REPORTS[key]; if (!def) return;
+            if (key === 'weekly' && !byId('eaRepFrom').value && !byId('eaRepTo').value) { const w = eaWeekRange(0); byId('eaRepFrom').value = w.from; byId('eaRepTo').value = w.to; }
             const r = { from: byId('eaRepFrom').value, to: byId('eaRepTo').value };
             const rep = def.build(r);
-            rep.sub = (r.from || r.to) ? `Period: ${r.from ? formatDate(r.from) : 'start'} to ${r.to ? formatDate(r.to) : 'today'}` : 'All dates';
+            rep.sub = (r.from || r.to) ? 'Period: ' + eaWeekLabel(r) : 'All dates';
             EA.reportCur = rep;
-            byId('eaReportOut').innerHTML = `<h3 style="margin-bottom:2px;">${esc(rep.title)}</h3><p class="page-subtitle" style="margin-bottom:12px;">${esc(rep.sub)}</p><div class="table-wrap">${eaReportTable(rep)}</div>${rep.note ? `<p class="page-subtitle" style="margin-top:12px;">${esc(rep.note)}</p>` : ''}`;
+            byId('eaReportOut').innerHTML = `<h3 style="margin-bottom:2px;">${esc(rep.title)}</h3><p class="page-subtitle" style="margin-bottom:12px;">${esc(rep.sub)}</p><div class="table-wrap">${eaReportFull(rep)}</div>${rep.note ? `<p class="page-subtitle" style="margin-top:12px;">${esc(rep.note)}</p>` : ''}`;
         }
         function eaRepFor(src) {
-            if (src === 'ledger') { const rep = EA_REPORTS.ledger.build({}); rep.sub = 'All dates'; return rep; }
+            const live = { ledger: ['ledger', eaLedRange], main: ['main-ledger', eaMainRange] }[src];
+            if (live) { const r = live[1](), rep = EA_REPORTS[live[0]].build(r); rep.sub = (r.from || r.to) ? 'Period: ' + eaWeekLabel(r) : 'All dates'; return rep; }
             if (!EA.reportCur) { showNotification('Run a report first', 'Pick a report and press Run', 'info'); return null; }
             return EA.reportCur;
         }
-        function eaPrintReport(src) { const rep = eaRepFor(src); if (rep) eaPrintDoc(rep.title, rep.sub + (rep.note ? ' — ' + rep.note : ''), eaReportTable(rep, 'print')); }
+        const EA_SIGNOFF = '<div class="sigs"><div class="sigbox">Prepared by (Expense Accountant): ______________________ Date: ____________</div><div class="sigbox">Reviewed by (Director / Main Accountant): ______________________ Date: ____________</div></div>';
+        function eaPrintRep(rep) { eaPrintDoc(rep.title, rep.sub + (rep.note ? ' — ' + rep.note : ''), eaReportFull(rep, 'print') + (rep.signoff ? EA_SIGNOFF : '')); }
+        function eaPrintReport(src) { const rep = eaRepFor(src); if (rep) eaPrintRep(rep); }
+        function eaPrintWeekly() {
+            let r = eaLedRange(); if (!r.from && !r.to) { r = eaWeekRange(0); byId('eaLedFrom').value = r.from; byId('eaLedTo').value = r.to; renderEALedger(); }
+            const rep = EA_REPORTS.weekly.build(r); rep.sub = 'Period: ' + eaWeekLabel(r); eaPrintRep(rep);
+        }
         function eaExportReport(src) {
             const rep = eaRepFor(src); if (!rep) return;
-            const csv = [rep.headers, ...rep.rows, ...(rep.foot ? [rep.foot] : [])].map(r => r.map(csvEscape).join(',')).join('\n');
+            const block = x => [x.headers, ...x.rows, ...(x.foot ? [x.foot] : [])];
+            const all = [...block(rep)]; (rep.extra || []).forEach(x => { all.push([]); all.push([x.title]); all.push(...block(x)); });
+            const csv = all.map(r => r.map(csvEscape).join(',')).join('\n');
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' }));
             a.download = `${rep.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${eaToday()}.csv`; a.click(); URL.revokeObjectURL(a.href);
         }
@@ -5729,6 +5929,15 @@
         byId('eaReimbForm').addEventListener('submit', eaSaveReimb);
         byId('eaSettingsForm').addEventListener('submit', eaSaveSettings);
         byId('eaFundTypeSel').addEventListener('change', eaFundTypeUI);
+        byId('eaFundAmt').addEventListener('input', eaFundTypeUI);
+        byId('eaExpDesc').addEventListener('change', () => {
+            if (byId('eaExpId').value) return;
+            const l = byId('eaExpDesc').value.trim().toLowerCase(); if (!l) return;
+            const m = EA.vouchers.filter(v => (v.description || '').trim().toLowerCase() === l).sort(eaByDateDesc)[0];
+            if (m && !byId('eaExpCat').value && [...byId('eaExpCat').options].some(o => o.value === m.category)) byId('eaExpCat').value = m.category;
+        });
+        ['eaLedFrom', 'eaLedTo'].forEach(id => byId(id).addEventListener('input', renderEALedger));
+        ['eaMainFrom', 'eaMainTo'].forEach(id => byId(id).addEventListener('input', renderEAMain));
         byId('eaExpSource').addEventListener('change', eaToggleSourceUI);
         byId('eaExpCat').addEventListener('change', () => { const n = byId('eaExpCatNew'); n.style.display = byId('eaExpCat').value === '__new__' ? '' : 'none'; if (n.style.display === '') n.focus(); });
         byId('eaFundFile').addEventListener('change', e => { eaPickFiles('fund', e.target.files).then(() => { e.target.value = ''; }); });
