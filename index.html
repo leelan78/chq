@@ -1183,6 +1183,17 @@
         #eaVoucherModal .modal-content, #eaProfileModal .modal-content { max-width: 900px; }
         @media (max-width: 640px) { .ea-row { grid-template-columns: 1fr 120px 32px; } .ea-kv { grid-template-columns: 1fr; } }
         .ea-xtitle { margin: 20px 0 6px; font-size: 14px; font-weight: 700; color: var(--gray-700); }
+        /* ===== SIMPLE EXPENSES REDESIGN ===== */
+        .ea-step { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; margin: 24px 0 12px; color: var(--gray-800); }
+        .ea-num { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+        .ea-more { margin-top: 22px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 12px 16px; }
+        .ea-more summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--gray-700); }
+        .ea-more[open] summary { margin-bottom: 16px; }
+        .ea-howto { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .ea-howto div { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--gray-600); line-height: 1.5; }
+        .ea-howto b { display: block; color: var(--gray-800); margin-bottom: 2px; }
+        .ea-btnrow { display: flex; flex-wrap: wrap; gap: 10px; }
+        @media (max-width: 768px) { .ea-howto { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -1249,11 +1260,11 @@
             </a>
             <a class="nav-link" data-page="expenses">
                 <i class="fas fa-receipt"></i>
-                <span>Expenses</span>
+                <span>Old Expenses</span>
             </a>
             <a class="nav-link" data-page="accountability">
                 <i class="fas fa-scale-balanced"></i>
-                <span>Accountability</span>
+                <span>Expenses</span>
                 <span class="badge" id="accBadge" style="display:none;">0</span>
             </a>
             <a class="nav-link" data-page="trash">
@@ -1578,170 +1589,141 @@
                 </div>
             </section>
 
-            <!-- ===== EXPENSE ACCOUNTABILITY ===== -->
+            <!-- ===== EXPENSES (simple) ===== -->
             <section class="page" id="page-accountability">
                 <div class="page-header">
-                    <div><h2>Expense Accountability</h2><p class="page-subtitle">Funds, payment vouchers, individuals, reimbursements and reconciliation — every cedi traceable</p></div>
+                    <div><h2>Expenses</h2><p class="page-subtitle">Record what was spent, who was paid and where the money came from</p></div>
                     <div class="page-actions">
                         <button class="btn-outline" id="eaSettingsBtn" type="button" style="display:none;"><i class="fas fa-sliders"></i> Voucher Settings</button>
-                        <button class="btn-outline funds-edit" id="eaAddFundBtn" type="button"><i class="fas fa-hand-holding-dollar"></i> Record Funds</button>
-                        <button class="btn-primary expense-edit" id="eaAddExpenseBtn" type="button"><i class="fas fa-plus"></i> Record Expense</button>
+                        <button class="btn-primary expense-edit" id="eaAddExpenseBtn" type="button"><i class="fas fa-plus"></i> New Expense</button>
                     </div>
                 </div>
 
                 <div class="ea-tabs" id="eaTabs">
-                    <button class="ea-tab active" data-tab="overview" type="button"><i class="fas fa-gauge"></i> Overview</button>
-                    <button class="ea-tab" data-tab="main" type="button"><i class="fas fa-vault"></i> Main Cash</button>
-                    <button class="ea-tab" data-tab="funds" type="button"><i class="fas fa-hand-holding-dollar"></i> Funds</button>
-                    <button class="ea-tab" data-tab="vouchers" type="button"><i class="fas fa-file-invoice"></i> Vouchers</button>
-                    <button class="ea-tab" data-tab="ledger" type="button"><i class="fas fa-book"></i> Cash Ledger</button>
+                    <button class="ea-tab active" data-tab="overview" type="button"><i class="fas fa-house"></i> Home</button>
+                    <button class="ea-tab" data-tab="vouchers" type="button"><i class="fas fa-file-invoice"></i> Expenses</button>
+                    <button class="ea-tab" data-tab="money" type="button"><i class="fas fa-vault"></i> Money</button>
                     <button class="ea-tab" data-tab="people" type="button"><i class="fas fa-users"></i> People</button>
-                    <button class="ea-tab" data-tab="reimb" type="button"><i class="fas fa-rotate-left"></i> Reimbursements</button>
                     <button class="ea-tab" data-tab="reports" type="button"><i class="fas fa-chart-column"></i> Reports</button>
-                    <button class="ea-tab" data-tab="audit" type="button"><i class="fas fa-shield-halved"></i> Audit Trail</button>
+                    <button class="ea-tab" data-tab="audit" type="button"><i class="fas fa-clock-rotate-left"></i> History</button>
                 </div>
 
-                <!-- Overview -->
+                <!-- HOME -->
                 <div class="ea-pane active" id="eaPane-overview">
+                    <div class="ea-howto">
+                        <div><b>1. Money in</b>The Main Accountant records his cash and gives money to the Expense Accountant (Money tab).</div>
+                        <div><b>2. Record expenses</b>Every payment becomes a voucher: what it was for, who got paid, how much (New Expense).</div>
+                        <div><b>3. Approve &amp; report</b>The Director approves vouchers. Print weekly or monthly reports (Reports tab).</div>
+                    </div>
                     <div class="stats-grid" id="eaStats" style="margin-bottom:20px;"></div>
                     <div class="ea-attn" id="eaAttention"></div>
-                    <div class="card">
-                        <div class="card-header"><h3><i class="fas fa-clock-rotate-left"></i> Latest vouchers</h3></div>
+                    <div class="card" style="margin-bottom:20px;">
+                        <div class="card-header"><h3><i class="fas fa-clock-rotate-left"></i> Latest expenses</h3>
+                            <button class="btn-outline" type="button" onclick="eaSetTab('vouchers')">See all</button></div>
                         <div class="table-wrap"><table class="table">
-                            <thead><tr><th>Voucher</th><th>Date</th><th>Category</th><th>Recipients</th><th>Source</th><th class="ea-money">Total</th><th>Status</th></tr></thead>
+                            <thead><tr><th>Voucher</th><th>Date</th><th>What for</th><th>Paid to</th><th class="ea-money">Amount</th><th>Status</th></tr></thead>
                             <tbody id="eaRecentBody"></tbody>
                         </table></div>
                     </div>
                 </div>
 
-                <!-- Main Cash -->
-                <div class="ea-pane" id="eaPane-main">
-                    <div class="stats-grid" id="eaMainStats" style="margin-bottom:20px;"></div>
-                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
-                        <div class="filter-item"><button class="btn-primary funds-edit" type="button" onclick="eaOpenFund('main_in')"><i class="fas fa-vault"></i> Record cash I have at hand</button></div>
-                        <div class="filter-item"><button class="btn-outline funds-edit" type="button" onclick="eaOpenFund('transfer')"><i class="fas fa-hand-holding-dollar"></i> Give to Expense Accountant</button></div>
-                        <div class="filter-item"><button class="btn-outline funds-edit" type="button" onclick="eaOpenExpense(null,'main')"><i class="fas fa-receipt"></i> Spend from my cash</button></div>
-                    </div></div></div>
-                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
-                        <div class="filter-item"><label>From</label><input type="date" id="eaMainFrom" /></div>
-                        <div class="filter-item"><label>To</label><input type="date" id="eaMainTo" /></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Main','week',0)">This week</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Main','week',-1)">Last week</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Main','month',0)">This month</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Main','all',0)">All</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaPrintReport('main')"><i class="fas fa-print"></i> Print</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaExportReport('main')"><i class="fas fa-download"></i> Export</button></div>
-                    </div></div></div>
-                    <div class="card"><div class="card-header"><h3><i class="fas fa-vault"></i> Main Accountant cash ledger</h3></div><div class="table-wrap" id="eaMainBody"></div></div>
-                </div>
-
-                <!-- Funds -->
-                <div class="ea-pane" id="eaPane-funds">
-                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
-                        <div class="filter-item"><label>Type</label><select id="eaFundType"><option value="">All types</option>
-                            <option value="main_in">Cash at hand (Main Accountant)</option><option value="transfer">Given to Expense Accountant</option><option value="main_adjust">Main cash adjustments</option>
-                            <option value="opening">Opening balance</option><option value="other">Other approved funds</option><option value="adjustment">Expense Accountant adjustments</option></select></div>
-                        <div class="filter-item" style="flex:1;min-width:180px;"><label>Search</label><input type="text" id="eaFundSearch" placeholder="Reference, source, purpose, receiver…" /></div>
-                    </div></div></div>
-                    <div class="card"><div class="table-wrap"><table class="table">
-                        <thead><tr><th>Date</th><th>Txn ID</th><th>Type</th><th>Reference</th><th>Source</th><th>Purpose</th><th>Received by</th><th class="ea-money">Amount</th><th>Receipt confirmed</th><th>Recorded by</th><th>Actions</th></tr></thead>
-                        <tbody id="eaFundBody"></tbody>
-                    </table></div></div>
-                </div>
-
-                <!-- Vouchers -->
+                <!-- EXPENSES (vouchers) -->
                 <div class="ea-pane" id="eaPane-vouchers">
                     <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
                         <div class="filter-item"><label>Status</label><select id="eaVStatus"><option value="">All</option><option value="pending">Awaiting approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="void">Void</option></select></div>
                         <div class="filter-item"><label>Category</label><select id="eaVCat"><option value="">All categories</option></select></div>
                         <div class="filter-item"><label>From</label><input type="date" id="eaVFrom" /></div>
                         <div class="filter-item"><label>To</label><input type="date" id="eaVTo" /></div>
-                        <div class="filter-item" style="flex:1;min-width:180px;"><label>Search</label><input type="text" id="eaVSearch" placeholder="Voucher no., recipient, description…" /></div>
+                        <div class="filter-item" style="flex:1;min-width:180px;"><label>Search</label><input type="text" id="eaVSearch" placeholder="Voucher no., name, description…" /></div>
                         <div class="filter-item"><button class="btn-outline" id="eaVClear" type="button"><i class="fas fa-times"></i> Clear</button></div>
                     </div></div></div>
                     <div class="card"><div class="table-wrap"><table class="table">
-                        <thead><tr><th>Voucher</th><th>Date</th><th>Category</th><th>Description</th><th>Recipients</th><th>Source</th><th class="ea-money">Total</th><th>Status</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Voucher</th><th>Date</th><th>What for</th><th>Paid to</th><th>Paid from</th><th class="ea-money">Amount</th><th>Status</th><th></th></tr></thead>
                         <tbody id="eaVBody"></tbody>
                     </table></div></div>
                 </div>
 
-                <!-- Ledger -->
-                <div class="ea-pane" id="eaPane-ledger">
-                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
-                        <div class="filter-item"><label>From</label><input type="date" id="eaLedFrom" /></div>
-                        <div class="filter-item"><label>To</label><input type="date" id="eaLedTo" /></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Led','week',0)">This week</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Led','week',-1)">Last week</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Led','month',0)">This month</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Led','all',0)">All</button></div>
-                    </div>
-                    <div class="exp-filter-bar" style="margin-top:12px;">
-                        <div class="filter-item"><button class="btn-primary" type="button" onclick="eaPrintWeekly()"><i class="fas fa-print"></i> Print weekly report</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaPrintReport('ledger')"><i class="fas fa-print"></i> Print ledger</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaExportReport('ledger')"><i class="fas fa-download"></i> Export</button></div>
-                    </div>
-                    <p class="page-subtitle" style="margin-top:10px;">The weekly report uses the dates above (or the current Monday–Sunday week if they are empty) and adds a summary and spending by category.</p></div></div>
-                    <div class="card">
-                        <div class="card-header"><h3><i class="fas fa-book"></i> Expense Accountant cash ledger — running balance</h3></div>
-                        <div class="table-wrap" id="eaLedgerBody"></div>
-                    </div>
-                </div>
-
-                <!-- People -->
-                <div class="ea-pane" id="eaPane-people">
-                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
-                        <div class="filter-item" style="flex:1;min-width:200px;"><label>Search a name</label><input type="text" id="eaPeopleSearch" placeholder="Search individuals…" /></div>
-                        <div class="filter-item"><button class="btn-primary expense-edit" id="eaAddPersonBtn" type="button"><i class="fas fa-user-plus"></i> Add Individual</button></div>
+                <!-- MONEY -->
+                <div class="ea-pane" id="eaPane-money">
+                    <div class="stats-grid" id="eaMoneyStats" style="margin-bottom:20px;"></div>
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="ea-btnrow">
+                        <button class="btn-primary funds-edit" type="button" onclick="eaOpenFund('main_in')"><i class="fas fa-vault"></i> Cash I have at hand</button>
+                        <button class="btn-outline funds-edit" type="button" onclick="eaOpenFund('transfer')"><i class="fas fa-hand-holding-dollar"></i> Give to Expense Accountant</button>
+                        <button class="btn-outline funds-edit" type="button" onclick="eaOpenExpense(null,'main')"><i class="fas fa-receipt"></i> Spend from my cash</button>
+                        <button class="btn-outline funds-edit" id="eaAddReimbBtn" type="button"><i class="fas fa-rotate-left"></i> Pay back Expense Accountant</button>
+                        <button class="btn-outline funds-edit" id="eaAddFundBtn" type="button"><i class="fas fa-ellipsis"></i> Other / corrections</button>
                     </div></div></div>
-                    <div class="card"><div class="table-wrap"><table class="table">
-                        <thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Payments</th><th class="ea-money">Total received</th><th class="ea-money">Unretired advances</th><th>Actions</th></tr></thead>
-                        <tbody id="eaPeopleBody"></tbody>
-                    </table></div></div>
-                </div>
 
-                <!-- Reimbursements -->
-                <div class="ea-pane" id="eaPane-reimb">
-                    <div class="stats-grid" id="eaReimbStats" style="margin-bottom:20px;"></div>
                     <div class="card" style="margin-bottom:20px;">
-                        <div class="card-header"><h3><i class="fas fa-wallet"></i> Expenses paid personally by the Expense Accountant</h3>
-                            <div class="page-actions"><button class="btn-primary funds-edit" id="eaAddReimbBtn" type="button"><i class="fas fa-plus"></i> Record Reimbursement</button></div></div>
+                        <div class="card-header"><h3><i class="fas fa-money-bill-transfer"></i> Money received and given</h3></div>
+                        <div class="card-body" style="padding-bottom:0;"><div class="exp-filter-bar">
+                            <div class="filter-item"><label>Show</label><select id="eaFundType"><option value="">Everything</option>
+                                <option value="main_in">Cash at hand</option><option value="transfer">Given to Expense Accountant</option><option value="main_adjust">Cash corrections</option>
+                                <option value="opening">Opening balance</option><option value="other">Other money received</option><option value="adjustment">Balance corrections</option></select></div>
+                            <div class="filter-item" style="flex:1;min-width:180px;"><label>Search</label><input type="text" id="eaFundSearch" placeholder="Reference, source, purpose, name…" /></div>
+                        </div></div>
                         <div class="table-wrap"><table class="table">
-                            <thead><tr><th>Voucher</th><th>Date</th><th>Description</th><th>Status</th><th class="ea-money">Amount</th><th class="ea-money">Reimbursed</th><th class="ea-money">Outstanding</th></tr></thead>
+                            <thead><tr><th>Date</th><th>What</th><th>Details</th><th class="ea-money">Amount</th><th>Receipt</th><th></th></tr></thead>
+                            <tbody id="eaFundBody"></tbody>
+                        </table></div>
+                    </div>
+
+                    <div class="card" style="margin-bottom:20px;">
+                        <div class="card-header"><h3><i class="fas fa-wallet"></i> Paid from the Expense Accountant's own pocket</h3></div>
+                        <div class="table-wrap"><table class="table">
+                            <thead><tr><th>Voucher</th><th>Date</th><th>Description</th><th>Status</th><th class="ea-money">Amount</th><th class="ea-money">Paid back</th><th class="ea-money">Still owed</th></tr></thead>
                             <tbody id="eaPersonalBody"></tbody>
                         </table></div>
                     </div>
                     <div class="card">
-                        <div class="card-header"><h3><i class="fas fa-clock-rotate-left"></i> Reimbursements paid</h3></div>
+                        <div class="card-header"><h3><i class="fas fa-rotate-left"></i> Pay-backs made</h3></div>
                         <div class="table-wrap"><table class="table">
-                            <thead><tr><th>Date</th><th>Txn ID</th><th>Method</th><th>Reference</th><th>Paid by</th><th>Notes</th><th class="ea-money">Amount</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>Date</th><th>Txn ID</th><th>Method</th><th>Reference</th><th>Paid by</th><th>Notes</th><th class="ea-money">Amount</th><th></th></tr></thead>
                             <tbody id="eaReimbBody"></tbody>
                         </table></div>
                     </div>
                 </div>
 
-                <!-- Reports -->
-                <div class="ea-pane" id="eaPane-reports">
+                <!-- PEOPLE -->
+                <div class="ea-pane" id="eaPane-people">
                     <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
-                        <div class="filter-item" style="min-width:260px;"><label>Report</label><select id="eaReportSel"></select></div>
-                        <div class="filter-item"><label>From</label><input type="date" id="eaRepFrom" /></div>
-                        <div class="filter-item"><label>To</label><input type="date" id="eaRepTo" /></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Rep','week',0)">This week</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Rep','week',-1)">Last week</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Rep','month',0)">This month</button></div>
-                        <div class="filter-item"><button class="btn-primary" id="eaRunReport" type="button"><i class="fas fa-play"></i> Run</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaPrintReport()"><i class="fas fa-print"></i> Print</button></div>
-                        <div class="filter-item"><button class="btn-outline" type="button" onclick="eaExportReport()"><i class="fas fa-download"></i> Export CSV</button></div>
+                        <div class="filter-item" style="flex:1;min-width:200px;"><label>Search a name</label><input type="text" id="eaPeopleSearch" placeholder="Search…" /></div>
+                        <div class="filter-item"><button class="btn-primary expense-edit" id="eaAddPersonBtn" type="button"><i class="fas fa-user-plus"></i> Add Person</button></div>
                     </div></div></div>
-                    <div class="card"><div class="card-body" id="eaReportOut"><div class="empty-state"><i class="fas fa-chart-column"></i><span>Pick a report and press Run</span></div></div></div>
+                    <div class="card"><div class="table-wrap"><table class="table">
+                        <thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Payments</th><th class="ea-money">Total received</th><th class="ea-money">Advances not retired</th><th></th></tr></thead>
+                        <tbody id="eaPeopleBody"></tbody>
+                    </table></div></div>
                 </div>
 
-                <!-- Audit -->
+                <!-- REPORTS -->
+                <div class="ea-pane" id="eaPane-reports">
+                    <div class="card" style="margin-bottom:20px;"><div class="card-body">
+                        <div class="ea-btnrow" style="margin-bottom:16px;">
+                            <button class="btn-primary" type="button" onclick="eaPrintWeekly()"><i class="fas fa-print"></i> Print this week's report</button>
+                        </div>
+                        <div class="exp-filter-bar">
+                            <div class="filter-item" style="min-width:260px;"><label>Report</label><select id="eaReportSel"></select></div>
+                            <div class="filter-item"><label>From</label><input type="date" id="eaRepFrom" /></div>
+                            <div class="filter-item"><label>To</label><input type="date" id="eaRepTo" /></div>
+                            <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Rep','week',0)">This week</button></div>
+                            <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Rep','week',-1)">Last week</button></div>
+                            <div class="filter-item"><button class="btn-outline" type="button" onclick="eaQuick('Rep','month',0)">This month</button></div>
+                            <div class="filter-item"><button class="btn-primary" id="eaRunReport" type="button"><i class="fas fa-play"></i> Show</button></div>
+                            <div class="filter-item"><button class="btn-outline" type="button" onclick="eaPrintReport()"><i class="fas fa-print"></i> Print</button></div>
+                            <div class="filter-item"><button class="btn-outline" type="button" onclick="eaExportReport()"><i class="fas fa-download"></i> Export</button></div>
+                        </div>
+                    </div></div>
+                    <div class="card"><div class="card-body" id="eaReportOut"><div class="empty-state"><i class="fas fa-chart-column"></i><span>Pick a report and press Show</span></div></div></div>
+                </div>
+
+                <!-- HISTORY -->
                 <div class="ea-pane" id="eaPane-audit">
                     <div class="card" style="margin-bottom:20px;"><div class="card-body"><div class="exp-filter-bar">
-                        <div class="filter-item"><label>Record type</label><select id="eaAuditEntity"><option value="">Everything</option><option value="voucher">Vouchers</option><option value="fund">Funds</option><option value="reimbursement">Reimbursements</option><option value="person">People</option><option value="settings">Settings</option></select></div>
+                        <div class="filter-item"><label>Show</label><select id="eaAuditEntity"><option value="">Everything</option><option value="voucher">Vouchers</option><option value="fund">Money</option><option value="reimbursement">Pay-backs</option><option value="person">People</option><option value="settings">Settings</option></select></div>
                         <div class="filter-item" style="flex:1;min-width:200px;"><label>Search</label><input type="text" id="eaAuditSearch" placeholder="Voucher no., user, reason…" /></div>
                     </div>
-                    <p class="page-subtitle" style="margin-top:10px;">Nothing here can be edited or deleted. Showing the most recent 500 entries.</p></div></div>
+                    <p class="page-subtitle" style="margin-top:10px;">A permanent log of every change. Nothing here can be edited or deleted. Showing the latest 500 entries.</p></div></div>
                     <div class="card"><div class="table-wrap"><table class="table">
                         <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Record</th><th>What happened</th></tr></thead>
                         <tbody id="eaAuditBody"></tbody>
@@ -2030,16 +2012,12 @@
                 <div class="form-grid">
                     <div class="form-group" style="grid-column:1/-1;"><label>What are you recording? <span class="required">*</span></label>
                         <select id="eaFundTypeSel">
-                            <optgroup label="Main Accountant">
-                                <option value="main_in">Cash I have at hand</option>
-                                <option value="transfer">Give money to the Expense Accountant</option>
-                                <option value="main_adjust">Adjust my cash (+ / −)</option>
-                            </optgroup>
-                            <optgroup label="Expense Accountant's records">
-                                <option value="opening">Opening balance</option>
-                                <option value="other">Other approved funds</option>
-                                <option value="adjustment">Adjustment (+ / −)</option>
-                            </optgroup>
+                            <option value="main_in">Cash I have at hand</option>
+                            <option value="transfer">Money I give to the Expense Accountant</option>
+                            <option value="main_adjust">Correct my cash (+ or −)</option>
+                            <option value="opening">Opening balance (Expense Accountant)</option>
+                            <option value="other">Other money for the Expense Accountant</option>
+                            <option value="adjustment">Correct Expense Accountant balance (+ or −)</option>
                         </select></div>
                     <div class="form-group"><label>Date <span class="required">*</span></label><input type="date" id="eaFundDate" required /></div>
                     <div class="form-group"><label id="eaFundAmtLabel">Amount <span class="required">*</span></label>
@@ -2062,39 +2040,47 @@
     <!-- ===== ACCOUNTABILITY: RECORD EXPENSE ===== -->
     <div class="modal" id="eaExpenseModal">
         <div class="modal-content modal-lg">
-            <div class="modal-header"><h3 id="eaExpTitle">Record Expense</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
+            <div class="modal-header"><h3 id="eaExpTitle">New Expense</h3><button class="modal-close" type="button" data-close><i class="fas fa-times"></i></button></div>
             <form id="eaExpenseForm" class="modal-body">
                 <input type="hidden" id="eaExpId" />
+
+                <div class="ea-step" style="margin-top:0;"><span class="ea-num">1</span> What was it for?</div>
                 <div class="form-grid">
-                    <div class="form-group"><label>Expense category <span class="required">*</span></label>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Description <span class="required">*</span></label>
+                        <input type="text" id="eaExpDesc" list="eaDescList" autocomplete="off" placeholder="Type, or pick one you used before" required /><datalist id="eaDescList"></datalist></div>
+                    <div class="form-group"><label>Category <span class="required">*</span></label>
                         <select id="eaExpCat" required></select>
                         <input type="text" id="eaExpCatNew" placeholder="Type the new category" style="display:none;margin-top:6px;padding:8px 12px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;" /></div>
-                    <div class="form-group"><label>Expense date <span class="required">*</span></label><input type="date" id="eaExpDate" required /></div>
-                    <div class="form-group" style="grid-column:1/-1;"><label>Description / purpose <span class="required">*</span></label><input type="text" id="eaExpDesc" list="eaDescList" autocomplete="off" placeholder="Type, or pick one you used before" required /><datalist id="eaDescList"></datalist></div>
-                    <div class="form-group"><label>Payment source <span class="required">*</span></label>
-                        <select id="eaExpSource"><option value="org">Organization Cash/Advance</option><option value="personal">Personal Funds – Reimbursement Required</option><option value="other">Other Approved Source</option></select></div>
-                    <div class="form-group"><label>Payment method</label>
-                        <select id="eaExpMethod"><option>Cash</option><option>Cheque</option><option>Bank Transfer</option><option>Mobile Money</option><option>Card</option><option>Other</option></select></div>
-                    <div class="form-group" style="grid-column:1/-1;display:none;" id="eaOtherSrcWrap"><label>Which approved source? <span class="required">*</span></label><input type="text" id="eaExpOtherSrc" placeholder="e.g. Director's direct payment, company card" /></div>
-                    <div style="grid-column:1/-1;display:none;" id="eaMainNote" class="ea-info"><i class="fas fa-vault"></i> This is paid from the cash you hold as Main Accountant. It reduces your cash at hand (see the Main Cash tab), not the Expense Accountant's balance.</div>
-                    <div style="grid-column:1/-1;display:none;" id="eaPersonalNote" class="ea-warn"><i class="fas fa-triangle-exclamation"></i> This will be recorded as paid from your own pocket. A receipt reference or attached receipt is required, and the amount is added to your reimbursement balance once the voucher is approved.</div>
-                    <div class="form-group"><label>Reference / receipt number</label><input type="text" id="eaExpRef" placeholder="Receipt, invoice or cheque no." /></div>
-                    <div class="form-group"><label>Receipt / document / photo</label><input type="file" id="eaExpFile" accept="image/*,application/pdf" multiple /><div class="ea-chips" id="eaChips-exp"></div></div>
-
-                    <div style="grid-column:1/-1;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                            <div class="ea-section-title" style="margin:0;">Recipients <span class="required" style="color:var(--danger)">*</span></div>
-                            <button type="button" class="btn-outline" id="eaAddRowBtn"><i class="fas fa-plus"></i> Add Recipient</button>
-                        </div>
-                        <div id="eaRows"></div>
-                        <div class="ea-total-box"><div><span class="stat-label">Combined total</span><br><strong id="eaTotal">₵0.00</strong></div><div class="ea-words" id="eaTotalWords"></div></div>
-                    </div>
-
-                    <div class="form-group" style="grid-column:1/-1;"><label style="display:flex;align-items:center;gap:8px;font-weight:500;">
-                        <input type="checkbox" id="eaExpAdvance" style="width:auto;" /> This is an advance — the recipient(s) must account for it / retire it later</label></div>
-                    <div class="form-group" style="grid-column:1/-1;"><label>Notes</label><textarea id="eaExpNotes"></textarea></div>
+                    <div class="form-group"><label>Date <span class="required">*</span></label><input type="date" id="eaExpDate" required /></div>
                 </div>
-                <div class="form-actions"><button type="button" class="btn-secondary" data-close>Cancel</button><button type="submit" class="btn-primary" id="eaExpSubmit">Save &amp; Generate Voucher</button></div>
+
+                <div class="ea-step"><span class="ea-num">2</span> Who was paid, and how much?</div>
+                <div id="eaRows"></div>
+                <button type="button" class="btn-outline" id="eaAddRowBtn"><i class="fas fa-plus"></i> Add another person</button>
+                <div class="ea-total-box"><div><span class="stat-label">Total</span><br><strong id="eaTotal">₵0.00</strong></div><div class="ea-words" id="eaTotalWords"></div></div>
+
+                <div class="ea-step"><span class="ea-num">3</span> Where did the money come from?</div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column:1/-1;"><select id="eaExpSource"></select></div>
+                    <div class="form-group" style="grid-column:1/-1;display:none;" id="eaOtherSrcWrap"><label>Which approved source? <span class="required">*</span></label><input type="text" id="eaExpOtherSrc" placeholder="e.g. Director's direct payment, company card" /></div>
+                    <div style="grid-column:1/-1;display:none;" id="eaMainNote" class="ea-info"><i class="fas fa-vault"></i> This is taken from your cash at hand as Main Accountant.</div>
+                    <div style="grid-column:1/-1;display:none;" id="eaPersonalNote" class="ea-warn"><i class="fas fa-triangle-exclamation"></i> Paid from your own pocket. Add a receipt number or photo under “More details”. Once approved, the amount is added to what you are owed.</div>
+                </div>
+
+                <details class="ea-more" id="eaMoreDetails">
+                    <summary>More details (optional)</summary>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Payment method</label>
+                            <select id="eaExpMethod"><option>Cash</option><option>Cheque</option><option>Bank Transfer</option><option>Mobile Money</option><option>Card</option><option>Other</option></select></div>
+                        <div class="form-group"><label>Receipt / reference number</label><input type="text" id="eaExpRef" placeholder="Receipt, invoice or cheque no." /></div>
+                        <div class="form-group" style="grid-column:1/-1;"><label>Receipt photo / document</label><input type="file" id="eaExpFile" accept="image/*,application/pdf" multiple /><div class="ea-chips" id="eaChips-exp"></div></div>
+                        <div class="form-group" style="grid-column:1/-1;"><label style="display:flex;align-items:center;gap:8px;font-weight:500;">
+                            <input type="checkbox" id="eaExpAdvance" style="width:auto;" /> This is an advance — the person must account for it later</label></div>
+                        <div class="form-group" style="grid-column:1/-1;"><label>Notes</label><textarea id="eaExpNotes"></textarea></div>
+                    </div>
+                </details>
+
+                <div class="form-actions"><button type="button" class="btn-secondary" data-close>Cancel</button><button type="submit" class="btn-primary" id="eaExpSubmit">Save &amp; Create Voucher</button></div>
             </form>
         </div>
     </div>
@@ -2377,6 +2363,7 @@
             document.body.classList.toggle('ro-funds', signedIn && !canEdit('funds'));
             document.body.classList.toggle('ro-approve', signedIn && !canEdit('approve'));
             document.querySelectorAll('.nav-link').forEach(l => { l.style.display = canView(l.dataset.page) ? '' : 'none'; });
+            updateLegacyNav();
             const seesCheques = canView('incoming');
             const sb = document.querySelector('.search-box');
             if (sb) sb.style.display = seesCheques || !signedIn ? '' : 'none';
@@ -4471,6 +4458,7 @@
         function attachExpenseSync() {
             unsubscribeExpenses = fbDb.collection('expenses').onSnapshot(snap => {
                 state.expenses = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                updateLegacyNav();
                 renderExpenses();
             }, err => {
                 console.error('Expense sync error:', err);
@@ -4478,6 +4466,10 @@
             });
         }
 
+        function updateLegacyNav() {
+            const l = document.querySelector('.nav-link[data-page="expenses"]');
+            if (l) l.style.display = (canView('expenses') && state.expenses.length) ? '' : 'none';
+        }
         function expAmount(e) { return parseFloat(e.amount) || 0; }
         function sumByCurrency(list) {
             const t = {};
@@ -4825,8 +4817,9 @@
         let eaUnsubs = [];
         const EA_ORG_DEFAULT = 'S.A.A Legacy Pharmaceutical';
         const EA_SOURCES = { main: 'Main Accountant Cash (my own cash at hand)', org: 'Organization Cash/Advance', personal: 'Personal Funds – Reimbursement Required', other: 'Other Approved Source' };
-        const EA_SOURCE_SHORT = { main: 'Main cash', org: 'Org cash', personal: 'Personal funds', other: 'Other source' };
-        const EA_FUND_TYPES = { main_in: 'Cash at hand (Main Accountant)', main_adjust: 'Main cash adjustment', transfer: 'Transfer from Main Accountant', opening: 'Opening balance', other: 'Other approved funds', adjustment: 'Adjustment' };
+        const EA_SOURCE_SHORT = { main: 'Main Accountant cash', org: 'Expense Acct cash', personal: 'Own pocket (pay back)', other: 'Other source' };
+        const EA_SOURCE_PICK = { main: 'My cash (Main Accountant)', org: 'Expense Accountant cash', personal: 'My own money — I must be paid back', other: 'Other approved source' };
+        const EA_FUND_TYPES = { main_in: 'Cash at hand', main_adjust: 'Cash correction', transfer: 'Given to Expense Accountant', opening: 'Opening balance', other: 'Other money received', adjustment: 'Balance correction' };
         const EA_STATUS = { pending: ['due_soon', 'Awaiting approval'], approved: ['cleared', 'Approved'], rejected: ['overdue', 'Rejected'], void: ['cancelled', 'Void'] };
 
         // ---------- small helpers ----------
@@ -5107,45 +5100,53 @@
             const sb = byId('eaSettingsBtn');
             if (sb) sb.style.display = (canEdit('funds') || canEdit('approve')) ? '' : 'none';
             if (state.currentPage !== 'accountability') return;
-            ({ overview: renderEAOverview, main: renderEAMain, funds: renderEAFunds, vouchers: renderEAVouchers, ledger: renderEALedger, people: renderEAPeople, reimb: renderEAReimb, reports: () => {}, audit: renderEAAudit })[EA.tab]();
+            ({ overview: renderEAOverview, vouchers: renderEAVouchers, money: renderEAMoney, people: renderEAPeople, reports: () => {}, audit: renderEAAudit })[EA.tab]();
             if (byId('eaVoucherModal').classList.contains('active') && EA.viewId) eaRenderVoucherModal();
             if (byId('eaProfileModal').classList.contains('active') && EA.profileId) eaRenderProfile();
             if (byId('eaExpenseModal').classList.contains('active')) eaRefreshRowSelects();
         }
 
+        function eaCard(icon, color, label, value, sub) {
+            return `<div class="stat-card"><div class="stat-icon ${color}"><i class="fas ${icon}"></i></div><div class="stat-info"><span class="stat-label">${label}</span><h3 style="font-size:21px;">${value}</h3></div><div class="stat-amount">${sub || ''}</div></div>`;
+        }
+
         function renderEAOverview() {
-            const t = eaTotals();
-            const card = (icon, color, label, value, sub) => `<div class="stat-card"><div class="stat-icon ${color}"><i class="fas ${icon}"></i></div>
-                <div class="stat-info"><span class="stat-label">${label}</span><h3 style="font-size:21px;">${value}</h3></div><div class="stat-amount">${sub || ''}</div></div>`;
+            const t = eaTotals(), m = eaTotals(eaMonthRange(0));
             byId('eaStats').innerHTML =
-                card('fa-vault', t.mainBalance < 0 ? 'red' : 'blue', 'Main Accountant cash at hand', eaFmt(t.mainBalance), 'Given out ' + eaFmt(t.transfers) + (t.mainSpent ? ' · spent ' + eaFmt(t.mainSpent) : '')) +
-                card('fa-flag', 'blue', 'Opening balance', eaFmt(t.opening), '') +
-                card('fa-hand-holding-dollar', 'green', 'Received from Main Accountant', eaFmt(t.received), t.otherFunds ? 'incl. ' + eaFmt(t.otherFunds) + ' other funds' : '') +
-                card('fa-receipt', 'red', 'Total spent', eaFmt(t.spent), 'Expense Acct cash ' + eaFmt(t.orgSpent)) +
-                card('fa-user-group', 'purple', 'Given to individuals', eaFmt(t.toIndividuals), '') +
-                card('fa-wallet', 'orange', 'Paid personally by Expense Accountant', eaFmt(t.personal), t.personalPending ? eaFmt(t.personalPending) + ' awaiting approval' : '') +
-                card('fa-rotate-left', 'green', 'Reimbursed so far', eaFmt(t.reimbursed), '') +
-                card('fa-scale-balanced', t.outstanding > 0 ? 'yellow' : 'green', 'Owed to Expense Accountant', eaFmt(t.outstanding), 'Outstanding reimbursement') +
-                card('fa-sack-dollar', t.balance < 0 ? 'red' : 'green', 'Remaining cash balance', eaFmt(t.balance), t.adjust ? 'incl. ' + eaFmt(t.adjust) + ' adjustments' : '');
+                eaCard('fa-vault', t.mainBalance < 0 ? 'red' : 'blue', 'Main Accountant cash', eaFmt(t.mainBalance), 'Cash at hand now') +
+                eaCard('fa-wallet', t.balance < 0 ? 'red' : 'green', 'Expense Accountant cash', eaFmt(t.balance), 'Available to spend') +
+                eaCard('fa-receipt', 'orange', 'Spent this month', eaFmt(m.spent), 'All time ' + eaFmt(t.spent)) +
+                eaCard('fa-scale-balanced', t.outstanding > 0.005 ? 'yellow' : 'green', 'Owed to Expense Accountant', eaFmt(t.outstanding), t.outstanding > 0.005 ? 'Paid from own pocket' : 'Nothing owed');
 
             const attn = [];
-            if (t.pendingCount) attn.push(`<a onclick="eaGoVouchers('pending')"><i class="fas fa-hourglass-half"></i> ${t.pendingCount} voucher${t.pendingCount > 1 ? 's' : ''} awaiting approval</a>`);
+            if (t.pendingCount) attn.push(`<a onclick="eaGoVouchers('pending')"><i class="fas fa-hourglass-half"></i> ${t.pendingCount} expense${t.pendingCount > 1 ? 's' : ''} waiting for approval</a>`);
             const unconf = EA.funds.filter(f => f.status !== 'void' && f.type === 'transfer' && !f.confirmed).length;
-            if (unconf) attn.push(`<a onclick="eaSetTab('funds')"><i class="fas fa-circle-question"></i> ${unconf} transfer${unconf > 1 ? 's' : ''} from the Main Accountant not yet confirmed by the Expense Accountant</a>`);
+            if (unconf) attn.push(`<a onclick="eaSetTab('money')"><i class="fas fa-circle-question"></i> ${unconf} money transfer${unconf > 1 ? 's' : ''} not yet confirmed by the Expense Accountant</a>`);
             const adv = eaSpendVouchers().filter(v => v.isAdvance && !v.retired).length;
-            if (adv) attn.push(`<a onclick="eaSetTab('people')"><i class="fas fa-user-clock"></i> ${adv} advance${adv > 1 ? 's' : ''} not yet retired</a>`);
-            if (t.mainBalance < 0) attn.push(`<a class="bad" onclick="eaSetTab('main')"><i class="fas fa-triangle-exclamation"></i> The Main Accountant's cash at hand is negative (${eaFmt(t.mainBalance)}) — record the cash received, or check what was given out</a>`);
-            if (t.balance < 0) attn.push(`<a class="bad"><i class="fas fa-triangle-exclamation"></i> The cash balance is negative (${eaFmt(t.balance)}) — more was paid out than was received</a>`);
+            if (adv) attn.push(`<a onclick="eaSetTab('people')"><i class="fas fa-user-clock"></i> ${adv} advance${adv > 1 ? 's' : ''} not yet accounted for</a>`);
+            if (t.mainBalance < 0) attn.push(`<a class="bad" onclick="eaSetTab('money')"><i class="fas fa-triangle-exclamation"></i> Main Accountant cash is negative (${eaFmt(t.mainBalance)}) — record the cash he has at hand</a>`);
+            if (t.balance < 0) attn.push(`<a class="bad" onclick="eaSetTab('money')"><i class="fas fa-triangle-exclamation"></i> Expense Accountant cash is negative (${eaFmt(t.balance)}) — more was paid out than received</a>`);
             const alloc = eaReimbAlloc();
-            if (alloc.excess > 0.005) attn.push(`<a class="bad"><i class="fas fa-triangle-exclamation"></i> Reimbursements exceed approved personal expenses by ${eaFmt(alloc.excess)}</a>`);
+            if (alloc.excess > 0.005) attn.push(`<a class="bad"><i class="fas fa-triangle-exclamation"></i> Pay-backs exceed approved own-pocket expenses by ${eaFmt(alloc.excess)}</a>`);
             if (!attn.length && (EA.vouchers.length || EA.funds.length)) attn.push('<a class="ok"><i class="fas fa-circle-check"></i> Nothing needs attention</a>');
             byId('eaAttention').innerHTML = attn.join('');
 
-            const recent = [...EA.vouchers].sort(eaByDateDesc).slice(0, 8);
+            const recent = [...EA.vouchers].sort(eaByDateDesc).slice(0, 6);
             byId('eaRecentBody').innerHTML = recent.length ? recent.map(v => `<tr style="cursor:pointer" onclick="eaOpenVoucher('${esc(v.id)}')">
-                <td class="text-mono"><strong>${esc(v.voucherNo)}</strong></td><td>${formatDate(v.date)}</td><td><span class="exp-cat">${esc(v.category)}</span></td>
-                <td>${esc(eaRecipientsText(v))}</td><td>${EA_SOURCE_SHORT[v.source] || ''}</td><td class="ea-money"><strong>${eaFmt(v.total)}</strong></td><td>${eaBadge(v.status)}</td></tr>`).join('')
-                : '<tr><td colspan="7" class="empty-state"><i class="fas fa-file-invoice"></i><span>No vouchers yet</span></td></tr>';
+                <td class="text-mono"><strong>${esc(v.voucherNo)}</strong></td><td>${formatDate(v.date)}</td>
+                <td><span class="exp-cat">${esc(v.category)}</span><div class="exp-note">${esc(v.description)}</div></td>
+                <td>${esc(eaRecipientsText(v))}</td><td class="ea-money"><strong>${eaFmt(v.total)}</strong></td><td>${eaBadge(v.status)}</td></tr>`).join('')
+                : '<tr><td colspan="6" class="empty-state"><i class="fas fa-file-invoice"></i><span>No expenses yet — press “New Expense” to start</span></td></tr>';
+        }
+
+        function renderEAMoney() {
+            const t = eaTotals();
+            byId('eaMoneyStats').innerHTML =
+                eaCard('fa-vault', t.mainBalance < 0 ? 'red' : 'blue', 'Main Accountant cash', eaFmt(t.mainBalance), 'Given out ' + eaFmt(t.transfers) + (t.mainSpent ? ' · spent ' + eaFmt(t.mainSpent) : '')) +
+                eaCard('fa-wallet', t.balance < 0 ? 'red' : 'green', 'Expense Accountant cash', eaFmt(t.balance), 'Received ' + eaFmt(t.opening + t.received + t.adjust) + ' · spent ' + eaFmt(t.orgSpent)) +
+                eaCard('fa-scale-balanced', t.outstanding > 0.005 ? 'yellow' : 'green', 'Owed to Expense Accountant', eaFmt(t.outstanding), 'Paid back ' + eaFmt(t.reimbursed));
+            renderEAFunds();
+            renderEAReimb();
         }
 
         function renderEAFunds() {
@@ -5157,12 +5158,13 @@
                 if (void_) conf = `<span class="status-badge cancelled"><span class="dot"></span>Void</span><div class="exp-note">${esc(f.voidReason)}</div>`;
                 else if (f.type === 'transfer') conf = f.confirmed
                     ? `<span class="status-badge cleared"><span class="dot"></span>Confirmed</span><div class="exp-note">${esc(f.confirmedBy)} · ${eaDT(f.confirmedAt)}</div>`
-                    : `<span class="status-badge due_soon"><span class="dot"></span>Awaiting</span>${canEdit('expenses') ? ` <button class="btn-outline" style="padding:2px 10px;font-size:12px;" onclick="eaConfirmFund('${esc(f.id)}')">Confirm receipt</button>` : ''}`;
-                return `<tr class="${void_ ? 'ea-void' : ''}"><td>${formatDate(f.date)}</td><td class="text-mono">${esc(f.id)}</td><td>${esc(EA_FUND_TYPES[f.type] || f.type)}</td>
-                    <td class="text-mono">${esc(f.reference) || '-'}</td><td>${esc(f.source) || '-'}</td><td>${esc(f.purpose)}${f.notes ? `<div class="exp-note">${esc(f.notes)}</div>` : ''}</td>
-                    <td>${esc(f.receivedBy)}</td><td class="ea-money"><strong>${eaFmt(f.amount)}</strong></td><td>${conf}</td><td class="exp-by">${esc(f.createdBy)}<br>${eaDT(f.createdAt)}</td>
-                    <td><div class="action-buttons">${eaAttBtns(f.attachments)}${canEdit('funds') && !void_ ? `<button class="action-btn delete" title="Void (keeps the record)" onclick="eaVoidFund('${esc(f.id)}')"><i class="fas fa-ban"></i></button>` : ''}</div></td></tr>`;
-            }).join('') : `<tr><td colspan="11" class="empty-state"><i class="fas fa-hand-holding-dollar"></i><span>${EA.funds.length ? 'Nothing matches' : 'No funds recorded yet'}</span></td></tr>`;
+                    : `<span class="status-badge due_soon"><span class="dot"></span>Not yet</span>${canEdit('expenses') ? ` <button class="btn-outline" style="padding:2px 10px;font-size:12px;" onclick="eaConfirmFund('${esc(f.id)}')">Confirm I received it</button>` : ''}`;
+                const meta = [f.source && 'From: ' + f.source, f.receivedBy && 'To: ' + f.receivedBy, f.reference && 'Ref: ' + f.reference, 'Recorded by ' + f.createdBy + ', ' + eaDT(f.createdAt)].filter(Boolean).map(esc).join(' · ');
+                return `<tr class="${void_ ? 'ea-void' : ''}"><td>${formatDate(f.date)}</td><td>${esc(EA_FUND_TYPES[f.type] || f.type)}</td>
+                    <td>${esc(f.purpose)}${f.notes ? ' — ' + esc(f.notes) : ''}<div class="exp-note">${meta}</div></td>
+                    <td class="ea-money"><strong>${eaFmt(f.amount)}</strong></td><td>${conf}</td>
+                    <td><div class="action-buttons">${eaAttBtns(f.attachments)}${canEdit('funds') && !void_ ? `<button class="action-btn delete" title="Cancel this entry (it stays on record)" onclick="eaVoidFund('${esc(f.id)}')"><i class="fas fa-ban"></i></button>` : ''}</div></td></tr>`;
+            }).join('') : `<tr><td colspan="6" class="empty-state"><i class="fas fa-hand-holding-dollar"></i><span>${EA.funds.length ? 'Nothing matches' : 'No money recorded yet — start with “Cash I have at hand”'}</span></td></tr>`;
         }
 
         function getEAVouchers() {
@@ -5175,11 +5177,11 @@
             const list = getEAVouchers();
             byId('eaVBody').innerHTML = list.length ? list.map(v => `<tr class="${v.status === 'void' ? 'ea-void' : ''}">
                 <td class="text-mono"><button class="ea-link" onclick="eaOpenVoucher('${esc(v.id)}')">${esc(v.voucherNo)}</button></td><td>${formatDate(v.date)}</td>
-                <td><span class="exp-cat">${esc(v.category)}</span></td><td>${esc(v.description)}${v.isAdvance ? ` <span class="pending-flag">${v.retired ? 'Advance retired' : 'Advance'}</span>` : ''}</td>
+                <td><span class="exp-cat">${esc(v.category)}</span><div class="exp-note">${esc(v.description)}${v.isAdvance ? ` <span class="pending-flag">${v.retired ? 'Advance retired' : 'Advance'}</span>` : ''}</div></td>
                 <td>${esc(eaRecipientsText(v))}</td><td>${EA_SOURCE_SHORT[v.source] || ''}</td><td class="ea-money"><strong>${eaFmt(v.total)}</strong></td><td>${eaBadge(v.status)}</td>
                 <td><div class="action-buttons"><button class="action-btn view" title="Open" onclick="eaOpenVoucher('${esc(v.id)}')"><i class="fas fa-eye"></i></button>
                 <button class="action-btn edit" title="Print voucher" onclick="eaPrintVoucher('${esc(v.id)}')"><i class="fas fa-print"></i></button></div></td></tr>`).join('')
-                : `<tr><td colspan="9" class="empty-state"><i class="fas fa-file-invoice"></i><span>${EA.vouchers.length ? 'Nothing matches these filters' : 'No vouchers yet'}</span></td></tr>`;
+                : `<tr><td colspan="8" class="empty-state"><i class="fas fa-file-invoice"></i><span>${EA.vouchers.length ? 'Nothing matches these filters' : 'No expenses yet — press “New Expense” to start'}</span></td></tr>`;
         }
 
         function eaReportTable(rep, extraClass = '') {
@@ -5188,19 +5190,6 @@
             return `<table class="table ea-report-table ${extraClass}"><thead><tr>${rep.headers.map((h, i) => `<th${money.includes(i) ? ' class="ea-money"' : ''}>${esc(h)}</th>`).join('')}</tr></thead><tbody>${
                 rep.rows.length ? rep.rows.map(r => `<tr>${r.map(cell).join('')}</tr>`).join('') : `<tr><td colspan="${rep.headers.length}" class="empty-state"><span>No data for this report</span></td></tr>`}</tbody>${
                 rep.foot ? `<tfoot><tr>${rep.foot.map(cell).join('')}</tr></tfoot>` : ''}</table>`;
-        }
-        const eaLedRange = () => ({ from: byId('eaLedFrom').value, to: byId('eaLedTo').value });
-        const eaMainRange = () => ({ from: byId('eaMainFrom').value, to: byId('eaMainTo').value });
-        function renderEALedger() { byId('eaLedgerBody').innerHTML = eaReportFull(EA_REPORTS.ledger.build(eaLedRange())); }
-        function renderEAMain() {
-            const t = eaTotals();
-            const card = (icon, color, label, value, sub) => `<div class="stat-card"><div class="stat-icon ${color}"><i class="fas ${icon}"></i></div><div class="stat-info"><span class="stat-label">${label}</span><h3 style="font-size:21px;">${value}</h3></div><div class="stat-amount">${sub || ''}</div></div>`;
-            byId('eaMainStats').innerHTML =
-                card('fa-vault', t.mainBalance < 0 ? 'red' : 'green', 'Cash at hand now', eaFmt(t.mainBalance), 'Recorded in minus given out and spent') +
-                card('fa-arrow-down', 'blue', 'Cash recorded in', eaFmt(t.mainIn + t.mainAdj), t.mainAdj ? 'incl. ' + eaFmt(t.mainAdj) + ' adjustments' : '') +
-                card('fa-hand-holding-dollar', 'purple', 'Given to Expense Accountant', eaFmt(t.transfers), '') +
-                card('fa-receipt', 'orange', 'Spent by Main Accountant', eaFmt(t.mainSpent), 'From his own cash');
-            byId('eaMainBody').innerHTML = eaReportFull(EA_REPORTS['main-ledger'].build(eaMainRange()));
         }
         function eaFillSuggestLists() {
             const uniq = a => [...new Set(a.map(x => (x || '').trim()).filter(Boolean))];
@@ -5230,7 +5219,7 @@
         function eaQuick(prefix, kind, off) {
             const r = kind === 'all' ? { from: '', to: '' } : kind === 'week' ? eaWeekRange(off) : eaMonthRange(off);
             byId('ea' + prefix + 'From').value = r.from; byId('ea' + prefix + 'To').value = r.to;
-            ({ Led: renderEALedger, Main: renderEAMain, Rep: eaRunReport })[prefix]();
+            eaRunReport();
         }
 
         function eaPeopleIndex() {
@@ -5290,10 +5279,7 @@
         }
 
         function renderEAReimb() {
-            const t = eaTotals(), a = eaReimbAlloc();
-            const card = (icon, color, label, value, sub) => `<div class="stat-card"><div class="stat-icon ${color}"><i class="fas ${icon}"></i></div><div class="stat-info"><span class="stat-label">${label}</span><h3 style="font-size:21px;">${value}</h3></div><div class="stat-amount">${sub || ''}</div></div>`;
-            byId('eaReimbStats').innerHTML = card('fa-wallet', 'orange', 'Approved personal expenses', eaFmt(t.owed), t.personalPending ? eaFmt(t.personalPending) + ' still awaiting approval' : '') +
-                card('fa-rotate-left', 'green', 'Reimbursed', eaFmt(t.reimbursed), '') + card('fa-scale-balanced', t.outstanding > 0 ? 'yellow' : 'green', 'Outstanding balance', eaFmt(t.outstanding), 'Owed to the Expense Accountant');
+            const a = eaReimbAlloc();
             const personal = EA.vouchers.filter(v => v.source === 'personal' && v.status !== 'void').sort(eaByDateDesc);
             byId('eaPersonalBody').innerHTML = personal.length ? personal.map(v => {
                 const al = a.map[v.id];
@@ -5449,6 +5435,7 @@
             byId('eaOtherSrcWrap').style.display = s === 'other' ? '' : 'none';
             byId('eaPersonalNote').style.display = s === 'personal' ? '' : 'none';
             byId('eaMainNote').style.display = s === 'main' ? '' : 'none';
+            if (s === 'personal') byId('eaMoreDetails').open = true;
         }
         function eaOpenExpense(v = null, preset = null) {
             if (eaDeny('expenses', 'record expenses')) return;
@@ -5462,7 +5449,7 @@
             byId('eaExpDate').value = v ? v.date : eaToday();
             byId('eaExpDesc').value = v ? v.description : '';
             const canMain = canEdit('funds') || (v && v.source === 'main');
-            byId('eaExpSource').innerHTML = [...(canMain ? [['main', EA_SOURCES.main]] : []), ['org', EA_SOURCES.org], ['personal', EA_SOURCES.personal], ['other', EA_SOURCES.other]].map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('');
+            byId('eaExpSource').innerHTML = [...(canMain ? [['main', EA_SOURCE_PICK.main]] : []), ['org', EA_SOURCE_PICK.org], ['personal', EA_SOURCE_PICK.personal], ['other', EA_SOURCE_PICK.other]].map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('');
             byId('eaExpSource').value = v ? v.source : (preset || (canEdit('funds') ? 'main' : 'org'));
             eaFillDescList();
             byId('eaExpMethod').value = v ? v.method : 'Cash';
@@ -5473,6 +5460,7 @@
             byId('eaRows').innerHTML = '';
             if (v) (v.recipients || []).forEach(r => eaAddRow(r.personId, r.amount)); else eaAddRow();
             eaToggleSourceUI(); eaRenderChips('exp'); eaCalcTotal();
+            byId('eaMoreDetails').open = !!(v && (v.reference || v.notes || v.isAdvance || (v.attachments || []).length)) || byId('eaExpSource').value === 'personal';
             byId('eaExpenseModal').classList.add('active');
         }
         function eaEditVoucher(id) { const v = EA.vouchers.find(x => x.id === id); if (v && v.status === 'pending') { byId('eaVoucherModal').classList.remove('active'); eaOpenExpense(v); } }
@@ -5888,17 +5876,16 @@
             EA.reportCur = rep;
             byId('eaReportOut').innerHTML = `<h3 style="margin-bottom:2px;">${esc(rep.title)}</h3><p class="page-subtitle" style="margin-bottom:12px;">${esc(rep.sub)}</p><div class="table-wrap">${eaReportFull(rep)}</div>${rep.note ? `<p class="page-subtitle" style="margin-top:12px;">${esc(rep.note)}</p>` : ''}`;
         }
-        function eaRepFor(src) {
-            const live = { ledger: ['ledger', eaLedRange], main: ['main-ledger', eaMainRange] }[src];
-            if (live) { const r = live[1](), rep = EA_REPORTS[live[0]].build(r); rep.sub = (r.from || r.to) ? 'Period: ' + eaWeekLabel(r) : 'All dates'; return rep; }
-            if (!EA.reportCur) { showNotification('Run a report first', 'Pick a report and press Run', 'info'); return null; }
+        function eaRepFor() {
+            if (!EA.reportCur) { showNotification('Show a report first', 'Pick a report and press Show', 'info'); return null; }
             return EA.reportCur;
         }
         const EA_SIGNOFF = '<div class="sigs"><div class="sigbox">Prepared by (Expense Accountant): ______________________ Date: ____________</div><div class="sigbox">Reviewed by (Director / Main Accountant): ______________________ Date: ____________</div></div>';
         function eaPrintRep(rep) { eaPrintDoc(rep.title, rep.sub + (rep.note ? ' — ' + rep.note : ''), eaReportFull(rep, 'print') + (rep.signoff ? EA_SIGNOFF : '')); }
         function eaPrintReport(src) { const rep = eaRepFor(src); if (rep) eaPrintRep(rep); }
         function eaPrintWeekly() {
-            let r = eaLedRange(); if (!r.from && !r.to) { r = eaWeekRange(0); byId('eaLedFrom').value = r.from; byId('eaLedTo').value = r.to; renderEALedger(); }
+            let r = { from: byId('eaRepFrom').value, to: byId('eaRepTo').value };
+            if (!r.from && !r.to) { r = eaWeekRange(0); byId('eaRepFrom').value = r.from; byId('eaRepTo').value = r.to; }
             const rep = EA_REPORTS.weekly.build(r); rep.sub = 'Period: ' + eaWeekLabel(r); eaPrintRep(rep);
         }
         function eaExportReport(src) {
@@ -5913,11 +5900,11 @@
         // ============================================================
         //  ACCOUNTABILITY — WIRING
         // ============================================================
-        byId('eaReportSel').innerHTML = Object.keys(EA_REPORTS).filter(k => k !== 'ledger').map(k => `<option value="${k}">${esc(EA_REPORTS[k].label)}</option>`).join('');
+        byId('eaReportSel').innerHTML = Object.keys(EA_REPORTS).map(k => `<option value="${k}">${esc(EA_REPORTS[k].label)}</option>`).join('');
         document.querySelectorAll('.ea-tab').forEach(b => b.addEventListener('click', () => eaSetTab(b.dataset.tab)));
         document.querySelectorAll('#eaFundModal,#eaExpenseModal,#eaVoucherModal,#eaPersonModal,#eaProfileModal,#eaReimbModal,#eaSettingsModal,#eaFileModal').forEach(m =>
             m.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeEAModal(m.id))));
-        byId('eaAddFundBtn').addEventListener('click', eaOpenFund);
+        byId('eaAddFundBtn').addEventListener('click', () => eaOpenFund('other'));
         byId('eaAddExpenseBtn').addEventListener('click', () => eaOpenExpense());
         byId('eaAddPersonBtn').addEventListener('click', () => eaOpenPerson());
         byId('eaAddReimbBtn').addEventListener('click', eaOpenReimb);
@@ -5936,8 +5923,8 @@
             const m = EA.vouchers.filter(v => (v.description || '').trim().toLowerCase() === l).sort(eaByDateDesc)[0];
             if (m && !byId('eaExpCat').value && [...byId('eaExpCat').options].some(o => o.value === m.category)) byId('eaExpCat').value = m.category;
         });
-        ['eaLedFrom', 'eaLedTo'].forEach(id => byId(id).addEventListener('input', renderEALedger));
-        ['eaMainFrom', 'eaMainTo'].forEach(id => byId(id).addEventListener('input', renderEAMain));
+        
+        
         byId('eaExpSource').addEventListener('change', eaToggleSourceUI);
         byId('eaExpCat').addEventListener('change', () => { const n = byId('eaExpCatNew'); n.style.display = byId('eaExpCat').value === '__new__' ? '' : 'none'; if (n.style.display === '') n.focus(); });
         byId('eaFundFile').addEventListener('change', e => { eaPickFiles('fund', e.target.files).then(() => { e.target.value = ''; }); });
