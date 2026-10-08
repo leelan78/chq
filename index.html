@@ -6169,18 +6169,20 @@
                     draw();
                 }
 
-                // clean this browser
-                ['checkData', 'checkTrash', 'checkCompanies', 'checkBanks', 'checkNotifiedKeys', 'eaLastReceiver'].forEach(k => localStorage.removeItem(k));
-                notifiedKeys = new Set();
-                state.incoming = []; state.outgoing = []; state.trash = []; state.companies = []; state.banks = [];
-                updateUI();
+                // clean this browser (only when the cloud was fully cleared)
+                if (!failed) {
+                    ['checkData', 'checkTrash', 'checkCompanies', 'checkBanks', 'checkNotifiedKeys', 'eaLastReceiver'].forEach(k => localStorage.removeItem(k));
+                    notifiedKeys = new Set();
+                    state.incoming = []; state.outgoing = []; state.trash = []; state.companies = []; state.banks = [];
+                    updateUI();
+                }
 
                 try {
                     await fbDb.collection('ea_audit').add(eaAuditObj({ action: 'factory-reset', entity: 'settings', entityId: 'settings', ref: 'Factory reset', summary: failed ? `Factory reset run by ${eaMe()} — ${failed} step(s) could not be completed` : `Factory reset run by ${eaMe()} — system cleared` }));
                 } catch (e) { /* the log is best-effort */ }
 
                 if (failed) {
-                    showNotification('Reset incomplete', `${failed} step(s) failed — see the list. The Firestore rules must let the Administrator write and delete those collections.`, 'error');
+                    showNotification('Reset incomplete', `${failed} step(s) were blocked by the Firestore security rules. Publish the updated firestore.rules (Firebase console → Firestore Database → Rules → Publish), then run the reset again. Nothing was changed on this screen.`, 'error');
                 } else {
                     byId('factoryResetModal').classList.remove('active');
                     navigateTo('dashboard');
