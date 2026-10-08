@@ -1876,11 +1876,70 @@
                             </p>
                         </div>
                     </div>
+                
+                    <div class="card" id="factoryResetCard" style="display:none;border-color:var(--danger);">
+                        <div class="card-header"><h3 style="color:var(--danger);"><i class="fas fa-triangle-exclamation" style="color:var(--danger);"></i> Danger Zone</h3></div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <div class="setting-info"><span class="setting-label">Reset password</span>
+                                    <span class="setting-value" id="resetPwStatus"><span class="dot disconnected"></span> Checking…</span>
+                                </div>
+                                <button class="btn-outline" id="resetPwBtn" type="button"><i class="fas fa-key"></i> Set password</button>
+                            </div>
+                            <div class="setting-item" style="align-items:flex-start;gap:16px;">
+                                <div class="setting-info"><span class="setting-label">Factory reset</span>
+                                    <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-top:4px;">Erases every cheque, expense, voucher, money record, person, receipt and history entry for <strong>everyone</strong> and starts the system fresh. User accounts and roles are kept. You must enter the reset password.</p>
+                                </div>
+                                <button class="btn-danger" id="factoryResetBtn" type="button"><i class="fas fa-bomb"></i> Factory Reset</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
         </div><!-- /content -->
     </main>
+
+    <!-- ===== RESET PASSWORD MODAL ===== -->
+    <div class="modal" id="resetPwModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Reset password</h3><button class="modal-close" type="button" id="resetPwClose"><i class="fas fa-times"></i></button></div>
+            <form id="resetPwForm" class="modal-body">
+                <div class="ea-info" style="margin-bottom:16px;">This password is asked for before a Factory Reset. Keep it safe — only the Administrator should know it.</div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column:1/-1;display:none;" id="rpCurrentWrap"><label>Current password</label><input type="password" id="rpCurrent" autocomplete="current-password" /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>New password (at least 8 characters)</label><input type="password" id="rpNew" autocomplete="new-password" /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Type it again</label><input type="password" id="rpConfirm" autocomplete="new-password" /></div>
+                </div>
+                <div class="form-actions"><button type="button" class="btn-secondary" id="resetPwCancel">Cancel</button><button type="submit" class="btn-primary" id="resetPwSave">Save password</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== FACTORY RESET MODAL ===== -->
+    <div class="modal" id="factoryResetModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 style="color:var(--danger);"><i class="fas fa-bomb"></i> Factory Reset</h3><button class="modal-close" type="button" id="frClose"><i class="fas fa-times"></i></button></div>
+            <div class="modal-body">
+                <div class="ea-warn" style="margin-bottom:16px;">
+                    <strong>This permanently deletes, for every user:</strong>
+                    <ul style="margin:6px 0 0 18px;">
+                        <li>All customer and supplier cheques, the Trash, and the saved company and bank lists</li>
+                        <li>All expenses, vouchers, money records, people, pay-backs and receipt photos</li>
+                        <li>The full history log, and the voucher and transaction numbering (starts again from 1)</li>
+                    </ul>
+                    <div style="margin-top:6px;">Kept: user accounts and roles, and the reset password.</div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column:1/-1;"><label style="display:flex;align-items:center;gap:8px;font-weight:500;"><input type="checkbox" id="frBackup" checked style="width:auto;" /> Download a backup file first (receipt photos are not included)</label></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Type <strong>RESET</strong> to confirm</label><input type="text" id="frType" autocomplete="off" placeholder="RESET" /></div>
+                    <div class="form-group" style="grid-column:1/-1;"><label>Reset password</label><input type="password" id="frPass" autocomplete="off" /></div>
+                </div>
+                <div id="frProgress" style="margin-top:14px;font-size:13px;line-height:1.9;"></div>
+                <div class="form-actions"><button type="button" class="btn-secondary" id="frCancel">Cancel</button><button type="button" class="btn-danger" id="frGoBtn"><i class="fas fa-bomb"></i> Erase everything</button></div>
+            </div>
+        </div>
+    </div>
 
     <!-- ===== CHECK MODAL ===== -->
     <div class="modal" id="checkModal">
@@ -2364,6 +2423,7 @@
             document.body.classList.toggle('ro-approve', signedIn && !canEdit('approve'));
             document.querySelectorAll('.nav-link').forEach(l => { l.style.display = canView(l.dataset.page) ? '' : 'none'; });
             updateLegacyNav();
+            const frc = byId('factoryResetCard'); if (frc) frc.style.display = (signedIn && currentRole === 'admin') ? '' : 'none';
             const seesCheques = canView('incoming');
             const sb = document.querySelector('.search-box');
             if (sb) sb.style.display = seesCheques || !signedIn ? '' : 'none';
@@ -2892,6 +2952,7 @@
             if (page === 'expenses') renderExpenses();
             if (page === 'accountability') renderAccountability();
             if (page === 'users') renderUsersPage();
+            if (page === 'settings') refreshResetCard();
             document.getElementById('sidebar').classList.remove('open');
         }
 
@@ -5949,6 +6010,194 @@
         // ============================================================
         //  EXPOSE GLOBALLY
         // ============================================================
+
+        // ============================================================
+        //  FACTORY RESET (administrator only, password protected)
+        //  The password is stored only as a salted PBKDF2 hash in ea_meta/resetPassword.
+        // ============================================================
+        const RP_ITER = 150000;
+        let rpAttempts = 0, rpLockUntil = 0, rpBusy = false;
+        const rpB64 = u8 => btoa(String.fromCharCode(...u8));
+        const rpUnB64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+        async function rpHash(pw, saltB64, iter) {
+            if (!(window.crypto && crypto.subtle)) throw new Error('This browser cannot hash passwords securely (the site must be opened over https).');
+            const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+            const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: rpUnB64(saltB64), iterations: iter || RP_ITER, hash: 'SHA-256' }, key, 256);
+            return rpB64(new Uint8Array(bits));
+        }
+        async function rpFetch() {
+            const d = await fbDb.collection('ea_meta').doc('resetPassword').get();
+            return d.exists ? d.data() : null;
+        }
+        async function rpVerify(pw, doc) { return (await rpHash(pw, doc.salt, doc.iter)) === doc.hash; }
+        function rpIsAdmin() {
+            if (currentRole === 'admin') return true;
+            showNotification('Not allowed', 'Only the Administrator can do this', 'warning');
+            return false;
+        }
+
+        async function refreshResetCard() {
+            const card = byId('factoryResetCard');
+            if (!card || currentRole !== 'admin' || !firebaseReady) return;
+            try {
+                const d = await rpFetch();
+                byId('resetPwStatus').innerHTML = d ? '<span class="dot connected"></span> Set' : '<span class="dot warning"></span> Not set — required before a reset';
+                byId('resetPwBtn').innerHTML = d ? '<i class="fas fa-key"></i> Change' : '<i class="fas fa-key"></i> Set password';
+            } catch (e) {
+                byId('resetPwStatus').innerHTML = '<span class="dot danger"></span> Could not check (' + esc(e.code || e.message) + ')';
+            }
+        }
+
+        async function openResetPw() {
+            if (!rpIsAdmin()) return;
+            try {
+                const d = await rpFetch();
+                byId('resetPwForm').reset();
+                byId('rpCurrentWrap').style.display = d ? '' : 'none';
+                byId('resetPwModal').classList.add('active');
+            } catch (e) { showNotification('Could not open', e.message, 'error'); }
+        }
+
+        async function saveResetPw(ev) {
+            ev.preventDefault();
+            if (!rpIsAdmin()) return;
+            const np = byId('rpNew').value, cf = byId('rpConfirm').value, cur = byId('rpCurrent').value;
+            if (np.length < 8) { showNotification('Too short', 'Use at least 8 characters', 'warning'); return; }
+            if (np !== cf) { showNotification('Does not match', 'The two passwords are different', 'warning'); return; }
+            const btn = byId('resetPwSave'); btn.disabled = true;
+            try {
+                const existing = await rpFetch();
+                if (existing) {
+                    if (Date.now() < rpLockUntil) { showNotification('Locked', 'Too many wrong attempts — wait a minute and try again', 'warning'); return; }
+                    if (!(await rpVerify(cur, existing))) {
+                        if (++rpAttempts >= 5) { rpLockUntil = Date.now() + 60000; rpAttempts = 0; }
+                        showNotification('Wrong password', 'The current password is not correct', 'error'); return;
+                    }
+                }
+                rpAttempts = 0;
+                const salt = rpB64(crypto.getRandomValues(new Uint8Array(16)));
+                const hash = await rpHash(np, salt, RP_ITER);
+                const batch = fbDb.batch();
+                batch.set(fbDb.collection('ea_meta').doc('resetPassword'), { salt, hash, iter: RP_ITER, setBy: eaMe(), setAt: eaNow() });
+                batch.set(fbDb.collection('ea_audit').doc(), eaAuditObj({ action: 'edit', entity: 'settings', entityId: 'settings', ref: 'Reset password', summary: existing ? 'Factory-reset password changed' : 'Factory-reset password set' }));
+                await batch.commit();
+                byId('resetPwModal').classList.remove('active');
+                showNotification('Saved', 'Reset password ' + (existing ? 'changed' : 'set'), 'success');
+                refreshResetCard();
+            } catch (e) {
+                showNotification('Not saved', e.code === 'permission-denied' ? 'Permission denied — the Firestore rules must allow the Administrator to write ea_meta/resetPassword.' : e.message, 'error');
+            } finally { btn.disabled = false; }
+        }
+
+        async function openFactoryReset() {
+            if (!rpIsAdmin()) return;
+            try {
+                const d = await rpFetch();
+                if (!d) { showNotification('Set a password first', 'Create the reset password before you can use Factory Reset', 'warning'); openResetPw(); return; }
+            } catch (e) { showNotification('Could not check', e.message, 'error'); return; }
+            byId('frType').value = ''; byId('frPass').value = ''; byId('frBackup').checked = true; byId('frProgress').innerHTML = '';
+            byId('frGoBtn').disabled = false;
+            byId('factoryResetModal').classList.add('active');
+        }
+
+        function frDownloadBackup() {
+            const data = {
+                app: 'S.A.A Legacy Pharmaceutical — backup before factory reset', exportedAt: new Date().toISOString(), exportedBy: eaMe(),
+                incoming: state.incoming, outgoing: state.outgoing, trash: state.trash, companies: state.companies, banks: state.banks,
+                expenses: state.expenses,
+                accountability: { funds: EA.funds, vouchers: EA.vouchers, people: EA.people, reimbursements: EA.reimb, audit: EA.audit, settings: EA.settings }
+            };
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+            a.download = `backup-before-reset-${new Date().toISOString().split('T')[0]}.json`;
+            a.click(); URL.revokeObjectURL(a.href);
+        }
+
+        async function frWipeCollection(name, pageSize) {
+            let total = 0;
+            for (;;) {
+                const snap = await fbDb.collection(name).limit(pageSize).get();
+                if (snap.empty) break;
+                const batch = fbDb.batch();
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                total += snap.size;
+                if (snap.size < pageSize) break;
+            }
+            return total;
+        }
+
+        async function runFactoryReset() {
+            if (!rpIsAdmin() || rpBusy) return;
+            if (byId('frType').value.trim() !== 'RESET') { showNotification('Confirmation needed', 'Type RESET (capital letters) to continue', 'warning'); return; }
+            const pw = byId('frPass').value;
+            if (!pw) { showNotification('Password needed', 'Enter the reset password', 'warning'); return; }
+            if (Date.now() < rpLockUntil) { showNotification('Locked', 'Too many wrong attempts — wait a minute and try again', 'warning'); return; }
+            rpBusy = true; const go = byId('frGoBtn'); go.disabled = true;
+            try {
+                const doc = await rpFetch();
+                if (!doc) { showNotification('Set a password first', 'No reset password exists yet', 'warning'); return; }
+                if (!(await rpVerify(pw, doc))) {
+                    if (++rpAttempts >= 5) { rpLockUntil = Date.now() + 60000; rpAttempts = 0; }
+                    byId('frPass').value = '';
+                    showNotification('Wrong password', 'The reset password is not correct', 'error'); return;
+                }
+                rpAttempts = 0;
+                if (!confirm('LAST CHANCE.\n\nEverything will be erased for all users and cannot be recovered' + (byId('frBackup').checked ? ' (except from the backup file).' : ' — and you chose NOT to download a backup.') + '\n\nErase everything now?')) return;
+                if (byId('frBackup').checked) frDownloadBackup();
+
+                const col = (n, size) => () => frWipeCollection(n, size);
+                const steps = [
+                    ['Cheques, Trash, company and bank lists', () => fbDb.collection(SHARED_DOC[0]).doc(SHARED_DOC[1]).set({ incoming: [], outgoing: [], trash: [], companies: [], banks: [], updatedAt: firebase.firestore.FieldValue.serverTimestamp() })],
+                    ['Old expenses', col('expenses', 400)],
+                    ['Receipt photos and documents', col('ea_files', 15)],
+                    ['Money records', col('ea_funds', 400)],
+                    ['Vouchers', col('ea_vouchers', 400)],
+                    ['People', col('ea_people', 400)],
+                    ['Pay-backs', col('ea_reimb', 400)],
+                    ['Numbering and voucher settings', async () => { const b = fbDb.batch(); b.delete(fbDb.collection('ea_meta').doc('counters')); b.delete(fbDb.collection('ea_meta').doc('settings')); await b.commit(); }],
+                    ['History log', col('ea_audit', 400)]
+                ];
+                const status = steps.map(() => ['·', '']);
+                const draw = () => { byId('frProgress').innerHTML = steps.map((st, i) => `<div>${status[i][0]} ${esc(st[0])}${status[i][1] ? ` <span style="color:var(--danger);">— ${esc(status[i][1])}</span>` : ''}</div>`).join(''); };
+                draw();
+                let failed = 0;
+                for (let i = 0; i < steps.length; i++) {
+                    status[i] = ['⏳', '']; draw();
+                    try { await steps[i][1](); status[i] = ['✅', '']; }
+                    catch (e) { failed++; status[i] = ['❌', e.code === 'permission-denied' ? 'not allowed by the Firestore rules' : e.message]; }
+                    draw();
+                }
+
+                // clean this browser
+                ['checkData', 'checkTrash', 'checkCompanies', 'checkBanks', 'checkNotifiedKeys', 'eaLastReceiver'].forEach(k => localStorage.removeItem(k));
+                notifiedKeys = new Set();
+                state.incoming = []; state.outgoing = []; state.trash = []; state.companies = []; state.banks = [];
+                updateUI();
+
+                try {
+                    await fbDb.collection('ea_audit').add(eaAuditObj({ action: 'factory-reset', entity: 'settings', entityId: 'settings', ref: 'Factory reset', summary: failed ? `Factory reset run by ${eaMe()} — ${failed} step(s) could not be completed` : `Factory reset run by ${eaMe()} — system cleared` }));
+                } catch (e) { /* the log is best-effort */ }
+
+                if (failed) {
+                    showNotification('Reset incomplete', `${failed} step(s) failed — see the list. The Firestore rules must let the Administrator write and delete those collections.`, 'error');
+                } else {
+                    byId('factoryResetModal').classList.remove('active');
+                    navigateTo('dashboard');
+                    showNotification('Factory reset complete', 'The system is clean and ready to start again', 'success', true);
+                }
+            } catch (e) {
+                showNotification('Reset failed', e.message, 'error');
+            } finally { rpBusy = false; go.disabled = false; }
+        }
+
+        byId('resetPwBtn').addEventListener('click', openResetPw);
+        byId('factoryResetBtn').addEventListener('click', openFactoryReset);
+        byId('resetPwForm').addEventListener('submit', saveResetPw);
+        ['resetPwClose', 'resetPwCancel'].forEach(id => byId(id).addEventListener('click', () => byId('resetPwModal').classList.remove('active')));
+        ['frClose', 'frCancel'].forEach(id => byId(id).addEventListener('click', () => { if (!rpBusy) byId('factoryResetModal').classList.remove('active'); }));
+        byId('frGoBtn').addEventListener('click', runFactoryReset);
+
         window.navigateTo = navigateTo;
         window.openCheckModal = openCheckModal;
         window.closeCheckModal = closeCheckModal;
